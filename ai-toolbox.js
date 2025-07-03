@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Play, Edit2, Trash2, Settings, History, Copy, Check } from 'lucide-react';
+// AI Toolbox Component - Converted for browser use
+const { useState, useEffect } = React;
+const { Plus, Play, Edit2, Trash2, Settings, History, Copy, Check } = lucideReact;
 
 const AIToolbox = () => {
   const [templates, setTemplates] = useState([]);
@@ -627,4 +628,5 @@ Format in a clear, professional structure.`,
   );
 };
 
-export default AIToolbox;
+// Export for browser use
+window.AIToolbox = AIToolbox;

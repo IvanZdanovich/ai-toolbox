@@ -1,0 +1,21 @@
+{
+  "name": "ai-toolbox",
+  "version": "1.0.0",
+  "description": "A streamlined, personal repository designed to adapt to your AI workflow",
+  "homepage": "https://YOUR_USERNAME.github.io/ai-toolbox",
+  "author": "Ivan Zdanovich",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "gh-pages -d ."
+  },
+  "devDependencies": {
+    "gh-pages": "^6.0.0"
+  },
+  "keywords": [
+    "ai",
+    "toolbox",
+    "claude",
+    "templates",
+    "automation"
+  ]
+}
