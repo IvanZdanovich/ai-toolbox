@@ -247,7 +247,7 @@ select.form-input {
   margin-bottom: var(--spacing-sm);
   box-shadow: var(--shadow-md);
   max-width: 300px;
-  animation: slideIn var(--transition-normal) ease-out;
+  animation: slide-in var(--transition-normal) ease-out;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -302,7 +302,7 @@ select.form-input {
   opacity: 0.3;
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from {
     transform: translateX(100%);
     opacity: 0;

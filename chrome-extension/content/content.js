@@ -18,7 +18,7 @@ class AIToolboxContent {
   }
 
   setupEventListeners() {
-    document.addEventListener('mouseup', (e) => {
+    document.addEventListener('mouseup', () => {
       setTimeout(() => {
         this.handleTextSelection();
       }, 10);
@@ -90,7 +90,7 @@ class AIToolboxContent {
     }
   }
 
-  handleContextMenu(e) {
+  handleContextMenu() {
     if (this.selectedText) {
       chrome.runtime.sendMessage({
         action: 'updateContextMenu',

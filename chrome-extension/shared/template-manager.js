@@ -27,7 +27,7 @@ class TemplateManager {
     const defaultTemplates = [
       {
         id: generateId(),
-        name: 'Email Response',
+        name: 'Email',
         description: 'Generate professional email responses',
         prompt: 'Write a professional email response to the following message: {email_content}. The tone should be {tone} and include {key_points}.',
         inputs: [
