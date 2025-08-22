@@ -4,7 +4,31 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
+    "lint:js": "eslint chrome-extension/**/*.js",
+    "lint:css": "stylelint chrome-extension/**/*.css",
+    "lint:html": "htmlhint chrome-extension/**/*.html",
+    "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix"
   },
-  "private": true
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IvanZdanovich/ai-toolbox.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/IvanZdanovich/ai-toolbox/issues"
+  },
+  "homepage": "https://github.com/IvanZdanovich/ai-toolbox#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "eslint": "^9.34.0",
+    "htmlhint": "^1.6.3",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard": "^39.0.0"
+  }
 }

@@ -90,7 +90,7 @@ export function replaceVariables(template, values) {
 }
 
 export function sanitizeText(text) {
-  if (typeof text !== 'string') return '';
+  if (typeof text !== 'string') {return '';}
   
   return text
     .replace(/[<>"'&]/g, (char) => {
@@ -106,7 +106,7 @@ export function sanitizeText(text) {
 }
 
 export function truncateText(text, maxLength = 100) {
-  if (!text || text.length <= maxLength) return text;
+  if (!text || text.length <= maxLength) {return text;}
   return text.substring(0, maxLength) + '...';
 }
 

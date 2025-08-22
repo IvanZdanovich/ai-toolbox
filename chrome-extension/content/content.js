@@ -8,7 +8,7 @@ class AIToolboxContent {
   }
 
   init() {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
     
     this.setupEventListeners();
     this.setupMessageListeners();
@@ -112,7 +112,7 @@ class AIToolboxContent {
 
   getSelectionHTML() {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) return '';
+    if (selection.rangeCount === 0) {return '';}
     
     const range = selection.getRangeAt(0);
     const clonedSelection = range.cloneContents();
@@ -123,7 +123,7 @@ class AIToolboxContent {
 
   getSelectionRange() {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) return null;
+    if (selection.rangeCount === 0) {return null;}
     
     const range = selection.getRangeAt(0);
     return {
@@ -159,7 +159,7 @@ class AIToolboxContent {
       const startNode = this.getNodeFromPath(rangeData.startContainer);
       const endNode = this.getNodeFromPath(rangeData.endContainer);
       
-      if (!startNode || !endNode) return false;
+      if (!startNode || !endNode) {return false;}
       
       const range = document.createRange();
       range.setStart(startNode, rangeData.startOffset);
@@ -189,7 +189,7 @@ class AIToolboxContent {
 
   replaceSelection(text) {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) return false;
+    if (selection.rangeCount === 0) {return false;}
     
     const range = selection.getRangeAt(0);
     range.deleteContents();
@@ -435,7 +435,7 @@ class AIToolboxContent {
   }
 
   escapeHtml(text) {
-    if (!text) return '';
+    if (!text) {return '';}
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;

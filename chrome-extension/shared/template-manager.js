@@ -10,7 +10,7 @@ class TemplateManager {
   }
 
   async init() {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
     
     try {
       this.templates = await storage.getTemplates();
@@ -22,7 +22,7 @@ class TemplateManager {
   }
 
   async seedDefaultTemplates() {
-    if (this.templates.length > 0) return;
+    if (this.templates.length > 0) {return;}
     
     const defaultTemplates = [
       {
@@ -92,17 +92,17 @@ class TemplateManager {
   }
 
   async getAllTemplates() {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     return [...this.templates];
   }
 
   async getTemplate(id) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     return this.templates.find(template => template.id === id);
   }
 
   async createTemplate(templateData) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const errors = validateTemplate(templateData);
     if (errors.length > 0) {
@@ -145,7 +145,7 @@ class TemplateManager {
   }
 
   async updateTemplate(id, updates) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const index = this.templates.findIndex(template => template.id === id);
     if (index === -1) {
@@ -189,7 +189,7 @@ class TemplateManager {
   }
 
   async deleteTemplate(id) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const index = this.templates.findIndex(template => template.id === id);
     if (index === -1) {
@@ -204,7 +204,7 @@ class TemplateManager {
   }
 
   async duplicateTemplate(id) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const original = this.templates.find(template => template.id === id);
     if (!original) {
@@ -223,7 +223,7 @@ class TemplateManager {
   }
 
   async exportTemplates() {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     return {
       templates: this.templates,
@@ -233,7 +233,7 @@ class TemplateManager {
   }
 
   async importTemplates(data) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     if (!data.templates || !Array.isArray(data.templates)) {
       throw new Error('Invalid import data format');
@@ -263,7 +263,7 @@ class TemplateManager {
   }
 
   async searchTemplates(query) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     if (!query || query.trim().length === 0) {
       return this.templates;
@@ -286,7 +286,7 @@ class TemplateManager {
   }
 
   off(event, callback) {
-    if (!this.listeners.has(event)) return;
+    if (!this.listeners.has(event)) {return;}
     
     const callbacks = this.listeners.get(event);
     const index = callbacks.indexOf(callback);
@@ -296,7 +296,7 @@ class TemplateManager {
   }
 
   emit(event, data) {
-    if (!this.listeners.has(event)) return;
+    if (!this.listeners.has(event)) {return;}
     
     const callbacks = this.listeners.get(event);
     callbacks.forEach(callback => {

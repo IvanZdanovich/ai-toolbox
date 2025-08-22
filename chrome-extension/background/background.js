@@ -95,10 +95,11 @@ class AIToolboxBackground {
           sendResponse({ success: true });
           break;
 
-        case 'getTemplates':
+        case 'getTemplates': {
           const templates = await this.getTemplates();
           sendResponse({ templates });
           break;
+        }
 
         case 'textSelected':
           await this.handleTextSelection(request, sender.tab);
@@ -115,10 +116,11 @@ class AIToolboxBackground {
           sendResponse({ success: true });
           break;
 
-        case 'getSidePanelState':
+        case 'getSidePanelState': {
           const state = await this.getSidePanelState(sender.tab?.id);
           sendResponse({ state });
           break;
+        }
 
         default:
           sendResponse({ error: 'Unknown action' });

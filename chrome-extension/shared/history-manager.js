@@ -10,7 +10,7 @@ class HistoryManager {
   }
 
   async init() {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
     
     try {
       this.history = await storage.getHistory();
@@ -21,24 +21,24 @@ class HistoryManager {
   }
 
   async getAllHistory() {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     return [...this.history].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }
 
   async getHistoryByTemplate(templateId) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     return this.history
       .filter(entry => entry.templateId === templateId)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }
 
   async getHistoryEntry(id) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     return this.history.find(entry => entry.id === id);
   }
 
   async addHistoryEntry(templateId, templateName, inputs, result, status = HISTORY_STATUS.COMPLETED) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const entry = {
       id: generateId(),
@@ -64,7 +64,7 @@ class HistoryManager {
   }
 
   async updateHistoryEntry(id, updates) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const index = this.history.findIndex(entry => entry.id === id);
     if (index === -1) {
@@ -84,7 +84,7 @@ class HistoryManager {
   }
 
   async deleteHistoryEntry(id) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const index = this.history.findIndex(entry => entry.id === id);
     if (index === -1) {
@@ -99,7 +99,7 @@ class HistoryManager {
   }
 
   async clearHistory() {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const clearedCount = this.history.length;
     this.history = [];
@@ -110,7 +110,7 @@ class HistoryManager {
   }
 
   async clearHistoryByTemplate(templateId) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const originalLength = this.history.length;
     this.history = this.history.filter(entry => entry.templateId !== templateId);
@@ -125,7 +125,7 @@ class HistoryManager {
   }
 
   async getHistoryStats() {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const stats = {
       totalEntries: this.history.length,
@@ -179,7 +179,7 @@ class HistoryManager {
   }
 
   async searchHistory(query) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     if (!query || query.trim().length === 0) {
       return this.getAllHistory();
@@ -199,7 +199,7 @@ class HistoryManager {
   }
 
   async exportHistory() {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     return {
       history: this.history,
@@ -209,7 +209,7 @@ class HistoryManager {
   }
 
   async getHistoryForTemplate(templateId, limit = 10) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     return this.history
       .filter(entry => entry.templateId === templateId)
@@ -227,7 +227,7 @@ class HistoryManager {
   }
 
   async getFavoriteTemplates(limit = 5) {
-    if (!this.initialized) await this.init();
+    if (!this.initialized) {await this.init();}
     
     const templateUsage = {};
     
@@ -262,7 +262,7 @@ class HistoryManager {
   }
 
   off(event, callback) {
-    if (!this.listeners.has(event)) return;
+    if (!this.listeners.has(event)) {return;}
     
     const callbacks = this.listeners.get(event);
     const index = callbacks.indexOf(callback);
@@ -272,7 +272,7 @@ class HistoryManager {
   }
 
   emit(event, data) {
-    if (!this.listeners.has(event)) return;
+    if (!this.listeners.has(event)) {return;}
     
     const callbacks = this.listeners.get(event);
     callbacks.forEach(callback => {

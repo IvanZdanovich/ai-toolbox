@@ -200,7 +200,7 @@ class SidePanelApp {
 
 
   switchSection(section) {
-    if (section === this.currentSection) return;
+    if (section === this.currentSection) {return;}
     
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.section === section);
@@ -552,7 +552,7 @@ class SidePanelApp {
   }
 
   async executeTemplate() {
-    if (!this.currentTemplate) return;
+    if (!this.currentTemplate) {return;}
     
     const form = document.getElementById('executeForm');
     const formData = new FormData(form);
@@ -816,7 +816,7 @@ class SidePanelApp {
   }
 
   async importData(file) {
-    if (!file) return;
+    if (!file) {return;}
     
     try {
       const data = await parseJsonFile(file);

@@ -196,7 +196,7 @@ class PopupApp {
   }
 
   switchSection(section) {
-    if (section === this.currentSection) return;
+    if (section === this.currentSection) {return;}
     
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.section === section);
@@ -544,7 +544,7 @@ class PopupApp {
   }
 
   async executeTemplate() {
-    if (!this.currentTemplate) return;
+    if (!this.currentTemplate) {return;}
     
     const form = document.getElementById('executeForm');
     const formData = new FormData(form);
@@ -706,8 +706,8 @@ class PopupApp {
         const percentUsed = Math.round(storageInfo.percentUsed);
         let barClass = '';
         
-        if (percentUsed > 90) barClass = 'error';
-        else if (percentUsed > 75) barClass = 'warning';
+        if (percentUsed > 90) {barClass = 'error';}
+        else if (percentUsed > 75) {barClass = 'warning';}
         
         storageInfoEl.innerHTML = `
           <div class="storage-bar">
@@ -791,7 +791,7 @@ class PopupApp {
   }
 
   async importData(file) {
-    if (!file) return;
+    if (!file) {return;}
     
     try {
       const data = await parseJsonFile(file);

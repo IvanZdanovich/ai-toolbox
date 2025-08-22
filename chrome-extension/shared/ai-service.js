@@ -17,7 +17,7 @@ class AIService {
   }
 
   async processTemplate(template, inputs) {
-    if (!this.settings) await this.init();
+    if (!this.settings) {await this.init();}
     
     if (!this.checkRateLimit()) {
       throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
@@ -271,7 +271,7 @@ class AIService {
   }
 
   async testConnection() {
-    if (!this.settings) await this.init();
+    if (!this.settings) {await this.init();}
     
     try {
       const testPrompt = 'Hello, this is a connection test. Please respond with "Connection successful".';
@@ -345,7 +345,7 @@ class AIService {
   }
 
   getCurrentProvider() {
-    if (!this.settings) return null;
+    if (!this.settings) {return null;}
     
     const providers = this.getAvailableProviders();
     return providers.find(provider => provider.id === this.settings.provider);
@@ -369,7 +369,7 @@ class AIService {
   }
 
   async encryptApiKey(apiKey) {
-    if (!apiKey) return '';
+    if (!apiKey) {return '';}
     
     try {
       const encoder = new TextEncoder();
