@@ -1,4 +1,5 @@
 import { formatRelativeTime, truncateText } from '../../shared/helpers.js';
+import IconHelper from '../../shared/icon-helper.js';
 
 class TemplateCard {
   constructor(template, options = {}) {
@@ -39,13 +40,13 @@ class TemplateCard {
     return `
       <div class="template-card-actions">
         <button class="action-btn edit" data-action="edit" title="Edit template">
-          ✏️
+          ${IconHelper.iconHTML('edit', 'sm')}
         </button>
         <button class="action-btn duplicate" data-action="duplicate" title="Duplicate template">
-          📋
+          ${IconHelper.iconHTML('copy', 'sm')}
         </button>
         <button class="action-btn delete" data-action="delete" title="Delete template">
-          🗑️
+          ${IconHelper.iconHTML('delete', 'sm', 'error')}
         </button>
       </div>
     `;

@@ -186,6 +186,11 @@ select.form-input {
   overflow: hidden;
 }
 
+.modal-large {
+  width: 560px;
+  max-height: 95vh;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -259,17 +264,20 @@ select.form-input {
 
 .toast.success {
   border-color: var(--color-success);
-  background-color: #f0fdf4;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
 }
 
 .toast.error {
   border-color: var(--color-error);
-  background-color: #fef2f2;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
 }
 
 .toast.warning {
   border-color: var(--color-warning);
-  background-color: #fffbeb;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
 }
 
 .toast-content {

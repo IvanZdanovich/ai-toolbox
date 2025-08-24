@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS = {
   apiKey: '',
   provider: AI_PROVIDERS.MOCK,
   defaultProvider: AI_PROVIDERS.MOCK,
-  theme: 'light'
+  theme: 'auto'
 };
 
 export const LIMITS = {
