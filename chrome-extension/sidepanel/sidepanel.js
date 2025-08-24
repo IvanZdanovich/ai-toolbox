@@ -67,7 +67,7 @@ class SidePanelApp {
 
     // Footer buttons
     document.getElementById('settingsBtn').addEventListener('click', () => {
-      this.showSettingsModal();
+      this.openSettingsPage();
     });
 
     // Template section
@@ -129,39 +129,6 @@ class SidePanelApp {
       this.copyResult();
     });
 
-    // Settings modal
-    document.getElementById('settingsModalClose').addEventListener('click', () => {
-      Modal.hide('settings');
-    });
-
-    document.getElementById('settingsModalCancel').addEventListener('click', () => {
-      Modal.hide('settings');
-    });
-
-    document.getElementById('settingsForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.saveSettings();
-    });
-
-    document.getElementById('aiProvider').addEventListener('change', (e) => {
-      this.updateApiKeyVisibility(e.target.value);
-    });
-
-    document.getElementById('testConnectionBtn').addEventListener('click', () => {
-      this.testConnection();
-    });
-
-    document.getElementById('exportDataBtn').addEventListener('click', () => {
-      this.exportData();
-    });
-
-    document.getElementById('importDataBtn').addEventListener('click', () => {
-      document.getElementById('importFileInput').click();
-    });
-
-    document.getElementById('importFileInput').addEventListener('change', (e) => {
-      this.importData(e.target.files[0]);
-    });
 
   }
 
@@ -658,190 +625,11 @@ class SidePanelApp {
   }
 
   // Settings methods
-  async showSettingsModal() {
-    Modal.show('settings');
-    
-    const providerSelect = document.getElementById('aiProvider');
-    const apiKeyInput = document.getElementById('apiKey');
-    const providers = aiService.getAvailableProviders();
-    
-    providerSelect.innerHTML = providers.map(provider => 
-      `<option value="${provider.id}">${provider.name}</option>`
-    ).join('');
-    
-    providerSelect.value = this.settings.provider;
-    apiKeyInput.value = this.settings.apiKey || '';
-    
-    this.updateApiKeyVisibility(this.settings.provider);
-    this.updateStorageInfo();
+  openSettingsPage() {
+    // Load the settings page within the sidepanel
+    window.location.href = chrome.runtime.getURL('settings/settings.html?from=sidepanel');
   }
 
-  updateApiKeyVisibility(provider) {
-    const apiKeyGroup = document.getElementById('apiKeyGroup');
-    const apiKeyHelp = document.getElementById('apiKeyHelp');
-    const providerDescription = document.getElementById('providerDescription');
-    const providers = aiService.getAvailableProviders();
-    const currentProvider = providers.find(p => p.id === provider);
-    
-    if (currentProvider && currentProvider.description) {
-      providerDescription.textContent = currentProvider.description;
-      providerDescription.style.display = 'block';
-    } else {
-      providerDescription.style.display = 'none';
-    }
-    
-    if (currentProvider && currentProvider.requiresApiKey) {
-      apiKeyGroup.style.display = 'block';
-      if (currentProvider.apiKeyUrl) {
-        apiKeyHelp.href = currentProvider.apiKeyUrl;
-        apiKeyHelp.style.display = 'inline';
-      } else {
-        apiKeyHelp.style.display = 'none';
-      }
-    } else {
-      apiKeyGroup.style.display = 'none';
-    }
-  }
-
-  async updateStorageInfo() {
-    try {
-      const storageInfo = await storage.getStorageInfo();
-      const storageInfoEl = document.getElementById('storageInfo');
-      
-      if (storageInfo) {
-        const percentUsed = Math.round(storageInfo.percentUsed);
-        const bytesInUse = storageInfo.bytesInUse;
-        const quota = storageInfo.quota;
-        const kbUsed = Math.round(bytesInUse / 1024 * 10) / 10;
-        const kbQuota = Math.round(quota / 1024);
-        const remainingBytes = quota - bytesInUse;
-        const kbRemaining = Math.round(remainingBytes / 1024 * 10) / 10;
-        
-        let barClass = '';
-        let statusText = 'Good';
-        let statusColor = 'var(--success)';
-        
-        if (percentUsed > 90) {
-          barClass = 'error';
-          statusText = 'Critical';
-          statusColor = 'var(--error)';
-        } else if (percentUsed > 75) {
-          barClass = 'warning';
-          statusText = 'Warning';
-          statusColor = '#f59e0b';
-        }
-        
-        storageInfoEl.innerHTML = `
-          <div class="storage-text">
-            ${kbUsed} KB of ${kbQuota} KB used (${percentUsed}%)
-          </div>
-        `;
-      }
-    } catch (error) {
-      console.error('Failed to get storage info:', error);
-      const storageInfoEl = document.getElementById('storageInfo');
-      storageInfoEl.innerHTML = `
-        <div class="storage-text" style="color: var(--error);">
-          Failed to load storage information
-        </div>
-      `;
-    }
-  }
-
-  async testConnection() {
-    const provider = document.getElementById('aiProvider').value;
-    const apiKey = document.getElementById('apiKey').value;
-    const statusEl = document.getElementById('connectionStatus');
-    const testBtn = document.getElementById('testConnectionBtn');
-    
-    testBtn.disabled = true;
-    testBtn.textContent = 'Testing...';
-    
-    try {
-      await aiService.updateSettings({ provider, apiKey });
-      const result = await aiService.testConnection();
-      
-      statusEl.className = `connection-status ${result.success ? 'success' : 'error'}`;
-      statusEl.textContent = result.success 
-        ? 'Connection successful!' 
-        : `Connection failed: ${result.error}`;
-      statusEl.classList.remove('hidden');
-    } catch (error) {
-      statusEl.className = 'connection-status error';
-      statusEl.textContent = `Test failed: ${error.message}`;
-      statusEl.classList.remove('hidden');
-    } finally {
-      testBtn.disabled = false;
-      testBtn.textContent = 'Test Connection';
-    }
-  }
-
-  async saveSettings() {
-    const provider = document.getElementById('aiProvider').value;
-    const apiKey = document.getElementById('apiKey').value;
-    
-    try {
-      await aiService.updateSettings({ provider, apiKey });
-      this.settings = await storage.getSettings();
-      Modal.hide('settings');
-      Toast.show('Settings saved successfully', 'success');
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      Toast.show('Failed to save settings', 'error');
-    }
-  }
-
-  async exportData() {
-    try {
-      const [templates, history] = await Promise.all([
-        templateManager.exportTemplates(),
-        historyManager.exportHistory()
-      ]);
-      
-      const exportData = {
-        templates: templates.templates,
-        history: history.history,
-        exportedAt: new Date().toISOString(),
-        version: '1.0.0'
-      };
-      
-      const filename = `ai-toolbox-backup-${new Date().toISOString().split('T')[0]}.json`;
-      downloadAsJson(exportData, filename);
-      
-      Toast.show('Data exported successfully', 'success');
-    } catch (error) {
-      console.error('Export failed:', error);
-      Toast.show('Failed to export data', 'error');
-    }
-  }
-
-  async importData(file) {
-    if (!file) {return;}
-    
-    try {
-      const data = await parseJsonFile(file);
-      
-      if (data.templates) {
-        const result = await templateManager.importTemplates(data);
-        if (result.imported.length > 0) {
-          Toast.show(`Imported ${result.imported.length} templates`, 'success');
-        }
-        if (result.errors.length > 0) {
-          console.warn('Import errors:', result.errors);
-          Toast.show(`${result.errors.length} templates failed to import`, 'warning');
-        }
-      }
-
-      
-      await this.loadData();
-      this.render();
-    } catch (error) {
-      console.error('Import failed:', error);
-      Toast.show('Failed to import data', 'error');
-    } finally {
-      document.getElementById('importFileInput').value = '';
-    }
-  }
 
 
   escapeHtml(text) {

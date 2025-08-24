@@ -66,7 +66,7 @@ class PopupApp {
     });
 
     document.getElementById('settingsBtn').addEventListener('click', () => {
-      this.showSettingsModal();
+      this.openSettingsPage();
     });
 
     document.getElementById('createTemplateBtn').addEventListener('click', () => {
@@ -90,10 +90,6 @@ class PopupApp {
   }
 
   setupModalEventListeners() {
-    const templateModal = document.getElementById('templateModal');
-    const executeModal = document.getElementById('executeModal');
-    const settingsModal = document.getElementById('settingsModal');
-
     // Removed click-outside behavior to prevent auto-closing
     // Modals can only be closed via explicit close buttons
 
@@ -131,38 +127,6 @@ class PopupApp {
       this.copyResult();
     });
 
-    document.getElementById('settingsModalClose').addEventListener('click', () => {
-      Modal.hide('settings');
-    });
-
-    document.getElementById('settingsModalCancel').addEventListener('click', () => {
-      Modal.hide('settings');
-    });
-
-    document.getElementById('settingsForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.saveSettings();
-    });
-
-    document.getElementById('aiProvider').addEventListener('change', (e) => {
-      this.updateApiKeyVisibility(e.target.value);
-    });
-
-    document.getElementById('testConnectionBtn').addEventListener('click', () => {
-      this.testConnection();
-    });
-
-    document.getElementById('exportDataBtn').addEventListener('click', () => {
-      this.exportData();
-    });
-
-    document.getElementById('importDataBtn').addEventListener('click', () => {
-      document.getElementById('importFileInput').click();
-    });
-
-    document.getElementById('importFileInput').addEventListener('change', (e) => {
-      this.importData(e.target.files[0]);
-    });
   }
 
   setupManagerEventListeners() {
@@ -651,125 +615,11 @@ class PopupApp {
     }
   }
 
-  async showSettingsModal() {
-    Modal.show('settings');
-    
-    const providerSelect = document.getElementById('aiProvider');
-    const apiKeyInput = document.getElementById('apiKey');
-    const themeSelect = document.getElementById('themeSelect');
-    const providers = aiService.getAvailableProviders();
-    
-    providerSelect.innerHTML = providers.map(provider => 
-      `<option value="${provider.id}">${provider.name}</option>`
-    ).join('');
-    
-    providerSelect.value = this.settings.provider;
-    apiKeyInput.value = this.settings.apiKey || '';
-    themeSelect.value = this.settings.theme || 'auto';
-    
-    this.updateApiKeyVisibility(this.settings.provider);
-    this.updateStorageInfo();
-  }
-
-  updateApiKeyVisibility(provider) {
-    const apiKeyGroup = document.getElementById('apiKeyGroup');
-    const apiKeyHelp = document.getElementById('apiKeyHelp');
-    const providerDescription = document.getElementById('providerDescription');
-    const providers = aiService.getAvailableProviders();
-    const currentProvider = providers.find(p => p.id === provider);
-    
-    // Update provider description
-    if (currentProvider && currentProvider.description) {
-      providerDescription.textContent = currentProvider.description;
-      providerDescription.style.display = 'block';
-    } else {
-      providerDescription.style.display = 'none';
-    }
-    
-    // Update API key visibility
-    if (currentProvider && currentProvider.requiresApiKey) {
-      apiKeyGroup.style.display = 'block';
-      if (currentProvider.apiKeyUrl) {
-        apiKeyHelp.href = currentProvider.apiKeyUrl;
-        apiKeyHelp.style.display = 'inline';
-      } else {
-        apiKeyHelp.style.display = 'none';
-      }
-    } else {
-      apiKeyGroup.style.display = 'none';
-    }
-  }
-
-  async updateStorageInfo() {
-    try {
-      const storageInfo = await storage.getStorageInfo();
-      const storageInfoEl = document.getElementById('storageInfo');
-      
-      if (storageInfo) {
-        const percentUsed = Math.round(storageInfo.percentUsed);
-        let barClass = '';
-        
-        if (percentUsed > 90) {barClass = 'error';}
-        else if (percentUsed > 75) {barClass = 'warning';}
-        
-        storageInfoEl.innerHTML = `
-          <div class="storage-bar">
-            <div class="storage-bar-fill ${barClass}" style="width: ${percentUsed}%"></div>
-          </div>
-          <div class="storage-text">
-            ${Math.round(storageInfo.bytesInUse / 1024)} KB of ${Math.round(storageInfo.quota / 1024)} KB used (${percentUsed}%)
-          </div>
-        `;
-      }
-    } catch (error) {
-      console.error('Failed to get storage info:', error);
-    }
-  }
-
-  async testConnection() {
-    const provider = document.getElementById('aiProvider').value;
-    const apiKey = document.getElementById('apiKey').value;
-    const statusEl = document.getElementById('connectionStatus');
-    const testBtn = document.getElementById('testConnectionBtn');
-    
-    testBtn.disabled = true;
-    testBtn.textContent = 'Testing...';
-    
-    try {
-      await aiService.updateSettings({ provider, apiKey });
-      const result = await aiService.testConnection();
-      
-      statusEl.className = `connection-status ${result.success ? 'success' : 'error'}`;
-      statusEl.textContent = result.success 
-        ? 'Connection successful!' 
-        : `Connection failed: ${result.error}`;
-      statusEl.classList.remove('hidden');
-    } catch (error) {
-      statusEl.className = 'connection-status error';
-      statusEl.textContent = `Test failed: ${error.message}`;
-      statusEl.classList.remove('hidden');
-    } finally {
-      testBtn.disabled = false;
-      testBtn.textContent = 'Test Connection';
-    }
-  }
-
-  async saveSettings() {
-    const provider = document.getElementById('aiProvider').value;
-    const apiKey = document.getElementById('apiKey').value;
-    const theme = document.getElementById('themeSelect').value;
-    
-    try {
-      await aiService.updateSettings({ provider, apiKey });
-      await storage.setSettings({ ...this.settings, theme });
-      this.settings = await storage.getSettings();
-      this.applyTheme(theme);
-      Modal.hide('settings');
-      Toast.show('Settings saved successfully', 'success');
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      Toast.show('Failed to save settings', 'error');
-    }
+  openSettingsPage() {
+    // Open the settings page in a new tab
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('settings/settings.html?from=popup')
+    });
   }
 
   applyTheme(theme) {
@@ -782,57 +632,6 @@ class PopupApp {
     } else {
       // Auto - remove the attribute to let CSS media query handle it
       root.removeAttribute('data-theme');
-    }
-  }
-
-  async exportData() {
-    try {
-      const [templates, history] = await Promise.all([
-        templateManager.exportTemplates(),
-        historyManager.exportHistory()
-      ]);
-      
-      const exportData = {
-        templates: templates.templates,
-        history: history.history,
-        exportedAt: new Date().toISOString(),
-        version: '1.0.0'
-      };
-      
-      const filename = `ai-toolbox-backup-${new Date().toISOString().split('T')[0]}.json`;
-      downloadAsJson(exportData, filename);
-      
-      Toast.show('Data exported successfully', 'success');
-    } catch (error) {
-      console.error('Export failed:', error);
-      Toast.show('Failed to export data', 'error');
-    }
-  }
-
-  async importData(file) {
-    if (!file) {return;}
-    
-    try {
-      const data = await parseJsonFile(file);
-      
-      if (data.templates) {
-        const result = await templateManager.importTemplates(data);
-        if (result.imported.length > 0) {
-          Toast.show(`Imported ${result.imported.length} templates`, 'success');
-        }
-        if (result.errors.length > 0) {
-          console.warn('Import errors:', result.errors);
-          Toast.show(`${result.errors.length} templates failed to import`, 'warning');
-        }
-      }
-      
-      await this.loadData();
-      this.render();
-    } catch (error) {
-      console.error('Import failed:', error);
-      Toast.show('Failed to import data', 'error');
-    } finally {
-      document.getElementById('importFileInput').value = '';
     }
   }
 
