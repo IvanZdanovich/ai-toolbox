@@ -23,6 +23,10 @@
   font-size: var(--font-size-xs);
 }
 
+.search-box .form-input::placeholder {
+  font-size: var(--font-size-xs);
+}
+
 .templates-list {
   max-height: 600px;
   overflow-y: auto;
@@ -81,6 +85,20 @@
   padding: var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  transform: translateY(0);
+}
+
+.history-entry:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-lg);
+  background-color: var(--color-background);
+  transform: translateY(-1px);
+}
+
+.history-entry:hover .history-entry-title {
+  color: var(--color-primary);
 }
 
 .history-entry-header {

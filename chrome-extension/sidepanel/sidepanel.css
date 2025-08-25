@@ -187,6 +187,15 @@ html {
   max-width: 300px;
 }
 
+.search-box .form-input {
+  height: 32px;
+  font-size: var(--font-size-xs);
+}
+
+.search-box .form-input::placeholder {
+  font-size: var(--font-size-xs);
+}
+
 /* Templates List */
 .templates-list {
   display: flex;
@@ -201,12 +210,18 @@ html {
   padding: 1rem;
   cursor: pointer;
   transition: all 0.2s;
+  transform: translateY(0);
 }
 
 .template-card:hover {
   border-color: var(--primary);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgb(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: var(--bg-primary);
+}
+
+.template-card:hover .template-card-title {
+  color: var(--primary);
 }
 
 .template-card-header {
@@ -274,6 +289,20 @@ html {
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  transform: translateY(0);
+}
+
+.history-entry:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: var(--bg-primary);
+}
+
+.history-entry:hover .history-entry-title {
+  color: var(--primary);
 }
 
 .history-entry-header {
