@@ -2,6 +2,7 @@ class AIToolboxBackground {
   constructor() {
     this.contextMenus = new Map();
     this.activeProcessing = new Map();
+    this.contextMenusCreating = false;
     this.init();
   }
 
@@ -133,60 +134,79 @@ class AIToolboxBackground {
 
   async setupContextMenus() {
     try {
+      // Clear existing menus and wait for completion
       await chrome.contextMenus.removeAll();
       
-      chrome.contextMenus.create({
-        id: 'ai-toolbox-main',
-        title: 'AI Toolbox',
-        contexts: ['selection']
-      });
-
-      chrome.contextMenus.create({
-        id: 'ai-toolbox-separator',
-        type: 'separator',
-        parentId: 'ai-toolbox-main',
-        contexts: ['selection']
-      });
-
-      const templates = await this.getTemplates();
+      // Add a small delay to ensure cleanup is complete
+      await new Promise(resolve => setTimeout(resolve, 50));
       
-      if (templates.length === 0) {
+      // Check if menus are already being created
+      if (this.contextMenusCreating) {
+        console.log('Context menus already being created, skipping...');
+        return;
+      }
+      
+      this.contextMenusCreating = true;
+      
+      try {
         chrome.contextMenus.create({
-          id: 'no-templates',
-          title: 'No templates available',
+          id: 'ai-toolbox-main',
+          title: 'AI Toolbox',
+          contexts: ['selection']
+        });
+
+        chrome.contextMenus.create({
+          id: 'ai-toolbox-separator',
+          type: 'separator',
           parentId: 'ai-toolbox-main',
-          contexts: ['selection'],
-          enabled: false
+          contexts: ['selection']
         });
-      } else {
-        templates.slice(0, 5).forEach((template) => {
-          chrome.contextMenus.create({
-            id: `template-${template.id}`,
-            title: `Process with "${template.name}"`,
-            parentId: 'ai-toolbox-main',
-            contexts: ['selection']
-          });
-        });
+
+        const templates = await this.getTemplates();
         
-        if (templates.length > 5) {
+        if (templates.length === 0) {
           chrome.contextMenus.create({
-            id: 'more-templates',
-            title: `... and ${templates.length - 5} more templates`,
+            id: 'no-templates',
+            title: 'No templates available',
             parentId: 'ai-toolbox-main',
             contexts: ['selection'],
             enabled: false
           });
+        } else {
+          templates.slice(0, 5).forEach((template) => {
+            chrome.contextMenus.create({
+              id: `template-${template.id}`,
+              title: `Process with "${template.name}"`,
+              parentId: 'ai-toolbox-main',
+              contexts: ['selection']
+            });
+          });
+          
+          if (templates.length > 5) {
+            chrome.contextMenus.create({
+              id: 'more-templates',
+              title: `... and ${templates.length - 5} more templates`,
+              parentId: 'ai-toolbox-main',
+              contexts: ['selection'],
+              enabled: false
+            });
+          }
         }
-      }
 
-      chrome.contextMenus.create({
-        id: 'open-popup',
-        title: 'Open AI Toolbox',
-        parentId: 'ai-toolbox-main',
-        contexts: ['selection']
-      });
+        chrome.contextMenus.create({
+          id: 'open-popup',
+          title: 'Open AI Toolbox',
+          parentId: 'ai-toolbox-main',
+          contexts: ['selection']
+        });
+        
+        console.log('Context menus created successfully');
+      } finally {
+        this.contextMenusCreating = false;
+      }
     } catch (error) {
       console.error('Failed to setup context menus:', error);
+      this.contextMenusCreating = false;
     }
   }
 

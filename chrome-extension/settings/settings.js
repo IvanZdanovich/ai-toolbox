@@ -72,16 +72,11 @@ class SettingsPage {
       this.importData(e.target.files[0]);
     });
 
-    // Theme change
-    document.getElementById('themeSelect').addEventListener('change', (e) => {
-      this.applyTheme(e.target.value);
-    });
   }
 
   populateForm() {
     const providerSelect = document.getElementById('aiProvider');
     const apiKeyInput = document.getElementById('apiKey');
-    const themeSelect = document.getElementById('themeSelect');
     const providers = aiService.getAvailableProviders();
     
     // Populate AI providers
@@ -92,7 +87,6 @@ class SettingsPage {
     // Set current values
     providerSelect.value = this.settings.provider;
     apiKeyInput.value = this.settings.apiKey || '';
-    themeSelect.value = this.settings.theme || 'auto';
     
     this.updateApiKeyVisibility(this.settings.provider);
     this.updateStorageInfo();
@@ -187,13 +181,10 @@ class SettingsPage {
   async saveSettings() {
     const provider = document.getElementById('aiProvider').value;
     const apiKey = document.getElementById('apiKey').value;
-    const theme = document.getElementById('themeSelect').value;
     
     try {
       await aiService.updateSettings({ provider, apiKey });
-      await storage.setSettings({ ...this.settings, theme });
       this.settings = await storage.getSettings();
-      this.applyTheme(theme);
       Toast.show('Settings saved successfully', 'success');
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -201,18 +192,6 @@ class SettingsPage {
     }
   }
 
-  applyTheme(theme) {
-    const root = document.documentElement;
-    
-    if (theme === 'light') {
-      root.setAttribute('data-theme', 'light');
-    } else if (theme === 'dark') {
-      root.setAttribute('data-theme', 'dark');
-    } else {
-      // Auto - remove the attribute to let CSS media query handle it
-      root.removeAttribute('data-theme');
-    }
-  }
 
   async exportData() {
     try {
@@ -247,7 +226,9 @@ class SettingsPage {
   }
 
   async importData(file) {
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     
     try {
       const data = await parseJsonFile(file);

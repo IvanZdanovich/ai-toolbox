@@ -265,4 +265,5 @@ class ChromeStorage {
   }
 }
 
-export default new ChromeStorage();
+const storage = new ChromeStorage();
+export default storage;

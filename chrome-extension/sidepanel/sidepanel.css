@@ -1,6 +1,6 @@
 /* Side Panel Specific Styles */
 :root {
-  --sidepanel-standard-width: 320px;
+  --sidepanel-standard-width: 250px;
 }
 
 .sidepanel-container {
@@ -9,7 +9,6 @@
   height: 100vh;
   max-height: 100vh;
   min-width: var(--sidepanel-standard-width);
-  width: var(--sidepanel-standard-width);
   max-width: none;
   overflow: hidden;
   background: var(--bg-primary);

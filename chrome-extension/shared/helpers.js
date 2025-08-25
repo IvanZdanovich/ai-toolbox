@@ -168,7 +168,7 @@ export function parseJsonFile(file) {
       try {
         const data = JSON.parse(e.target.result);
         resolve(data);
-      } catch (error) {
+      } catch {
         reject(new Error('Invalid JSON file'));
       }
     };

@@ -1,5 +1,5 @@
 import storage from './storage.js';
-import { generateId, formatDate, formatRelativeTime } from './helpers.js';
+import { generateId, formatRelativeTime } from './helpers.js';
 import { LIMITS, EVENTS, HISTORY_STATUS } from './constants.js';
 
 class HistoryManager {

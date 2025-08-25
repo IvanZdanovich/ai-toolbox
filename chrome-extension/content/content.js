@@ -457,5 +457,3 @@ const aiToolboxContent = new AIToolboxContent();
 window.addEventListener('beforeunload', () => {
   aiToolboxContent.cleanup();
 });
-
-export default aiToolboxContent;

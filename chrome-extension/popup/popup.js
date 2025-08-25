@@ -2,7 +2,7 @@ import templateManager from '../shared/template-manager.js';
 import historyManager from '../shared/history-manager.js';
 import aiService from '../shared/ai-service.js';
 import storage from '../shared/storage.js';
-import { formatRelativeTime, truncateText, debounce, copyToClipboard, downloadAsJson, parseJsonFile } from '../shared/helpers.js';
+import { formatRelativeTime, truncateText, debounce, copyToClipboard } from '../shared/helpers.js';
 import { EVENTS, HISTORY_STATUS } from '../shared/constants.js';
 import Toast from './components/toast.js';
 import Modal from './components/modal.js';
@@ -30,7 +30,6 @@ class PopupApp {
       ]);
       
       await this.loadData();
-      this.applyTheme(this.settings.theme);
       this.setupEventListeners();
       this.render();
       
@@ -455,7 +454,13 @@ class PopupApp {
   }
 
   async deleteTemplate(templateId) {
-    if (confirm('Are you sure you want to delete this template?')) {
+    const confirmed = await Modal.confirm(
+      'Delete Template',
+      'Are you sure you want to delete this template? This action cannot be undone.',
+      { confirmText: 'Delete', confirmClass: 'btn-danger' }
+    );
+    
+    if (confirmed) {
       try {
         await templateManager.deleteTemplate(templateId);
       } catch (error) {
@@ -593,7 +598,12 @@ class PopupApp {
   }
 
   async deleteHistoryEntry(entryId) {
-    if (confirm('Are you sure you want to delete this history entry?')) {
+    const confirmed = await Modal.confirm(
+      'Delete History Entry',
+      'Are you sure you want to delete this history entry?'
+    );
+    
+    if (confirmed) {
       try {
         await historyManager.deleteHistoryEntry(entryId);
       } catch (error) {
@@ -604,7 +614,13 @@ class PopupApp {
   }
 
   async clearHistory() {
-    if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
+    const confirmed = await Modal.confirm(
+      'Clear All History',
+      'Are you sure you want to clear all history? This cannot be undone.',
+      { confirmText: 'Clear All', confirmClass: 'btn-danger' }
+    );
+    
+    if (confirmed) {
       try {
         const clearedCount = await historyManager.clearHistory();
         Toast.show(`Cleared ${clearedCount} history entries`, 'success');
@@ -622,18 +638,6 @@ class PopupApp {
     });
   }
 
-  applyTheme(theme) {
-    const root = document.documentElement;
-    
-    if (theme === 'light') {
-      root.setAttribute('data-theme', 'light');
-    } else if (theme === 'dark') {
-      root.setAttribute('data-theme', 'dark');
-    } else {
-      // Auto - remove the attribute to let CSS media query handle it
-      root.removeAttribute('data-theme');
-    }
-  }
 
   // Debug function to test storage persistence
   async testStoragePersistence() {

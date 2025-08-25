@@ -53,7 +53,9 @@
         </button>
         <div class="header-text">
           <h1 class="settings-title">Settings</h1>
-          <p class="settings-subtitle">Configure your AI Toolbox preferences</p>
+        </div>
+        <div class="header-actions">
+          <button type="submit" class="btn btn-primary btn-small" id="saveSettingsBtn" form="settingsForm">Save</button>
         </div>
       </div>
     </header>
@@ -64,119 +66,94 @@
         <!-- AI Provider Section -->
         <section class="settings-section">
           <h2 class="section-title">AI Provider</h2>
-          <div class="section-content">
-            <div class="form-group">
-              <label class="form-label" for="aiProvider">Provider</label>
-              <select id="aiProvider" class="form-input">
-                <!-- Options will be populated dynamically -->
-              </select>
-              <div id="providerDescription" class="provider-description">
-                <!-- Provider description will appear here -->
-              </div>
+          <div class="form-group">
+            <label class="form-label" for="aiProvider">Provider</label>
+            <select id="aiProvider" class="form-input">
+              <!-- Options will be populated dynamically -->
+            </select>
+            <div id="providerDescription" class="provider-description">
+              <!-- Provider description will appear here -->
             </div>
-            
-            <div class="form-group" id="apiKeyGroup">
-              <label class="form-label" for="apiKey">
-                API Key
-                <a href="#" id="apiKeyHelp" class="help-link" target="_blank">Get API Key</a>
-              </label>
-              <div class="api-key-input-group">
-                <input type="password" id="apiKey" class="form-input" placeholder="Enter your API key...">
-                <button type="button" class="btn btn-small btn-secondary" id="testConnectionBtn">
-                  <span class="btn-text">Test</span>
-                </button>
-              </div>
+          </div>
+          
+          <div class="form-group" id="apiKeyGroup">
+            <label class="form-label" for="apiKey">
+              API Key
+              <a href="#" id="apiKeyHelp" class="help-link" target="_blank">Get API Key</a>
+            </label>
+            <div class="api-key-input-group">
+              <input type="password" id="apiKey" class="form-input" placeholder="Enter your API key...">
+              <button type="button" class="btn btn-small btn-secondary" id="testConnectionBtn">
+                <span class="btn-text">Test</span>
+              </button>
             </div>
-            
-            <div id="connectionStatus" class="connection-status hidden">
-              <!-- Connection test results will appear here -->
-            </div>
+          </div>
+          
+          <div id="connectionStatus" class="connection-status hidden">
+            <!-- Connection test results will appear here -->
           </div>
         </section>
 
-        <!-- Theme Section -->
-        <section class="settings-section">
-          <h2 class="section-title">Appearance</h2>
-          <div class="section-content">
-            <div class="form-group">
-              <label class="form-label" for="themeSelect">Theme</label>
-              <select id="themeSelect" class="form-input">
-                <option value="auto">Auto (System Preference)</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-              <p class="form-help">Choose your preferred theme. Auto will follow your system's dark/light mode setting.</p>
-            </div>
-          </div>
-        </section>
 
         <!-- Backup & Restore Section -->
         <section class="settings-section">
           <h2 class="section-title">Backup & Restore</h2>
-          <div class="section-content">
-            <div class="form-group">
-              <label class="form-label">Data Management</label>
-              <div class="button-group">
-                <button type="button" class="btn btn-secondary btn-small" id="exportDataBtn">
-                  <svg class="icon icon--sm"><use href="#icon-export"></use></svg>Export Data
-                </button>
-                <button type="button" class="btn btn-secondary btn-small" id="importDataBtn">
-                  <svg class="icon icon--sm"><use href="#icon-import"></use></svg>Import Data
-                </button>
-              </div>
-              <input type="file" id="importFileInput" accept=".json" class="hidden">
-              <p class="form-help">Export your templates and history as a JSON file or import from a backup.</p>
+          <div class="form-group">
+            <label class="form-label">Data Management</label>
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary btn-small" id="exportDataBtn">
+                <svg class="icon icon--sm"><use href="#icon-export"></use></svg>Export Data
+              </button>
+              <button type="button" class="btn btn-secondary btn-small" id="importDataBtn">
+                <svg class="icon icon--sm"><use href="#icon-import"></use></svg>Import Data
+              </button>
             </div>
+            <input type="file" id="importFileInput" accept=".json" class="hidden">
+            <p class="form-help">Export your templates and history as a JSON file or import from a backup.</p>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label">Chrome Storage Usage</label>
-              <div id="storageInfo" class="storage-info">
-                <!-- Storage usage information will appear here -->
-              </div>
-              <p class="form-help">Chrome extensions have a 100KB sync storage limit across devices.</p>
+          <div class="form-group">
+            <label class="form-label">Chrome Storage Usage</label>
+            <div id="storageInfo" class="storage-info">
+              <!-- Storage usage information will appear here -->
             </div>
+            <p class="form-help">Chrome extensions have a 100KB sync storage limit across devices.</p>
           </div>
         </section>
 
         <!-- Support Section -->
         <section class="settings-section">
           <h2 class="section-title">Support the Project</h2>
-          <div class="section-content">
-            <div class="form-group">
-              <div class="support-content">
-                <div class="support-item">
-                  <div class="support-text">
-                    <p>If you find AI Toolbox helpful, consider supporting its development!</p>
-                    <div class="support-links">
-                      <a href="https://buymeacoffee.com/ivanzdanovich" target="_blank" class="support-link coffee-link">
-                        <svg class="icon icon--sm"><use href="#icon-coffee"></use></svg>Buy me a coffee
-                      </a>
-                    </div>
-                  </div>
-                  <div class="qr-container">
-                    <img src="../icons/bmc_qr.png" alt="Buy me a coffee QR Code" class="qr-code" />
+          <div class="form-group">
+            <div class="support-content">
+              <div class="support-item">
+                <div class="support-text">
+                  <p>If you find AI Toolbox helpful, consider supporting its development!</p>
+                  <div class="support-links">
+                    <a href="https://buymeacoffee.com/ivanzdanovich" target="_blank" class="support-link coffee-link">
+                      <svg class="icon icon--sm"><use href="#icon-coffee"></use></svg>Buy me a coffee
+                    </a>
                   </div>
                 </div>
-                <div class="github-support">
-                  <p>Help improve AI Toolbox:</p>
-                  <div class="github-links">
-                    <a href="https://github.com/IvanZdanovich/ai-toolbox" target="_blank" class="support-link github-link">
-                      <svg class="icon icon--sm"><use href="#icon-star"></use></svg>Star the repository
-                    </a>
-                    <a href="https://github.com/IvanZdanovich/ai-toolbox/issues" target="_blank" class="support-link github-link">
-                      <svg class="icon icon--sm"><use href="#icon-github"></use></svg>Report issues & suggestions
-                    </a>
-                  </div>
+                <div class="qr-container">
+                  <img src="../icons/bmc_qr.png" alt="Buy me a coffee QR Code" class="qr-code" />
+                </div>
+              </div>
+              <div class="github-support">
+                <p>Help improve AI Toolbox:</p>
+                <div class="github-links">
+                  <a href="https://github.com/IvanZdanovich/ai-toolbox" target="_blank" class="support-link github-link">
+                    <svg class="icon icon--sm"><use href="#icon-star"></use></svg>Star the repository
+                  </a>
+                  <a href="https://github.com/IvanZdanovich/ai-toolbox/issues" target="_blank" class="support-link github-link">
+                    <svg class="icon icon--sm"><use href="#icon-github"></use></svg>Report issues & suggestions
+                  </a>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Save Button -->
-        <div class="settings-actions">
-          <button type="submit" class="btn btn-primary btn-large">Save Settings</button>
-        </div>
       </form>
     </main>
   </div>
