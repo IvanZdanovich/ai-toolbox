@@ -88,6 +88,7 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .history-entry:hover {

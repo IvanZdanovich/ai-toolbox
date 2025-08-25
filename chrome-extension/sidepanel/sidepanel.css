@@ -204,24 +204,25 @@ html {
 }
 
 .template-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .template-card:hover {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: var(--bg-primary);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-background);
 }
 
 .template-card:hover .template-card-title {
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .template-card-header {
@@ -285,24 +286,25 @@ html {
 }
 
 .history-entry {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .history-entry:hover {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: var(--bg-primary);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-background);
 }
 
 .history-entry:hover .history-entry-title {
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .history-entry-header {
