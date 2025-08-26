@@ -336,7 +336,11 @@ class AIToolboxBackground {
   setBadge(text, color) {
     if (chrome.action) {
       chrome.action.setBadgeText({ text });
-      chrome.action.setBadgeBackgroundColor({ color });
+      
+      // Only set badge background color if a valid color is provided
+      if (color && color.trim() !== '') {
+        chrome.action.setBadgeBackgroundColor({ color });
+      }
     }
   }
 
