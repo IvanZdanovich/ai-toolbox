@@ -133,14 +133,14 @@ body {
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     box-sizing: border-box;
 }
 
 .settings-form {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-sm);
 }
 
 .settings-section {
@@ -166,7 +166,6 @@ body {
     margin: 0 0 var(--spacing-md) 0;
     line-height: 1.2;
 }
-
 
 .form-group {
     margin-bottom: var(--spacing-lg);
@@ -481,21 +480,12 @@ body {
         text-overflow: ellipsis;
     }
 
-    .settings-content {
-        padding: var(--spacing-sm);
-    }
-
     .settings-form {
         gap: var(--spacing-md);
     }
 
     .section-title {
         font-size: var(--font-size-sm);
-    }
-
-
-    .form-group {
-        margin-bottom: var(--spacing-md);
     }
 
     .api-key-input-group {
