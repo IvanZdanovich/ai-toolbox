@@ -1,174 +1,244 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Toolbox - Side Panel</title>
-  <link rel="stylesheet" href="../styles/variables.css">
-  <link rel="stylesheet" href="../styles/base.css">
-  <link rel="stylesheet" href="../styles/components.css">
-  <link rel="stylesheet" href="sidepanel.css">
-</head>
-<body>
-  <div class="sidepanel-container">
-    <!-- Navigation -->
-    <nav class="nav-tabs">
-      <button class="nav-tab active" data-section="templates">Templates</button>
-      <button class="nav-tab" data-section="history">History</button>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="sidepanel-content">
-      <!-- Templates Section -->
-      <section id="templates" class="section active">
-        <div class="section-header">
-          <button class="btn btn-primary btn-small" id="createTemplateBtn">
-            <span class="btn-icon">+</span>New Template
-          </button>
-          <div class="search-box">
-            <input type="text" id="templateSearch" class="form-input" placeholder="Search templates...">
-          </div>
-        </div>
-        
-        <div id="templatesList" class="templates-list">
-          <!-- Template cards will be rendered here -->
-        </div>
-        
-        <div id="templatesEmpty" class="empty-state hidden">
-          <h3>No templates found</h3>
-          <p>Create your first template to get started</p>
-        </div>
-      </section>
-
-      <!-- History Section -->
-      <section id="history" class="section">
-        <div class="section-header">
-          <button class="btn btn-secondary btn-small" id="clearHistoryBtn">
-            Clear All
-          </button>
-          <div class="search-box">
-            <input type="text" id="historySearch" class="form-input" placeholder="Search history...">
-          </div>
-        </div>
-        
-        <div id="historyList" class="history-list">
-          <!-- History entries will be rendered here -->
-        </div>
-        
-        <div id="historyEmpty" class="empty-state hidden">
-          <h3>No history found</h3>
-          <p>Execute templates to see your history here</p>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="sidepanel-footer">
-      <div class="footer-content">
-        <div class="footer-spacer"></div>
-        <button class="footer-btn footer-btn-right" id="settingsBtn" title="Settings">
-          ⚙️
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Toolbox - Side Panel</title>
+    <link rel="stylesheet" href="../styles/variables.css" />
+    <link rel="stylesheet" href="../styles/base.css" />
+    <link rel="stylesheet" href="../styles/components.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div class="sidepanel-container">
+      <!-- Navigation -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-section="templates">
+          Templates
         </button>
-      </div>
-    </footer>
-  </div>
+        <button class="nav-tab" data-section="history">History</button>
+      </nav>
 
-  <!-- Template Modal -->
-  <div id="templateModal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title" id="templateModalTitle">Create Template</h2>
-        <button class="modal-close" id="templateModalClose">×</button>
-      </div>
-      <div class="modal-body">
-        <form id="templateForm">
-          <div class="form-group">
-            <label class="form-label" for="templateName">Template Name</label>
-            <input type="text" id="templateName" class="form-input" required maxlength="50">
-          </div>
-          
-          <div class="form-group">
-            <div class="form-label-group">
-              <label class="form-label" for="templateDescription">Description (optional)</label>
-              <button type="button" class="btn btn-small btn-secondary generate-btn" id="generateDescriptionBtn" title="Generate description from template name">
-                <span class="btn-icon">✨</span>Generate
-              </button>
+      <!-- Main Content -->
+      <main class="sidepanel-content">
+        <!-- Templates Section -->
+        <section id="templates" class="section active">
+          <div class="section-header">
+            <button class="btn btn-primary btn-small" id="createTemplateBtn">
+              <span class="btn-icon">+</span>New Template
+            </button>
+            <div class="search-box">
+              <input
+                type="text"
+                id="templateSearch"
+                class="form-input"
+                placeholder="Search templates..."
+              />
             </div>
-            <input type="text" id="templateDescription" class="form-input" maxlength="200">
           </div>
-          
-          <div class="form-group">
-            <div class="form-label-group">
-              <label class="form-label" for="templatePrompt">Prompt</label>
-              <button type="button" class="btn btn-small btn-secondary generate-btn" id="generatePromptBtn" title="Generate prompt from template name and description">
-                <span class="btn-icon">✨</span>Generate
-              </button>
+
+          <div id="templatesList" class="templates-list">
+            <!-- Template cards will be rendered here -->
+          </div>
+
+          <div id="templatesEmpty" class="empty-state hidden">
+            <h3>No templates found</h3>
+            <p>Create your first template to get started</p>
+          </div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="section">
+          <div class="section-header">
+            <button class="btn btn-secondary btn-small" id="clearHistoryBtn">
+              Clear All
+            </button>
+            <div class="search-box">
+              <input
+                type="text"
+                id="historySearch"
+                class="form-input"
+                placeholder="Search history..."
+              />
             </div>
-            <p class="form-help">Use {variable_name} for dynamic inputs</p>
-            <textarea id="templatePrompt" class="form-textarea" required maxlength="2000" rows="4"></textarea>
           </div>
-          
-          <div id="templateVariables" class="template-variables">
-            <!-- Variable inputs will be generated here -->
+
+          <div id="historyList" class="history-list">
+            <!-- History entries will be rendered here -->
           </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="templateModalCancel">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="templateModalSave" form="templateForm">Save Template</button>
+
+          <div id="historyEmpty" class="empty-state hidden">
+            <h3>No history found</h3>
+            <p>Execute templates to see your history here</p>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="sidepanel-footer">
+        <div class="footer-content">
+          <div class="footer-spacer"></div>
+          <button
+            class="footer-btn footer-btn-right"
+            id="settingsBtn"
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Template Modal -->
+    <div id="templateModal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title" id="templateModalTitle">Create Template</h2>
+          <button class="modal-close" id="templateModalClose">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="templateForm">
+            <div class="form-group">
+              <label class="form-label" for="templateName">Template Name</label>
+              <input
+                type="text"
+                id="templateName"
+                class="form-input"
+                required
+                maxlength="50"
+              />
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-group">
+                <label class="form-label" for="templateDescription"
+                  >Description (optional)</label
+                >
+                <button
+                  type="button"
+                  class="btn btn-small btn-secondary generate-btn"
+                  id="generateDescriptionBtn"
+                  title="Generate description from template name"
+                >
+                  <span class="btn-icon">✨</span>Generate
+                </button>
+              </div>
+              <input
+                type="text"
+                id="templateDescription"
+                class="form-input"
+                maxlength="200"
+              />
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-group">
+                <label class="form-label" for="templatePrompt">Prompt</label>
+                <button
+                  type="button"
+                  class="btn btn-small btn-secondary generate-btn"
+                  id="generatePromptBtn"
+                  title="Generate prompt from template name and description"
+                >
+                  <span class="btn-icon">✨</span>Generate
+                </button>
+              </div>
+              <p class="form-help">Use {variable_name} for dynamic inputs</p>
+              <textarea
+                id="templatePrompt"
+                class="form-textarea"
+                required
+                maxlength="2000"
+                rows="4"
+              ></textarea>
+            </div>
+
+            <div id="templateVariables" class="template-variables">
+              <!-- Variable inputs will be generated here -->
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="templateModalCancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="templateModalSave"
+            form="templateForm"
+          >
+            Save Template
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Execute Template Modal -->
-  <div id="executeModal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title" id="executeModalTitle">Execute Template</h2>
-        <button class="modal-close" id="executeModalClose">×</button>
-      </div>
-      <div class="modal-body">
-        <form id="executeForm">
-          <div id="executeInputs" class="execute-inputs">
-            <!-- Template input fields will be generated here -->
+    <!-- Execute Template Modal -->
+    <div id="executeModal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title" id="executeModalTitle">Execute Template</h2>
+          <button class="modal-close" id="executeModalClose">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="executeForm">
+            <div id="executeInputs" class="execute-inputs">
+              <!-- Template input fields will be generated here -->
+            </div>
+          </form>
+
+          <div id="executeResult" class="execute-result hidden">
+            <div class="result-header">
+              <h3>Result</h3>
+              <button class="btn btn-small btn-secondary" id="copyResultBtn">
+                Copy
+              </button>
+            </div>
+            <div id="resultContent" class="result-content"></div>
+            <div id="resultMeta" class="result-meta"></div>
           </div>
-        </form>
-        
-        <div id="executeResult" class="execute-result hidden">
-          <div class="result-header">
-            <h3>Result</h3>
-            <button class="btn btn-small btn-secondary" id="copyResultBtn">Copy</button>
+
+          <div id="executeLoading" class="execute-loading hidden">
+            <div class="loading"></div>
+            <p>Processing template...</p>
           </div>
-          <div id="resultContent" class="result-content"></div>
-          <div id="resultMeta" class="result-meta"></div>
+
+          <div id="executeError" class="execute-error hidden">
+            <p class="error-message"></p>
+          </div>
         </div>
-        
-        <div id="executeLoading" class="execute-loading hidden">
-          <div class="loading"></div>
-          <p>Processing template...</p>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="executeModalCancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="executeModalRun"
+            form="executeForm"
+          >
+            Run Template
+          </button>
         </div>
-        
-        <div id="executeError" class="execute-error hidden">
-          <p class="error-message"></p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="executeModalCancel">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="executeModalRun" form="executeForm">Run Template</button>
       </div>
     </div>
-  </div>
 
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
-
-  <!-- Toast Container -->
-  <div id="toastContainer" class="toast-container"></div>
-
-  <!-- Scripts -->
-  <script type="module" src="../popup/components/toast.js"></script>
-  <script type="module" src="../popup/components/modal.js"></script>
-  <script type="module" src="../popup/components/template-card.js"></script>
-  <script type="module" src="sidepanel.js"></script>
-</body>
+    <!-- Scripts -->
+    <script type="module" src="../popup/components/toast.js"></script>
+    <script type="module" src="../popup/components/modal.js"></script>
+    <script type="module" src="../popup/components/template-card.js"></script>
+    <script type="module" src="sidepanel.js"></script>
+  </body>
 </html>

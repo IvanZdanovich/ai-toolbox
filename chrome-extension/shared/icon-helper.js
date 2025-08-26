@@ -11,23 +11,23 @@ class IconHelper {
   static createIcon(iconName, size = 'sm', color = '', attributes = {}) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    
+
     // Set icon classes
     const classes = ['icon', `icon--${size}`];
     if (color) {
       classes.push(`icon--${color}`);
     }
     svg.className = classes.join(' ');
-    
+
     // Set icon reference
     use.setAttribute('href', `#icon-${iconName}`);
     svg.appendChild(use);
-    
+
     // Add any additional attributes
     Object.entries(attributes).forEach(([key, value]) => {
       svg.setAttribute(key, value);
     });
-    
+
     return svg;
   }
 
@@ -52,7 +52,7 @@ class IconHelper {
     const emojiMap = {
       '⚙️': 'settings',
       '✨': 'magic',
-      '📤': 'export', 
+      '📤': 'export',
       '📥': 'import',
       '☕': 'coffee',
       '⭐': 'star',
@@ -62,7 +62,7 @@ class IconHelper {
       '🗑️': 'delete',
       '📋': 'copy',
       '➕': 'add',
-      '❌': 'close'
+      '❌': 'close',
     };
 
     let result = text;
@@ -83,7 +83,7 @@ class IconHelper {
    */
   static addIconToButton(button, iconName, position = 'before', size = 'sm') {
     const icon = this.createIcon(iconName, size);
-    
+
     if (position === 'before') {
       button.insertBefore(icon, button.firstChild);
     } else {
@@ -99,19 +99,24 @@ class IconHelper {
    * @param {function} onClick - Click handler
    * @returns {HTMLElement} Button element with icon
    */
-  static createActionButton(iconName, title, className = 'action-btn', onClick = null) {
+  static createActionButton(
+    iconName,
+    title,
+    className = 'action-btn',
+    onClick = null
+  ) {
     const button = document.createElement('button');
     button.className = className;
     button.title = title;
     button.setAttribute('aria-label', title);
-    
+
     const icon = this.createIcon(iconName, 'sm');
     button.appendChild(icon);
-    
+
     if (onClick) {
       button.addEventListener('click', onClick);
     }
-    
+
     return button;
   }
 

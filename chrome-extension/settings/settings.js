@@ -12,15 +12,12 @@ class SettingsPage {
   async init() {
     try {
       console.log('SettingsPage: Starting initialization...');
-      
-      await Promise.all([
-        aiService.init(),
-        this.loadSettings()
-      ]);
-      
+
+      await Promise.all([aiService.init(), this.loadSettings()]);
+
       this.setupEventListeners();
       this.populateForm();
-      
+
       console.log('SettingsPage initialized successfully');
     } catch (error) {
       console.error('Failed to initialize SettingsPage:', error);
@@ -55,9 +52,11 @@ class SettingsPage {
     });
 
     // Test connection
-    document.getElementById('testConnectionBtn').addEventListener('click', () => {
-      this.testConnection();
-    });
+    document
+      .getElementById('testConnectionBtn')
+      .addEventListener('click', () => {
+        this.testConnection();
+      });
 
     // Data export/import
     document.getElementById('exportDataBtn').addEventListener('click', () => {
@@ -68,26 +67,29 @@ class SettingsPage {
       document.getElementById('importFileInput').click();
     });
 
-    document.getElementById('importFileInput').addEventListener('change', (e) => {
-      this.importData(e.target.files[0]);
-    });
-
+    document
+      .getElementById('importFileInput')
+      .addEventListener('change', (e) => {
+        this.importData(e.target.files[0]);
+      });
   }
 
   populateForm() {
     const providerSelect = document.getElementById('aiProvider');
     const apiKeyInput = document.getElementById('apiKey');
     const providers = aiService.getAvailableProviders();
-    
+
     // Populate AI providers
-    providerSelect.innerHTML = providers.map(provider => 
-      `<option value="${provider.id}">${provider.name}</option>`
-    ).join('');
-    
+    providerSelect.innerHTML = providers
+      .map(
+        (provider) => `<option value="${provider.id}">${provider.name}</option>`
+      )
+      .join('');
+
     // Set current values
     providerSelect.value = this.settings.provider;
     apiKeyInput.value = this.settings.apiKey || '';
-    
+
     this.updateApiKeyVisibility(this.settings.provider);
     this.updateStorageInfo();
   }
@@ -97,8 +99,8 @@ class SettingsPage {
     const apiKeyHelp = document.getElementById('apiKeyHelp');
     const providerDescription = document.getElementById('providerDescription');
     const providers = aiService.getAvailableProviders();
-    const currentProvider = providers.find(p => p.id === provider);
-    
+    const currentProvider = providers.find((p) => p.id === provider);
+
     // Update provider description
     if (currentProvider && currentProvider.description) {
       providerDescription.textContent = currentProvider.description;
@@ -106,7 +108,7 @@ class SettingsPage {
     } else {
       providerDescription.style.display = 'none';
     }
-    
+
     // Update API key visibility
     if (currentProvider && currentProvider.requiresApiKey) {
       apiKeyGroup.style.display = 'block';
@@ -125,17 +127,17 @@ class SettingsPage {
     try {
       const storageInfo = await storage.getStorageInfo();
       const storageInfoEl = document.getElementById('storageInfo');
-      
+
       if (storageInfo) {
         const percentUsed = Math.round(storageInfo.percentUsed);
         let barClass = '';
-        
+
         if (percentUsed > 90) {
           barClass = 'error';
         } else if (percentUsed > 75) {
           barClass = 'warning';
         }
-        
+
         storageInfoEl.innerHTML = `
           <div class="storage-bar">
             <div class="storage-bar-fill ${barClass}" style="width: ${percentUsed}%"></div>
@@ -155,17 +157,17 @@ class SettingsPage {
     const apiKey = document.getElementById('apiKey').value;
     const statusEl = document.getElementById('connectionStatus');
     const testBtn = document.getElementById('testConnectionBtn');
-    
+
     testBtn.disabled = true;
     testBtn.textContent = 'Testing...';
-    
+
     try {
       await aiService.updateSettings({ provider, apiKey });
       const result = await aiService.testConnection();
-      
+
       statusEl.className = `connection-status ${result.success ? 'success' : 'error'}`;
-      statusEl.textContent = result.success 
-        ? 'Connection successful!' 
+      statusEl.textContent = result.success
+        ? 'Connection successful!'
         : `Connection failed: ${result.error}`;
       statusEl.classList.remove('hidden');
     } catch (error) {
@@ -181,7 +183,7 @@ class SettingsPage {
   async saveSettings() {
     const provider = document.getElementById('aiProvider').value;
     const apiKey = document.getElementById('apiKey').value;
-    
+
     try {
       await aiService.updateSettings({ provider, apiKey });
       this.settings = await storage.getSettings();
@@ -192,32 +194,28 @@ class SettingsPage {
     }
   }
 
-
   async exportData() {
     try {
       const { templateManager } = await import('../shared/template-manager.js');
       const { historyManager } = await import('../shared/history-manager.js');
-      
-      await Promise.all([
-        templateManager.init(),
-        historyManager.init()
-      ]);
+
+      await Promise.all([templateManager.init(), historyManager.init()]);
 
       const [templates, history] = await Promise.all([
         templateManager.exportTemplates(),
-        historyManager.exportHistory()
+        historyManager.exportHistory(),
       ]);
-      
+
       const exportData = {
         templates: templates.templates,
         history: history.history,
         exportedAt: new Date().toISOString(),
-        version: '1.0.0'
+        version: '1.0.0',
       };
-      
+
       const filename = `ai-toolbox-backup-${new Date().toISOString().split('T')[0]}.json`;
       downloadAsJson(exportData, filename);
-      
+
       Toast.show('Data exported successfully', 'success');
     } catch (error) {
       console.error('Export failed:', error);
@@ -229,21 +227,26 @@ class SettingsPage {
     if (!file) {
       return;
     }
-    
+
     try {
       const data = await parseJsonFile(file);
-      
+
       if (data.templates) {
-        const { templateManager } = await import('../shared/template-manager.js');
+        const { templateManager } = await import(
+          '../shared/template-manager.js'
+        );
         await templateManager.init();
-        
+
         const result = await templateManager.importTemplates(data);
         if (result.imported.length > 0) {
           Toast.show(`Imported ${result.imported.length} templates`, 'success');
         }
         if (result.errors.length > 0) {
           console.warn('Import errors:', result.errors);
-          Toast.show(`${result.errors.length} templates failed to import`, 'warning');
+          Toast.show(
+            `${result.errors.length} templates failed to import`,
+            'warning'
+          );
         }
       }
     } catch (error) {
@@ -263,7 +266,7 @@ class SettingsPage {
     if (from === 'popup') {
       // Go back to popup in new tab
       chrome.tabs.create({
-        url: chrome.runtime.getURL('popup/popup.html')
+        url: chrome.runtime.getURL('popup/popup.html'),
       });
     } else if (from === 'sidepanel') {
       // Go back to sidepanel in current window
@@ -277,7 +280,7 @@ class SettingsPage {
         window.location.href = '../sidepanel/sidepanel.html';
       } else {
         chrome.tabs.create({
-          url: chrome.runtime.getURL('popup/popup.html')
+          url: chrome.runtime.getURL('popup/popup.html'),
         });
       }
     }
@@ -287,7 +290,7 @@ class SettingsPage {
 // Initialize the settings page when the DOM loads
 document.addEventListener('DOMContentLoaded', () => {
   const settingsPage = new SettingsPage();
-  
+
   // Expose for debugging
   window.settingsPage = settingsPage;
 });

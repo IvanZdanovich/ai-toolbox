@@ -30,6 +30,7 @@ This extension uses a comprehensive SVG icon system that automatically supports 
 ## 🚀 **Usage Examples**
 
 ### HTML Usage
+
 ```html
 <!-- Basic icon -->
 <svg class="icon icon--sm">
@@ -48,6 +49,7 @@ This extension uses a comprehensive SVG icon system that automatically supports 
 ```
 
 ### JavaScript Usage
+
 ```javascript
 import IconHelper from '../shared/icon-helper.js';
 
@@ -61,8 +63,8 @@ container.innerHTML = `<button>${addIconHTML}New Item</button>`;
 
 // Create action button with icon
 const deleteBtn = IconHelper.createActionButton(
-  'delete', 
-  'Delete item', 
+  'delete',
+  'Delete item',
   'btn btn-danger',
   () => deleteItem()
 );
@@ -72,22 +74,29 @@ const textWithIcons = IconHelper.replaceEmojiIcons('Click ⚙️ to open setting
 ```
 
 ### Button Examples
+
 ```html
 <!-- Primary button with icon -->
 <button class="btn btn-primary">
-  <svg class="icon icon--sm"><use href="../icons/icons.svg#icon-add"></use></svg>
+  <svg class="icon icon--sm">
+    <use href="../icons/icons.svg#icon-add"></use>
+  </svg>
   New Template
 </button>
 
 <!-- Secondary button with icon -->
 <button class="btn btn-secondary">
-  <svg class="icon icon--sm"><use href="../icons/icons.svg#icon-export"></use></svg>
+  <svg class="icon icon--sm">
+    <use href="../icons/icons.svg#icon-export"></use>
+  </svg>
   Export Data
 </button>
 
 <!-- Icon-only button -->
 <button class="btn btn-small" title="Settings">
-  <svg class="icon icon--md"><use href="../icons/icons.svg#icon-settings"></use></svg>
+  <svg class="icon icon--md">
+    <use href="../icons/icons.svg#icon-settings"></use>
+  </svg>
 </button>
 ```
 
@@ -104,7 +113,7 @@ const textWithIcons = IconHelper.replaceEmojiIcons('Click ⚙️ to open setting
 - `icon--primary` - Primary theme color
 - `icon--secondary` - Secondary text color
 - `icon--success` - Success state color
-- `icon--warning` - Warning state color  
+- `icon--warning` - Warning state color
 - `icon--error` - Error state color
 - `icon--muted` - Muted/disabled appearance
 
@@ -121,7 +130,7 @@ Icons automatically adapt to dark theme via:
 @media (prefers-color-scheme: dark) {
   :root {
     --color-text-primary: #f9fafb; /* Icons inherit this */
-    --color-primary: #3b82f6;      /* Primary icons use this */
+    --color-primary: #3b82f6; /* Primary icons use this */
   }
 }
 ```
@@ -147,6 +156,7 @@ chrome-extension/
 4. **Test themes** - Verify icon works in both light/dark themes
 
 Example:
+
 ```xml
 <symbol id="icon-newicon" viewBox="0 0 24 24">
   <path fill="currentColor" d="your-path-data"/>

@@ -9,22 +9,22 @@ export default [
       globals: {
         chrome: 'readonly',
         browser: true,
-        node: false
-      }
+        node: false,
+      },
     },
     rules: {
       'no-unused-vars': 'warn',
       'no-console': 'off',
       'prefer-const': 'warn',
       'no-var': 'error',
-      'eqeqeq': 'error',
-      'curly': 'error',
+      eqeqeq: 'error',
+      curly: 'error',
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-script-url': 'error',
-      'no-alert': 'warn'
-    }
+      'no-alert': 'warn',
+    },
   },
   {
     files: ['chrome-extension/**/*.js'],
@@ -54,8 +54,8 @@ export default [
         crypto: 'readonly',
         btoa: 'readonly',
         Blob: 'readonly',
-        FileReader: 'readonly'
-      }
-    }
-  }
+        FileReader: 'readonly',
+      },
+    },
+  },
 ];

@@ -9,7 +9,9 @@
     "lint:js": "eslint chrome-extension/**/*.js",
     "lint:css": "stylelint chrome-extension/**/*.css",
     "lint:html": "htmlhint chrome-extension/**/*.html",
-    "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix"
+    "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "private": true,
   "repository": {
@@ -28,6 +30,7 @@
     "@eslint/js": "^9.34.0",
     "eslint": "^9.34.0",
     "htmlhint": "^1.6.3",
+    "prettier": "^3.6.2",
     "stylelint": "^16.23.1",
     "stylelint-config-standard": "^39.0.0"
   }

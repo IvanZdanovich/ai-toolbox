@@ -25,7 +25,7 @@ class Modal {
 
     this.activeModal = modal;
     modal.classList.remove('hidden');
-    
+
     setTimeout(() => {
       modal.classList.add('show');
     }, 10);
@@ -41,15 +41,15 @@ class Modal {
 
   hide(modalId = null) {
     let modal = this.activeModal;
-    
+
     if (modalId) {
       modal = document.getElementById(modalId + 'Modal');
     }
-    
+
     if (!modal) return false;
 
     modal.classList.remove('show');
-    
+
     setTimeout(() => {
       modal.classList.add('hidden');
       if (modal === this.activeModal) {
@@ -77,11 +77,11 @@ class Modal {
     return new Promise((resolve) => {
       const modal = this.createConfirmModal(title, message, options, resolve);
       document.body.appendChild(modal);
-      
+
       setTimeout(() => {
         modal.classList.add('show');
       }, 10);
-      
+
       const confirmBtn = modal.querySelector('.confirm-btn');
       if (confirmBtn) {
         confirmBtn.focus();
@@ -133,13 +133,19 @@ class Modal {
 
   prompt(title, message, defaultValue = '', options = {}) {
     return new Promise((resolve) => {
-      const modal = this.createPromptModal(title, message, defaultValue, options, resolve);
+      const modal = this.createPromptModal(
+        title,
+        message,
+        defaultValue,
+        options,
+        resolve
+      );
       document.body.appendChild(modal);
-      
+
       setTimeout(() => {
         modal.classList.add('show');
       }, 10);
-      
+
       const input = modal.querySelector('.prompt-input');
       if (input) {
         input.focus();
@@ -168,7 +174,7 @@ class Modal {
     `;
 
     const input = modal.querySelector('.prompt-input');
-    
+
     const cleanup = () => {
       modal.classList.remove('show');
       setTimeout(() => {
@@ -190,7 +196,7 @@ class Modal {
     });
 
     modal.querySelector('.confirm-btn').addEventListener('click', submit);
-    
+
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         submit();

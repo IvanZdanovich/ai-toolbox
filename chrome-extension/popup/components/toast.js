@@ -20,7 +20,7 @@ class Toast {
 
     const id = this.generateId();
     const toast = this.createToastElement(id, message, type);
-    
+
     this.container.appendChild(toast);
     this.toasts.set(id, toast);
 
@@ -53,9 +53,9 @@ class Toast {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.setAttribute('data-toast-id', id);
-    
+
     const icon = this.getIcon(type);
-    
+
     toast.innerHTML = `
       <div class="toast-content">
         <span class="toast-icon">${icon}</span>
@@ -79,7 +79,7 @@ class Toast {
       success: '✓',
       error: '✗',
       warning: '⚠',
-      info: 'ℹ'
+      info: 'ℹ',
     };
     return icons[type] || icons.info;
   }
@@ -87,16 +87,19 @@ class Toast {
   animateIn(toast) {
     toast.style.opacity = '0';
     toast.style.transform = 'translateX(100%)';
-    
-    const animation = toast.animate([
-      { opacity: 0, transform: 'translateX(100%)' },
-      { opacity: 1, transform: 'translateX(0)' }
-    ], {
-      duration: 300,
-      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      fill: 'forwards'
-    });
-    
+
+    const animation = toast.animate(
+      [
+        { opacity: 0, transform: 'translateX(100%)' },
+        { opacity: 1, transform: 'translateX(0)' },
+      ],
+      {
+        duration: 300,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        fill: 'forwards',
+      }
+    );
+
     animation.onfinish = () => {
       toast.style.opacity = '1';
       toast.style.transform = 'translateX(0)';
@@ -104,15 +107,18 @@ class Toast {
   }
 
   animateOut(toast, callback) {
-    const animation = toast.animate([
-      { opacity: 1, transform: 'translateX(0)' },
-      { opacity: 0, transform: 'translateX(100%)' }
-    ], {
-      duration: 200,
-      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      fill: 'forwards'
-    });
-    
+    const animation = toast.animate(
+      [
+        { opacity: 1, transform: 'translateX(0)' },
+        { opacity: 0, transform: 'translateX(100%)' },
+      ],
+      {
+        duration: 200,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        fill: 'forwards',
+      }
+    );
+
     animation.onfinish = callback;
   }
 

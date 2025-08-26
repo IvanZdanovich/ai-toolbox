@@ -8,12 +8,14 @@ class AIToolboxContent {
   }
 
   init() {
-    if (this.initialized) {return;}
-    
+    if (this.initialized) {
+      return;
+    }
+
     this.setupEventListeners();
     this.setupMessageListeners();
     this.initialized = true;
-    
+
     console.log('AI Toolbox content script initialized');
   }
 
@@ -81,7 +83,7 @@ class AIToolboxContent {
   handleTextSelection() {
     const selection = window.getSelection();
     const selectedText = selection.toString().trim();
-    
+
     if (selectedText && selectedText !== this.selectedText) {
       this.selectedText = selectedText;
       this.notifySelectionChange(selectedText);
@@ -96,7 +98,7 @@ class AIToolboxContent {
         action: 'updateContextMenu',
         selectedText: this.selectedText,
         pageUrl: window.location.href,
-        pageTitle: document.title
+        pageTitle: document.title,
       });
     }
   }
@@ -106,14 +108,16 @@ class AIToolboxContent {
     return {
       text: selection.toString().trim(),
       html: this.getSelectionHTML(),
-      range: this.getSelectionRange()
+      range: this.getSelectionRange(),
     };
   }
 
   getSelectionHTML() {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) {return '';}
-    
+    if (selection.rangeCount === 0) {
+      return '';
+    }
+
     const range = selection.getRangeAt(0);
     const clonedSelection = range.cloneContents();
     const div = document.createElement('div');
@@ -123,14 +127,16 @@ class AIToolboxContent {
 
   getSelectionRange() {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) {return null;}
-    
+    if (selection.rangeCount === 0) {
+      return null;
+    }
+
     const range = selection.getRangeAt(0);
     return {
       startContainer: this.getNodePath(range.startContainer),
       startOffset: range.startOffset,
       endContainer: this.getNodePath(range.endContainer),
-      endOffset: range.endOffset
+      endOffset: range.endOffset,
     };
   }
 
@@ -158,16 +164,18 @@ class AIToolboxContent {
     try {
       const startNode = this.getNodeFromPath(rangeData.startContainer);
       const endNode = this.getNodeFromPath(rangeData.endContainer);
-      
-      if (!startNode || !endNode) {return false;}
-      
+
+      if (!startNode || !endNode) {
+        return false;
+      }
+
       const range = document.createRange();
       range.setStart(startNode, rangeData.startOffset);
       range.setEnd(endNode, rangeData.endOffset);
-      
+
       range.deleteContents();
       range.insertNode(document.createTextNode(text));
-      
+
       return true;
     } catch (error) {
       console.error('Failed to insert text at range:', error);
@@ -189,28 +197,36 @@ class AIToolboxContent {
 
   replaceSelection(text) {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) {return false;}
-    
+    if (selection.rangeCount === 0) {
+      return false;
+    }
+
     const range = selection.getRangeAt(0);
     range.deleteContents();
     range.insertNode(document.createTextNode(text));
-    
+
     selection.removeAllRanges();
     return true;
   }
 
   insertAtCursor(text) {
     const activeElement = document.activeElement;
-    
-    if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+
+    if (
+      activeElement &&
+      (activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'INPUT')
+    ) {
       const start = activeElement.selectionStart;
       const end = activeElement.selectionEnd;
       const currentValue = activeElement.value;
-      
-      activeElement.value = currentValue.substring(0, start) + text + currentValue.substring(end);
-      activeElement.selectionStart = activeElement.selectionEnd = start + text.length;
+
+      activeElement.value =
+        currentValue.substring(0, start) + text + currentValue.substring(end);
+      activeElement.selectionStart = activeElement.selectionEnd =
+        start + text.length;
       activeElement.focus();
-      
+
       activeElement.dispatchEvent(new Event('input', { bubbles: true }));
       return true;
     } else if (activeElement && activeElement.isContentEditable) {
@@ -225,14 +241,14 @@ class AIToolboxContent {
         return true;
       }
     }
-    
+
     this.showInsertionToast(text);
     return false;
   }
 
   showProcessingOverlay(template, selectedText) {
     this.hideOverlay();
-    
+
     const overlay = this.createOverlay();
     overlay.innerHTML = `
       <div class="ai-toolbox-overlay">
@@ -255,14 +271,14 @@ class AIToolboxContent {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(overlay);
     this.overlayVisible = true;
-    
+
     overlay.querySelector('.ai-toolbox-close').addEventListener('click', () => {
       this.hideOverlay();
     });
-    
+
     setTimeout(() => {
       overlay.classList.add('visible');
     }, 10);
@@ -270,7 +286,7 @@ class AIToolboxContent {
 
   showResultOverlay(template, selectedText, result) {
     this.hideOverlay();
-    
+
     const overlay = this.createOverlay();
     overlay.innerHTML = `
       <div class="ai-toolbox-overlay">
@@ -294,31 +310,34 @@ class AIToolboxContent {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(overlay);
     this.overlayVisible = true;
-    
+
     const closeBtn = overlay.querySelector('.ai-toolbox-close');
     const insertBtn = overlay.querySelector('[data-action="insert"]');
     const copyBtn = overlay.querySelector('[data-action="copy"]');
     const closeActionBtn = overlay.querySelector('[data-action="close"]');
-    
+
     closeBtn.addEventListener('click', () => this.hideOverlay());
     closeActionBtn.addEventListener('click', () => this.hideOverlay());
-    
+
     insertBtn.addEventListener('click', () => {
       this.insertText(result);
       this.hideOverlay();
     });
-    
+
     copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(result).then(() => {
-        this.showToast('Result copied to clipboard', 'success');
-      }).catch(() => {
-        this.showToast('Failed to copy result', 'error');
-      });
+      navigator.clipboard
+        .writeText(result)
+        .then(() => {
+          this.showToast('Result copied to clipboard', 'success');
+        })
+        .catch(() => {
+          this.showToast('Failed to copy result', 'error');
+        });
     });
-    
+
     setTimeout(() => {
       overlay.classList.add('visible');
     }, 10);
@@ -326,7 +345,7 @@ class AIToolboxContent {
 
   showErrorOverlay(template, selectedText, error) {
     this.hideOverlay();
-    
+
     const overlay = this.createOverlay();
     overlay.innerHTML = `
       <div class="ai-toolbox-overlay ai-toolbox-error">
@@ -347,18 +366,20 @@ class AIToolboxContent {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(overlay);
     this.overlayVisible = true;
-    
+
     overlay.querySelector('.ai-toolbox-close').addEventListener('click', () => {
       this.hideOverlay();
     });
-    
-    overlay.querySelector('[data-action="close"]').addEventListener('click', () => {
-      this.hideOverlay();
-    });
-    
+
+    overlay
+      .querySelector('[data-action="close"]')
+      .addEventListener('click', () => {
+        this.hideOverlay();
+      });
+
     setTimeout(() => {
       overlay.classList.add('visible');
     }, 10);
@@ -389,7 +410,7 @@ class AIToolboxContent {
     toast.className = `ai-toolbox-toast ai-toolbox-toast-${type}`;
     toast.textContent = message;
     toast.style.cursor = 'pointer';
-    
+
     // Make toast clickable to close
     const closeToast = () => {
       toast.classList.remove('visible');
@@ -399,15 +420,15 @@ class AIToolboxContent {
         }
       }, 200);
     };
-    
+
     toast.addEventListener('click', closeToast);
-    
+
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
       toast.classList.add('visible');
     }, 10);
-    
+
     // Auto-close after 4 seconds
     setTimeout(closeToast, 4000);
   }
@@ -422,7 +443,7 @@ class AIToolboxContent {
       action: 'processTemplate',
       templateId,
       selectedText,
-      pageUrl: window.location.href
+      pageUrl: window.location.href,
     });
   }
 
@@ -430,12 +451,14 @@ class AIToolboxContent {
     chrome.runtime.sendMessage({
       action: 'textSelected',
       selectedText,
-      pageUrl: window.location.href
+      pageUrl: window.location.href,
     });
   }
 
   escapeHtml(text) {
-    if (!text) {return '';}
+    if (!text) {
+      return '';
+    }
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -444,7 +467,7 @@ class AIToolboxContent {
   cleanup() {
     this.hideOverlay();
     const toasts = document.querySelectorAll('.ai-toolbox-toast');
-    toasts.forEach(toast => {
+    toasts.forEach((toast) => {
       if (toast.parentNode) {
         toast.parentNode.removeChild(toast);
       }

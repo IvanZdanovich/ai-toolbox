@@ -12,7 +12,7 @@ class TemplateCard {
       onEdit: null,
       onDuplicate: null,
       onDelete: null,
-      ...options
+      ...options,
     };
   }
 
@@ -20,15 +20,19 @@ class TemplateCard {
     const card = document.createElement('div');
     card.className = 'template-card';
     card.setAttribute('data-template-id', this.template.id);
-    
+
     card.innerHTML = `
       <div class="template-card-header">
         <h3 class="template-card-title">${this.escapeHtml(this.template.name)}</h3>
         ${this.options.showActions ? this.renderActions() : ''}
       </div>
-      ${this.options.showDescription && this.template.description ? `
+      ${
+        this.options.showDescription && this.template.description
+          ? `
         <p class="template-card-description">${this.escapeHtml(this.template.description)}</p>
-      ` : ''}
+      `
+          : ''
+      }
       ${this.options.showMeta ? this.renderMeta() : ''}
     `;
 
@@ -53,9 +57,13 @@ class TemplateCard {
   }
 
   renderMeta() {
-    const variableCount = this.template.inputs ? this.template.inputs.length : 0;
-    const createdTime = this.template.createdAt ? formatRelativeTime(this.template.createdAt) : 'Unknown';
-    
+    const variableCount = this.template.inputs
+      ? this.template.inputs.length
+      : 0;
+    const createdTime = this.template.createdAt
+      ? formatRelativeTime(this.template.createdAt)
+      : 'Unknown';
+
     return `
       <p class="template-card-meta">
         Variables: ${variableCount} • 
@@ -101,7 +109,9 @@ class TemplateCard {
 
   update(template) {
     this.template = template;
-    const existingCard = document.querySelector(`[data-template-id="${template.id}"]`);
+    const existingCard = document.querySelector(
+      `[data-template-id="${template.id}"]`
+    );
     if (existingCard) {
       const newCard = this.render();
       existingCard.parentNode.replaceChild(newCard, existingCard);
@@ -111,7 +121,9 @@ class TemplateCard {
   }
 
   destroy() {
-    const card = document.querySelector(`[data-template-id="${this.template.id}"]`);
+    const card = document.querySelector(
+      `[data-template-id="${this.template.id}"]`
+    );
     if (card && card.parentNode) {
       card.parentNode.removeChild(card);
     }
@@ -131,7 +143,7 @@ class TemplateCard {
     }
 
     container.innerHTML = '';
-    
+
     if (templates.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -142,7 +154,7 @@ class TemplateCard {
       return [];
     }
 
-    const cards = templates.map(template => {
+    const cards = templates.map((template) => {
       const card = new TemplateCard(template, options);
       const element = card.render();
       container.appendChild(element);
