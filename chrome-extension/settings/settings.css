@@ -150,6 +150,7 @@ body {
   padding: var(--spacing-md);
   transition: all var(--transition-fast);
   transform: translateY(0);
+  animation: slide-in-up var(--transition-normal) ease-out;
 }
 
 .settings-section:hover {
@@ -207,7 +208,7 @@ body {
 .form-textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgb(59, 130, 246, 0.1);
 }
 
 .form-help {
@@ -387,14 +388,14 @@ body {
 }
 
 .coffee-link {
-  background-color: #ffdd44;
+  background-color: #fd4;
   color: #333;
-  border-color: #ffdd44;
+  border-color: #fd4;
 }
 
 .coffee-link:hover {
-  background-color: #ffcc11;
-  border-color: #ffcc11;
+  background-color: #fc1;
+  border-color: #fc1;
   transform: translateY(-1px);
 }
 
@@ -516,7 +517,7 @@ body {
   }
 
   /* Ensure Save Settings button fits */
-  #saveSettingsBtn {
+  #save-settings-btn {
     font-size: var(--font-size-xs);
     padding: var(--spacing-xs) var(--spacing-sm);
     white-space: nowrap;
@@ -572,11 +573,6 @@ body {
   outline-offset: 2px;
 }
 
-.form-input:focus,
-.form-textarea:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
 
 /* Animation for sections */
 @keyframes slide-in-up {
@@ -584,12 +580,10 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.settings-section {
-  animation: slide-in-up var(--transition-normal) ease-out;
-}

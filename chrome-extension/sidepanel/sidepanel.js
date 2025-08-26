@@ -171,7 +171,7 @@ class SidePanelApp {
     });
 
     // History manager events
-    historyManager.on(EVENTS.HISTORY_UPDATED, (data) => {
+    historyManager.on(EVENTS.HISTORY_UPDATED, () => {
       this.loadData().then(() => {
         if (this.currentSection === 'history') {
           this.renderHistory();

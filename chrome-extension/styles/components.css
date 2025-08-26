@@ -121,7 +121,7 @@ select.form-input {
   cursor: pointer;
   transition: all var(--transition-fast);
   transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
 }
 
 .template-card:hover {
@@ -129,10 +129,6 @@ select.form-input {
   box-shadow: var(--shadow-lg);
   background-color: var(--color-background);
   transform: translateY(-1px);
-}
-
-.template-card:hover .template-card-title {
-  color: var(--color-primary);
 }
 
 .template-card-header {
@@ -147,6 +143,10 @@ select.form-input {
   font-weight: var(--font-weight-semibold);
   margin: 0;
   color: var(--color-text-primary);
+}
+
+.template-card:hover .template-card-title {
+  color: var(--color-primary);
 }
 
 .template-card-actions {

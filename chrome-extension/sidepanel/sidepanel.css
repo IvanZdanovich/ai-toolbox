@@ -145,10 +145,6 @@ html {
   order: 3;
 }
 
-.footer-spacer {
-  flex: 1;
-}
-
 /* Main Content */
 .sidepanel-content {
   flex: 1;
@@ -210,7 +206,7 @@ html {
   cursor: pointer;
   transition: all var(--transition-fast);
   transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
 }
 
 .template-card:hover {
@@ -292,7 +288,7 @@ html {
   cursor: pointer;
   transition: all var(--transition-fast);
   transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
 }
 
 .history-entry:hover {
@@ -527,6 +523,7 @@ html {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -611,26 +608,6 @@ html {
   text-decoration: underline;
 }
 
-/* Simplified Storage Info */
-.storage-info {
-  background: var(--bg-secondary);
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-primary);
-}
-
-.storage-text {
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  text-align: center;
-  font-weight: normal;
-  margin: 0;
-}
-
-/* Remove storage details grid */
-.storage-details {
-  display: none;
-}
 
 /* Button groups alignment */
 .button-group {
