@@ -447,7 +447,7 @@ html {
 /* Settings Modal Sections */
 .settings-section {
   margin-bottom: 0;
-  padding: 1rem 0;
+  padding: var(--spacing-sm) 0;
 }
 
 .settings-section:first-child {
