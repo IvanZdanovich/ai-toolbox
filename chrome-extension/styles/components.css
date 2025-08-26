@@ -118,7 +118,6 @@ select.form-input {
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
   cursor: pointer;
   transition: all var(--transition-fast);
   transform: translateY(0);
