@@ -45,16 +45,7 @@ html {
   width: 100%;
 }
 
-/* Flexible section headers */
-.section-header {
-  flex-wrap: wrap;
-}
-
-/* Responsive search boxes */
-.search-box {
-  min-width: 150px;
-  flex: 1;
-}
+/* Flexible section headers and responsive search boxes */
 
 /* Flexible template and history cards */
 .template-card,
@@ -167,6 +158,7 @@ html {
   margin-bottom: var(--spacing-sm);
   gap: var(--spacing-sm);
   min-height: 2.5rem; /* Consistent height for all section headers */
+  flex-wrap: wrap;
 }
 
 .section-header h2 {
@@ -180,6 +172,7 @@ html {
 .search-box {
   flex: 1;
   max-width: 300px;
+  min-width: 150px;
 }
 
 .search-box .form-input {
@@ -216,10 +209,6 @@ html {
   background: var(--color-background);
 }
 
-.template-card:hover .template-card-title {
-  color: var(--color-primary);
-}
-
 .template-card-header {
   display: flex;
   align-items: flex-start;
@@ -233,6 +222,10 @@ html {
   color: var(--text-primary);
   margin: 0;
   flex: 1;
+}
+
+.template-card:hover .template-card-title {
+  color: var(--color-primary);
 }
 
 .template-card-actions {
@@ -298,10 +291,6 @@ html {
   background: var(--color-background);
 }
 
-.history-entry:hover .history-entry-title {
-  color: var(--color-primary);
-}
-
 .history-entry-header {
   display: flex;
   align-items: center;
@@ -314,6 +303,10 @@ html {
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+}
+
+.history-entry:hover .history-entry-title {
+  color: var(--color-primary);
 }
 
 .history-entry-time {
