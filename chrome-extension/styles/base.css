@@ -44,7 +44,7 @@ html {
 .popup-content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
 }
 
 .popup-footer {
@@ -60,7 +60,7 @@ html {
 }
 
 .app-title {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
   margin: 0;
@@ -89,7 +89,7 @@ html {
 
 .nav-tab {
   flex: 1;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   background: none;
   border: none;
   font-size: var(--font-size-sm);

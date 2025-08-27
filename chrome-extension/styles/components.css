@@ -53,11 +53,6 @@
   margin-right: var(--spacing-xs);
 }
 
-/* Form Elements */
-.form-group {
-  margin-bottom: var(--spacing-md);
-}
-
 .form-label {
   display: block;
   margin-bottom: var(--spacing-xs);
@@ -117,7 +112,7 @@ select.form-input {
   background-color: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--border-radius-lg);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
   transform: translateY(0);
@@ -202,12 +197,12 @@ select.form-input {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .modal-title {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
@@ -215,7 +210,7 @@ select.form-input {
 .modal-close {
   background: none;
   border: none;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   cursor: pointer;
   padding: var(--spacing-xs);
   color: var(--color-text-secondary);
@@ -229,13 +224,13 @@ select.form-input {
 }
 
 .modal-body {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   flex: 1;
   overflow-y: auto;
 }
 
 .modal-footer {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border-top: var(--border-width) solid var(--color-border);
   display: flex;
   justify-content: flex-end;
@@ -255,7 +250,7 @@ select.form-input {
   background-color: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--border-radius);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
   box-shadow: var(--shadow-md);
   max-width: 300px;
@@ -317,18 +312,6 @@ select.form-input {
   opacity: 0.3;
 }
 
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 /* Loading States */
 .loading {
   display: inline-block;
@@ -338,12 +321,6 @@ select.form-input {
   border-radius: 50%;
   border-top-color: var(--color-primary);
   animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* Utility Classes */

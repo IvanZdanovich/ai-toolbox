@@ -111,13 +111,12 @@ body {
     flex: 1;
     display: flex;
     align-items: center;
-    margin-left: var(--spacing-sm);
     min-width: 0;
     overflow: hidden;
 }
 
 .settings-title {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
     margin: 0;
@@ -147,7 +146,7 @@ body {
     background-color: var(--color-surface);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--border-radius-lg);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     transition: all var(--transition-fast);
     transform: translateY(0);
     animation: slide-in-up var(--transition-normal) ease-out;
@@ -169,7 +168,7 @@ body {
 }
 
 .form-group {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
 }
 
 .form-group:last-child {
@@ -344,14 +343,13 @@ body {
 .support-content {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .support-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-sm);
     padding: var(--spacing-sm);
     background-color: var(--color-background);
     border-radius: var(--border-radius);
@@ -424,7 +422,7 @@ body {
 }
 
 .github-support {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     background-color: var(--color-background);
     border-radius: var(--border-radius);
     border: 1px solid var(--color-border);
