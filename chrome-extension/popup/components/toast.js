@@ -12,10 +12,21 @@ class Toast {
     }
   }
 
-  show(message, type = 'success', duration = 4000) {
+  show(message, type = 'success', duration = null) {
     if (!this.container) {
       console.warn('Toast container not available');
       return;
+    }
+
+    // Set default durations based on type
+    if (duration === null) {
+      const defaultDurations = {
+        success: 3000,
+        error: 5000,
+        warning: 5000,
+        info: 3000,
+      };
+      duration = defaultDurations[type] || 5000;
     }
 
     const id = this.generateId();
