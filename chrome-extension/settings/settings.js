@@ -196,19 +196,15 @@ class SettingsPage {
 
   async exportData() {
     try {
-      const { templateManager } = await import('../shared/template-manager.js');
-      const { historyManager } = await import('../shared/history-manager.js');
-
-      await Promise.all([templateManager.init(), historyManager.init()]);
-
-      const [templates, history] = await Promise.all([
-        templateManager.exportTemplates(),
-        historyManager.exportHistory(),
-      ]);
+      const templateManagerModule = await import('../shared/template-manager.js');
+      const templateManager = templateManagerModule.default;
+      
+      await templateManager.init();
+      
+      const templates = await templateManager.exportTemplates();
 
       const exportData = {
         templates: templates.templates,
-        history: history.history,
         exportedAt: new Date().toISOString(),
         version: '1.0.0',
       };
@@ -232,9 +228,10 @@ class SettingsPage {
       const data = await parseJsonFile(file);
 
       if (data.templates) {
-        const { templateManager } = await import(
+        const templateManagerModule = await import(
           '../shared/template-manager.js'
         );
+        const templateManager = templateManagerModule.default;
         await templateManager.init();
 
         const result = await templateManager.importTemplates(data);

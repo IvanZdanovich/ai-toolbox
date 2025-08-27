@@ -275,8 +275,8 @@ body {
 }
 
 .connection-status.success {
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-success);
     color: var(--color-success);
 }
 
@@ -285,8 +285,8 @@ body {
 }
 
 .connection-status.error {
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-error);
     color: var(--color-error);
 }
 
