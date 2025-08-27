@@ -196,11 +196,13 @@ class SettingsPage {
 
   async exportData() {
     try {
-      const templateManagerModule = await import('../shared/template-manager.js');
+      const templateManagerModule = await import(
+        '../shared/template-manager.js'
+      );
       const templateManager = templateManagerModule.default;
-      
+
       await templateManager.init();
-      
+
       const templates = await templateManager.exportTemplates();
 
       const exportData = {

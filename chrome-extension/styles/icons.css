@@ -1,122 +1,122 @@
 /* SVG Icon System */
 .icon {
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-    fill: currentcolor;
-    vertical-align: middle;
-    transition: fill var(--transition-fast);
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  fill: currentcolor;
+  vertical-align: middle;
+  transition: fill var(--transition-fast);
 }
 
 /* Icon sizes */
 .icon--xs {
-    width: 0.75em;
-    height: 0.75em;
+  width: 0.75em;
+  height: 0.75em;
 }
 
 .icon--sm {
-    width: 1em;
-    height: 1em;
+  width: 1em;
+  height: 1em;
 }
 
 .icon--md {
-    width: 1.25em;
-    height: 1.25em;
+  width: 1.25em;
+  height: 1.25em;
 }
 
 .icon--lg {
-    width: 1.5em;
-    height: 1.5em;
+  width: 1.5em;
+  height: 1.5em;
 }
 
 .icon--xl {
-    width: 2em;
-    height: 2em;
+  width: 2em;
+  height: 2em;
 }
 
 /* Icon colors - automatically adapt to theme */
 .icon--primary {
-    color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .icon--secondary {
-    color: var(--color-text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .icon--success {
-    color: var(--color-success);
+  color: var(--color-success);
 }
 
 .icon--warning {
-    color: var(--color-warning);
+  color: var(--color-warning);
 }
 
 .icon--error {
-    color: var(--color-error);
+  color: var(--color-error);
 }
 
 .icon--muted {
-    color: var(--color-text-secondary);
-    opacity: 0.7;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
 }
 
 /* Interactive states */
 .icon--interactive {
-    cursor: pointer;
-    transition: all var(--transition-fast);
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .icon--interactive:hover {
-    opacity: 0.8;
-    transform: scale(1.1);
+  opacity: 0.8;
+  transform: scale(1.1);
 }
 
 /* Button icon spacing */
 .btn .icon {
-    margin-right: var(--spacing-xs);
+  margin-right: var(--spacing-xs);
 }
 
 .btn .icon:last-child {
-    margin-right: 0;
-    margin-left: var(--spacing-xs);
+  margin-right: 0;
+  margin-left: var(--spacing-xs);
 }
 
 .btn .icon:only-child {
-    margin: 0;
+  margin: 0;
 }
 
 /* Dark theme support - icons automatically inherit color */
 @media (prefers-color-scheme: dark) {
-    .icon {
-        /* Icons automatically adapt via currentColor */
-    }
+  .icon {
+    /* Icons automatically adapt via currentColor */
+  }
 }
 
 /* Icon-specific styles */
 .icon-settings {
-    animation: rotate-hover 0.3s ease-in-out;
+  animation: rotate-hover 0.3s ease-in-out;
 }
 
 .icon-settings:hover {
-    animation: rotate-spin 0.3s ease-in-out;
+  animation: rotate-spin 0.3s ease-in-out;
 }
 
 @keyframes rotate-hover {
-    0% {
-        transform: rotate(0deg);
-    }
+  0% {
+    transform: rotate(0deg);
+  }
 
-    100% {
-        transform: rotate(15deg);
-    }
+  100% {
+    transform: rotate(15deg);
+  }
 }
 
 @keyframes rotate-spin {
-    0% {
-        transform: rotate(0deg);
-    }
+  0% {
+    transform: rotate(0deg);
+  }
 
-    100% {
-        transform: rotate(90deg);
-    }
+  100% {
+    transform: rotate(90deg);
+  }
 }
