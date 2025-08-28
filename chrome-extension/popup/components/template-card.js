@@ -1,4 +1,4 @@
-import { formatRelativeTime, truncateText } from '../../shared/helpers.js';
+import { formatRelativeTime, truncateText, downloadAsJson } from '../../shared/helpers.js';
 import IconHelper from '../../shared/icon-helper.js';
 
 class TemplateCard {
@@ -12,6 +12,7 @@ class TemplateCard {
       onEdit: null,
       onDuplicate: null,
       onDelete: null,
+      onExport: null,
       ...options,
     };
   }
@@ -49,6 +50,9 @@ class TemplateCard {
         <button class="action-btn duplicate" data-action="duplicate" title="Duplicate template">
           ${IconHelper.iconHTML('copy', 'sm')}
         </button>
+        <button class="action-btn export" data-action="export" title="Export template">
+          ${IconHelper.iconHTML('export', 'sm')}
+        </button>
         <button class="action-btn delete" data-action="delete" title="Delete template">
           ${IconHelper.iconHTML('delete', 'sm', 'error')}
         </button>
@@ -82,6 +86,7 @@ class TemplateCard {
     if (this.options.showActions) {
       const editBtn = card.querySelector('[data-action="edit"]');
       const duplicateBtn = card.querySelector('[data-action="duplicate"]');
+      const exportBtn = card.querySelector('[data-action="export"]');
       const deleteBtn = card.querySelector('[data-action="delete"]');
 
       if (editBtn && this.options.onEdit) {
@@ -95,6 +100,17 @@ class TemplateCard {
         duplicateBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           this.options.onDuplicate(this.template);
+        });
+      }
+
+      if (exportBtn) {
+        exportBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.options.onExport) {
+            this.options.onExport(this.template);
+          } else {
+            this.exportTemplate(this.template);
+          }
         });
       }
 
@@ -126,6 +142,26 @@ class TemplateCard {
     );
     if (card && card.parentNode) {
       card.parentNode.removeChild(card);
+    }
+  }
+
+  exportTemplate(template) {
+    try {
+      const exportData = {
+        templates: [template],
+        exportedAt: new Date().toISOString(),
+        version: '1.0.0',
+      };
+
+      const sanitizedName = template.name
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+      
+      const filename = `${sanitizedName}-template.json`;
+      downloadAsJson(exportData, filename);
+    } catch (error) {
+      console.error('Export failed:', error);
     }
   }
 

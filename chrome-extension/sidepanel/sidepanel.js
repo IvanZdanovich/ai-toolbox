@@ -7,6 +7,7 @@ import {
   truncateText,
   debounce,
   copyToClipboard,
+  downloadAsJson,
 } from '../shared/helpers.js';
 import { EVENTS, HISTORY_STATUS } from '../shared/constants.js';
 import Toast from '../popup/components/toast.js';
@@ -232,6 +233,9 @@ class SidePanelApp {
             <button class="action-btn duplicate" data-action="duplicate" title="Duplicate template">
               📋
             </button>
+            <button class="action-btn export" data-action="export" title="Export template">
+              📤
+            </button>
             <button class="action-btn delete" data-action="delete" title="Delete template">
               🗑️
             </button>
@@ -323,6 +327,9 @@ class SidePanelApp {
               break;
             case 'duplicate':
               this.duplicateTemplate(templateId);
+              break;
+            case 'export':
+              this.exportTemplate(templateId);
               break;
             case 'delete':
               this.deleteTemplate(templateId);
@@ -503,6 +510,35 @@ class SidePanelApp {
     } catch (error) {
       console.error('Failed to duplicate template:', error);
       Toast.show(`Failed to duplicate template: ${error.message}`, 'error');
+    }
+  }
+
+  async exportTemplate(templateId) {
+    try {
+      const template = await templateManager.getTemplate(templateId);
+      if (!template) {
+        Toast.show('Template not found', 'error');
+        return;
+      }
+
+      const exportData = {
+        templates: [template],
+        exportedAt: new Date().toISOString(),
+        version: '1.0.0',
+      };
+
+      const sanitizedName = template.name
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+      
+      const filename = `${sanitizedName}-template.json`;
+      downloadAsJson(exportData, filename);
+      
+      Toast.show('Template exported successfully', 'success');
+    } catch (error) {
+      console.error('Failed to export template:', error);
+      Toast.show('Failed to export template', 'error');
     }
   }
 
