@@ -5,7 +5,7 @@
   justify-content: center;
   gap: var(--spacing-xs);
   height: var(--button-height);
-  padding: var(--spacing-md);
+  padding: 0 var(--spacing-sm);
   border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -42,7 +42,7 @@
 
 .btn-small {
   height: 32px;
-  padding: var(--spacing-sm);
+  padding: 0 var(--spacing-sm);
   font-size: var(--font-size-xs);
 }
 
@@ -61,10 +61,27 @@
   color: var(--color-text-primary);
 }
 
+.form-label-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  margin-bottom: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.form-label-group .form-label {
+  flex: 1;
+}
+
+.generate-btn {
+  flex-shrink: 0;
+  margin-left: var(--spacing-sm);
+}
+
 .form-input {
   width: 100%;
   height: var(--button-height);
-  margin-top: var(--spacing-sm);
   padding: var(--spacing-md);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--border-radius);
