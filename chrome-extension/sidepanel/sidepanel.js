@@ -531,10 +531,10 @@ class SidePanelApp {
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '-')
         .toLowerCase();
-      
+
       const filename = `${sanitizedName}-template.json`;
       downloadAsJson(exportData, filename);
-      
+
       Toast.show('Template exported successfully', 'success');
     } catch (error) {
       console.error('Failed to export template:', error);

@@ -24,6 +24,13 @@ class TemplateManager {
   }
 
   async seedDefaultTemplates() {
+    // Check if default templates have already been seeded
+    const alreadySeeded = await storage.getTemplatesSeeded();
+    if (alreadySeeded) {
+      return;
+    }
+
+    // Only seed if this is truly the first time (no templates and not seeded before)
     if (this.templates.length > 0) {
       return;
     }
@@ -96,6 +103,7 @@ class TemplateManager {
 
     this.templates = defaultTemplates;
     await storage.setTemplates(this.templates);
+    await storage.setTemplatesSeeded(true);
   }
 
   async getAllTemplates() {

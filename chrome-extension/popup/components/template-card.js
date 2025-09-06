@@ -1,4 +1,8 @@
-import { formatRelativeTime, truncateText, downloadAsJson } from '../../shared/helpers.js';
+import {
+  formatRelativeTime,
+  truncateText,
+  downloadAsJson,
+} from '../../shared/helpers.js';
 import IconHelper from '../../shared/icon-helper.js';
 
 class TemplateCard {
@@ -157,7 +161,7 @@ class TemplateCard {
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '-')
         .toLowerCase();
-      
+
       const filename = `${sanitizedName}-template.json`;
       downloadAsJson(exportData, filename);
     } catch (error) {

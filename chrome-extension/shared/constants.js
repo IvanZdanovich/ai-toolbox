@@ -2,6 +2,7 @@ export const STORAGE_KEYS = {
   TEMPLATES: 'templates',
   HISTORY: 'history',
   SETTINGS: 'settings',
+  TEMPLATES_SEEDED: 'templates_seeded',
 };
 
 export const AI_PROVIDERS = {

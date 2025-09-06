@@ -197,6 +197,14 @@ class ChromeStorage {
     return await this.set(STORAGE_KEYS.SETTINGS, settings);
   }
 
+  async getTemplatesSeeded() {
+    return (await this.get(STORAGE_KEYS.TEMPLATES_SEEDED)) || false;
+  }
+
+  async setTemplatesSeeded(seeded) {
+    return await this.set(STORAGE_KEYS.TEMPLATES_SEEDED, seeded);
+  }
+
   async validatePersistence() {
     console.log('Storage: Validating data persistence...');
 
