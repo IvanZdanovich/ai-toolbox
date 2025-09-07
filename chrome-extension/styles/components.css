@@ -47,8 +47,7 @@
 }
 
 .btn-icon {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-normal);
+  font-size: var(--font-size-xs);
   line-height: 1;
   margin-right: var(--spacing-xs);
 }
