@@ -1,9 +1,11 @@
 /* Content Script Styles */
+
 /* Note: Content scripts run in page context, so we define our own scoped variables */
+
 /* These values are kept in sync with ../styles/variables.css */
 
 /* ========================================
-   SCOPED CSS VARIABLES (Content Script)
+   OVERLAY CONTAINER (with scoped CSS variables)
    ======================================== */
 
 .ai-toolbox-overlay-container {
@@ -14,7 +16,7 @@
   --ai-color-success: #059669;
   --ai-color-error: #dc2626;
   --ai-color-background: #f9fafb;
-  --ai-color-surface: #ffffff;
+  --ai-color-surface: #fff;
   --ai-color-text: #111827;
   --ai-color-text-muted: #6b7280;
   --ai-color-border: #e5e7eb;
@@ -33,13 +35,8 @@
   --ai-radius: 6px;
   --ai-radius-lg: 8px;
   --ai-transition: 0.2s ease;
-}
 
-/* ========================================
-   OVERLAY CONTAINER
-   ======================================== */
-
-.ai-toolbox-overlay-container {
+  /* Overlay container styles */
   position: fixed;
   top: 0;
   left: 0;

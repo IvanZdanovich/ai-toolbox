@@ -1,4 +1,5 @@
 /* Settings Page Styles */
+
 /* Note: Uses CSS variables from ../styles/variables.css */
 
 /* ========================================
@@ -456,6 +457,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

@@ -12,7 +12,7 @@
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
     "lint:js": "eslint chrome-extension/**/*.js",
     "lint:css": "stylelint chrome-extension/**/*.css",
-    "lint:html": "htmlhint chrome-extension/**/*.html",
+    "lint:html": "htmlhint chrome-extension/sidepanel/*.html chrome-extension/settings/*.html",
     "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

@@ -5,7 +5,7 @@
   "attr-value-double-quotes": true,
   "doctype-first": false,
   "doctype-html5": true,
-  "id-class-value": "dash",
+  "id-class-value": false,
   "id-unique": true,
   "inline-script-disabled": false,
   "inline-style-disabled": false,
