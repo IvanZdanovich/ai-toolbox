@@ -102,7 +102,7 @@ class AIService {
         Authorization: `Bearer ${this.settings.apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'user',
@@ -143,7 +143,7 @@ class AIService {
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [
           {
@@ -175,7 +175,7 @@ class AIService {
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.settings.apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.settings.apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -224,7 +224,7 @@ class AIService {
     }
 
     const response = await fetch(
-      'https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf',
+      'https://api-inference.huggingface.co/models/meta-llama/Llama-3.3-70B-Instruct',
       {
         method: 'POST',
         headers: {
@@ -271,7 +271,7 @@ class AIService {
         Authorization: `Bearer ${this.settings.apiKey}`,
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: 'grok-3',
         messages: [
           {
             role: 'user',
@@ -349,22 +349,22 @@ class AIService {
       },
       {
         id: AI_PROVIDERS.OPENAI,
-        name: 'OpenAI GPT',
-        description: 'OpenAI GPT-3.5 Turbo for high-quality text generation',
+        name: 'OpenAI',
+        description: 'OpenAI API for high-quality text generation',
         requiresApiKey: true,
         apiKeyUrl: 'https://platform.openai.com/api-keys',
       },
       {
         id: AI_PROVIDERS.CLAUDE,
         name: 'Anthropic Claude',
-        description: 'Claude 3 Haiku for fast and efficient AI responses',
+        description: 'Anthropic API for safe and helpful AI responses',
         requiresApiKey: true,
         apiKeyUrl: 'https://console.anthropic.com/',
       },
       {
         id: AI_PROVIDERS.GEMINI,
         name: 'Google Gemini',
-        description: 'Google Gemini 1.5 Flash for multimodal AI capabilities',
+        description: 'Google AI API for multimodal capabilities',
         requiresApiKey: true,
         apiKeyUrl: 'https://aistudio.google.com/app/apikey',
       },
@@ -378,7 +378,7 @@ class AIService {
       {
         id: AI_PROVIDERS.GROK,
         name: 'xAI Grok',
-        description: 'Grok AI model with real-time knowledge and wit',
+        description: 'xAI API for real-time knowledge and reasoning',
         requiresApiKey: true,
         apiKeyUrl: 'https://console.x.ai/',
       },
