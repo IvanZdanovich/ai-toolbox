@@ -3,7 +3,7 @@
  * Global setup for all tests
  */
 
-import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import { beforeAll, afterAll, beforeEach, afterEach, vi, expect } from 'vitest';
 import { installChromeMock, uninstallChromeMock, testUtils } from './mocks/chrome-api.mock.js';
 
 // Global test timeout
@@ -76,7 +76,7 @@ globalThis.testHelpers = {
    * Mock a successful fetch response
    */
   mockFetchSuccess: (data) => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(data),
     });
@@ -86,7 +86,7 @@ globalThis.testHelpers = {
    * Mock a failed fetch response
    */
   mockFetchError: (status, error) => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status,
       json: () => Promise.resolve({ error: { message: error } }),
@@ -97,7 +97,7 @@ globalThis.testHelpers = {
    * Mock a network error
    */
   mockNetworkError: (message = 'Network error') => {
-    global.fetch = vi.fn().mockRejectedValue(new Error(message));
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error(message));
   },
 };
 
