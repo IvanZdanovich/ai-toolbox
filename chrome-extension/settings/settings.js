@@ -1,7 +1,7 @@
 import aiService from '../shared/ai-service.js';
 import storage from '../shared/storage.js';
 import { downloadAsJson, parseJsonFile } from '../shared/helpers.js';
-import Toast from '../popup/components/toast.js';
+import Toast from '../shared/components/toast.js';
 
 class SettingsPage {
   constructor() {
@@ -208,7 +208,7 @@ class SettingsPage {
       const exportData = {
         templates: templates.templates,
         exportedAt: new Date().toISOString(),
-        version: '1.0.0',
+        version: '0.9.0',
       };
 
       const filename = `ai-toolbox-backup-${new Date().toISOString().split('T')[0]}.json`;

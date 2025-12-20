@@ -251,7 +251,7 @@ class HistoryManager {
     return {
       history: this.history,
       exportedAt: new Date().toISOString(),
-      version: '1.0.0',
+      version: '0.9.0',
     };
   }
 

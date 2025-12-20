@@ -253,7 +253,7 @@ class ChromeStorage {
         history: history || [],
         settings: settings || {},
         exportedAt: new Date().toISOString(),
-        version: '1.0.0',
+        version: '0.9.0',
       };
     } catch (error) {
       console.error('Failed to export data:', error);

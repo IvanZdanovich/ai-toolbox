@@ -1,19 +1,18 @@
 /* Settings Page Styles */
+/* Note: Uses CSS variables from ../styles/variables.css */
 
-/* Import sidepanel width constraints */
-:root {
-  --sidepanel-standard-width: 250px;
-}
+/* ========================================
+   LAYOUT - Settings page sizing
+   ======================================== */
 
-/* Align with sidepanel expandable interface */
 html {
   width: auto;
-  min-width: var(--sidepanel-standard-width);
+  min-width: var(--sidepanel-width);
   box-sizing: border-box;
 }
 
 body {
-  min-width: var(--sidepanel-standard-width);
+  min-width: var(--sidepanel-width);
   width: 100%;
   max-width: none;
   resize: horizontal;
@@ -23,24 +22,12 @@ body {
   padding: 0;
 }
 
-/* Make all elements flexible and responsive */
-* {
-  box-sizing: border-box;
-}
-
 /* Ensure containers adapt to width changes */
 .settings-container,
 .settings-header,
 .settings-content,
 .settings-actions {
   width: 100%;
-}
-
-/* Ensure buttons don't overflow */
-.btn {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 /* Make form elements flexible */
@@ -52,11 +39,15 @@ body {
   min-width: 0;
 }
 
+/* ========================================
+   CONTAINER
+   ======================================== */
+
 .settings-container {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-width: var(--sidepanel-standard-width);
+  min-width: var(--sidepanel-width);
   max-width: none;
   min-height: 100vh;
   background-color: var(--color-background);
@@ -64,10 +55,14 @@ body {
   box-sizing: border-box;
 }
 
+/* ========================================
+   HEADER
+   ======================================== */
+
 .settings-header {
   display: flex;
   background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
   width: 100%;
   height: var(--header-height);
   min-height: var(--header-height);
@@ -128,6 +123,10 @@ body {
   align-items: center;
 }
 
+/* ========================================
+   CONTENT AREA
+   ======================================== */
+
 .settings-content {
   width: 100%;
   max-width: 800px;
@@ -141,6 +140,10 @@ body {
   flex-direction: column;
   gap: var(--spacing-sm);
 }
+
+/* ========================================
+   SETTINGS SECTIONS
+   ======================================== */
 
 .settings-section {
   background-color: var(--color-surface);
@@ -167,47 +170,16 @@ body {
   line-height: 1.2;
 }
 
+/* ========================================
+   FORM ELEMENTS (Settings-specific overrides)
+   ======================================== */
+
 .form-group {
   margin-bottom: var(--spacing-sm);
 }
 
 .form-group:last-child {
   margin-bottom: 0;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: var(--spacing-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-}
-
-.form-input,
-.form-textarea {
-  width: 100%;
-  height: var(--button-height);
-  padding: 0 var(--spacing-md);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--border-radius);
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  line-height: 1.4;
-  transition: border-color var(--transition-fast);
-}
-
-.form-textarea {
-  height: auto;
-  min-height: 80px;
-  padding: var(--spacing-sm) var(--spacing-md);
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(59, 130, 246, 0.1);
 }
 
 .form-help {
@@ -226,7 +198,7 @@ body {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   line-height: 1.4;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
 }
 
 .api-key-input-group {
@@ -256,6 +228,10 @@ body {
   text-decoration: underline;
 }
 
+/* ========================================
+   CONNECTION STATUS
+   ======================================== */
+
 .connection-status {
   padding: var(--spacing-sm);
   border-radius: var(--border-radius);
@@ -276,7 +252,7 @@ body {
 
 .connection-status.success {
   background-color: var(--color-background);
-  border: 1px solid var(--color-success);
+  border: var(--border-width) solid var(--color-success);
   color: var(--color-success);
 }
 
@@ -286,13 +262,17 @@ body {
 
 .connection-status.error {
   background-color: var(--color-background);
-  border: 1px solid var(--color-error);
+  border: var(--border-width) solid var(--color-error);
   color: var(--color-error);
 }
 
 .connection-status.error::before {
   background-color: var(--color-error);
 }
+
+/* ========================================
+   BUTTON GROUPS
+   ======================================== */
 
 .button-group {
   display: flex;
@@ -306,6 +286,10 @@ body {
   min-width: 120px;
   justify-content: center;
 }
+
+/* ========================================
+   STORAGE INFO
+   ======================================== */
 
 .storage-info {
   font-size: var(--font-size-sm);
@@ -340,6 +324,10 @@ body {
   margin-top: var(--spacing-xs);
 }
 
+/* ========================================
+   SUPPORT SECTION
+   ======================================== */
+
 .support-content {
   display: flex;
   flex-direction: column;
@@ -353,7 +341,7 @@ body {
   padding: var(--spacing-sm);
   background-color: var(--color-background);
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
 }
 
 .support-text {
@@ -384,7 +372,7 @@ body {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   transition: all var(--transition-fast);
-  border: 1px solid transparent;
+  border: var(--border-width) solid transparent;
 }
 
 .coffee-link {
@@ -415,14 +403,14 @@ body {
   width: 150px;
   height: 150px;
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
 }
 
 .github-support {
   padding: var(--spacing-sm);
   background-color: var(--color-background);
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
 }
 
 .github-support p {
@@ -432,10 +420,14 @@ body {
   font-weight: var(--font-weight-medium);
 }
 
+/* ========================================
+   ACTIONS
+   ======================================== */
+
 .settings-actions {
   margin-top: var(--spacing-md);
   padding: var(--spacing-sm) 0;
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) solid var(--color-border);
   display: flex;
   justify-content: center;
 }
@@ -447,6 +439,25 @@ body {
   min-width: 200px;
 }
 
+/* ========================================
+   UTILITIES
+   ======================================== */
+
 .hidden {
   display: none !important;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

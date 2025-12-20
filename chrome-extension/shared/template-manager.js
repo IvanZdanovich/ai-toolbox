@@ -273,7 +273,7 @@ class TemplateManager {
     return {
       templates: this.templates,
       exportedAt: new Date().toISOString(),
-      version: '1.0.0',
+      version: '0.9.0',
     };
   }
 

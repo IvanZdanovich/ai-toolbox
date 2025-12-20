@@ -10,8 +10,8 @@ import {
   downloadAsJson,
 } from '../shared/helpers.js';
 import { EVENTS, HISTORY_STATUS } from '../shared/constants.js';
-import Toast from '../popup/components/toast.js';
-import Modal from '../popup/components/modal.js';
+import Toast from '../shared/components/toast.js';
+import Modal from '../shared/components/modal.js';
 
 class SidePanelApp {
   constructor() {
@@ -524,7 +524,7 @@ class SidePanelApp {
       const exportData = {
         templates: [template],
         exportedAt: new Date().toISOString(),
-        version: '1.0.0',
+        version: '0.9.0',
       };
 
       const sanitizedName = template.name

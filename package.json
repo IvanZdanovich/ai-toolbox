@@ -1,10 +1,14 @@
 {
   "name": "ai-toolbox",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run --config chrome-extension/vitest.config.js",
+    "test:watch": "vitest --config chrome-extension/vitest.config.js",
+    "test:coverage": "vitest run --config chrome-extension/vitest.config.js --coverage",
+    "test:ui": "vitest --config chrome-extension/vitest.config.js --ui",
+    "test:integration": "vitest run --config chrome-extension/vitest.config.js tests/integration",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
     "lint:js": "eslint chrome-extension/**/*.js",
     "lint:css": "stylelint chrome-extension/**/*.css",
@@ -28,10 +32,14 @@
   "homepage": "https://github.com/IvanZdanovich/ai-toolbox#readme",
   "devDependencies": {
     "@eslint/js": "^9.34.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/ui": "^2.1.0",
     "eslint": "^9.34.0",
     "htmlhint": "^1.6.3",
+    "jsdom": "^25.0.0",
     "prettier": "^3.6.2",
     "stylelint": "^16.23.1",
-    "stylelint-config-standard": "^39.0.0"
+    "stylelint-config-standard": "^39.0.0",
+    "vitest": "^2.1.0"
   }
 }

@@ -154,7 +154,7 @@ class TemplateCard {
       const exportData = {
         templates: [template],
         exportedAt: new Date().toISOString(),
-        version: '1.0.0',
+        version: '0.9.0',
       };
 
       const sanitizedName = template.name
