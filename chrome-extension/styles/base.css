@@ -21,6 +21,37 @@ html {
 }
 
 /* ========================================
+   STANDARDIZED SCROLLBAR STYLES
+   ======================================== */
+
+/* Global scrollbar styling for consistent UX across all components */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+  transition: background var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-surface);
+}
+
+/* ========================================
    UTILITY CLASSES
    ======================================== */
 

@@ -551,19 +551,7 @@ html {
    SCROLLBAR STYLING
    ======================================== */
 
-.sidepanel-content::-webkit-scrollbar {
-  width: 6px;
-}
+/* Scrollbar styling inherited from global styles in base.css */
 
-.sidepanel-content::-webkit-scrollbar-track {
-  background: var(--color-surface);
-}
+/* All scrollable elements use consistent theme-aware scrollbars */
 
-.sidepanel-content::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
-}
-
-.sidepanel-content::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
-}
