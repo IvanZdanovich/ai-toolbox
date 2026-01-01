@@ -148,6 +148,19 @@ class SidePanelApp {
       this.updateTemplateVariables(e.target.value);
     });
 
+    // Generate buttons
+    document
+      .getElementById('generateDescriptionBtn')
+      .addEventListener('click', () => {
+        this.generateDescription();
+      });
+
+    document
+      .getElementById('generatePromptBtn')
+      .addEventListener('click', () => {
+        this.generatePrompt();
+      });
+
     // Execute modal
     document
       .getElementById('executeModalClose')
@@ -515,6 +528,125 @@ class SidePanelApp {
         })
         .join('')}
     `;
+  }
+
+  async generateDescription() {
+    const nameInput = document.getElementById('templateName');
+    const descriptionInput = document.getElementById('templateDescription');
+    const generateBtn = document.getElementById('generateDescriptionBtn');
+
+    const templateName = nameInput.value.trim();
+    if (!templateName) {
+      Toast.show('Please enter a template name first', 'warning');
+      nameInput.focus();
+      return;
+    }
+
+    // Disable button and show loading state
+    generateBtn.disabled = true;
+    const originalText = generateBtn.innerHTML;
+    generateBtn.innerHTML = '<span class="btn-icon">⏳</span>Generating...';
+
+    try {
+      const prompt = `Generate a concise, professional description (max 50 words) for a template named "${templateName}". The description should explain what this template does and when to use it. Return only the description text without quotes or extra formatting.`;
+
+      const response = await aiService.processTemplate({
+        name: 'Generate Description',
+        prompt: prompt,
+        inputs: [],
+      }, {});
+
+      // AI service returns { result, duration, provider, ... }
+      const result = response?.result || response;
+
+      if (result && typeof result === 'string' && result.trim()) {
+        descriptionInput.value = result.trim();
+        Toast.show('Description generated successfully', 'success');
+      } else {
+        throw new Error('Empty response from AI service');
+      }
+    } catch (error) {
+      console.error('Failed to generate description:', error);
+      Toast.show(
+        `Failed to generate description: ${error.message}`,
+        'error'
+      );
+    } finally {
+      // Re-enable button and restore text
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = originalText;
+    }
+  }
+
+  async generatePrompt() {
+    const nameInput = document.getElementById('templateName');
+    const descriptionInput = document.getElementById('templateDescription');
+    const promptInput = document.getElementById('templatePrompt');
+    const generateBtn = document.getElementById('generatePromptBtn');
+
+    const templateName = nameInput.value.trim();
+    if (!templateName) {
+      Toast.show('Please enter a template name first', 'warning');
+      nameInput.focus();
+      return;
+    }
+
+    const description = descriptionInput.value.trim();
+
+    // Disable button and show loading state
+    generateBtn.disabled = true;
+    const originalText = generateBtn.innerHTML;
+    generateBtn.innerHTML = '<span class="btn-icon">⏳</span>Generating...';
+
+    try {
+      let promptTemplate = `Generate a professional AI prompt template for a template named "${templateName}".`;
+
+      if (description) {
+        promptTemplate += ` Description: ${description}.`;
+      }
+
+      promptTemplate += `
+
+Requirements:
+1. Create a clear, effective prompt that accomplishes the template's purpose
+2. Use {variable_name} syntax for any dynamic inputs (e.g., {topic}, {style}, {audience})
+3. Include 1-4 relevant variables that users would want to customize
+4. Make the prompt specific and actionable
+5. Keep it concise (max 200 words)
+6. Return ONLY the prompt template without any explanations or formatting
+
+Example format: "Write an email about {topic} for {audience}. Include key points about {details}."
+
+Generate the prompt template now:`;
+
+      const result = await aiService.processTemplate({
+        name: 'Generate Prompt',
+        prompt: promptTemplate,
+        inputs: [],
+      }, {});
+
+      // AI service returns { result, duration, provider, ... }
+      const generatedPrompt = result?.result || result;
+
+      if (generatedPrompt && typeof generatedPrompt === 'string' && generatedPrompt.trim()) {
+        promptInput.value = generatedPrompt.trim();
+        // Trigger the input event to update variables display
+        promptInput.dispatchEvent(new Event('input', { bubbles: true }));
+        Toast.show('Prompt generated successfully', 'success');
+      } else {
+        throw new Error('Empty response from AI service');
+      }
+    } catch (error) {
+      console.error('Failed to generate prompt:', error);
+      Toast.show(
+        `Failed to generate prompt: ${error.message}`,
+        'error'
+      );
+    } finally {
+      // Re-enable button and restore text
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = originalText;
+    }
   }
 
   extractVariables(prompt) {

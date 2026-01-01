@@ -6,6 +6,10 @@
 
 * {
   box-sizing: border-box;
+
+  /* Firefox scrollbar support */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-surface);
 }
 
 body,
@@ -45,11 +49,6 @@ html {
   background: var(--color-border-hover);
 }
 
-/* Firefox scrollbar support */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) var(--color-surface);
-}
 
 /* ========================================
    UTILITY CLASSES
