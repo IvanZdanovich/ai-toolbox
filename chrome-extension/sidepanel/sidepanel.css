@@ -271,9 +271,9 @@ html {
 }
 
 .status-badge {
-  padding: 2px 6px;
+  padding: var(--spacing-xxs) var(--spacing-xs);
   border-radius: var(--border-radius);
-  font-size: 10px;
+  font-size: var(--font-size-xxs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
@@ -411,7 +411,7 @@ html {
 
 .help-content code {
   background: var(--color-background);
-  padding: 2px 4px;
+  padding: var(--spacing-xxs) var(--spacing-xs);
   border-radius: var(--border-radius);
   font-family: monospace;
   font-size: 11px;
@@ -448,7 +448,7 @@ html {
 }
 
 .grid-header-label {
-  font-size: 10px;
+  font-size: var(--font-size-xxs);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -496,7 +496,7 @@ html {
 .variable-input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .input-mini-label {
@@ -506,7 +506,7 @@ html {
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding-left: 2px;
+  padding-left: var(--spacing-xxs);
 }
 
 .variable-inputs .form-input {

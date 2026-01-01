@@ -28,8 +28,12 @@
   --ai-spacing-lg: 24px;
 
   /* Typography */
+  --ai-font-size-xxs: 10px;
+  --ai-font-size-xs: 12px;
   --ai-font-size-sm: 14px;
   --ai-font-size-base: 16px;
+  --ai-font-size-lg: 18px;
+  --ai-font-size-xl: 20px;
 
   /* Effects */
   --ai-radius: 6px;
@@ -88,7 +92,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--ai-spacing-md) 20px;
+  padding: var(--ai-spacing-md) var(--ai-spacing-lg);
   background: var(--ai-color-background);
   border-bottom: 1px solid var(--ai-color-border);
 }
@@ -103,7 +107,7 @@
 .ai-toolbox-close {
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: var(--ai-font-size-xl);
   cursor: pointer;
   color: var(--ai-color-text-muted);
   padding: var(--ai-spacing-xs);
@@ -121,7 +125,7 @@
    ======================================== */
 
 .ai-toolbox-content {
-  padding: 20px;
+  padding: var(--ai-spacing-lg);
   max-height: 60vh;
   overflow-y: auto;
 }
@@ -145,7 +149,7 @@
   background: #f3f4f6;
   border: 1px solid var(--ai-color-border);
   border-radius: var(--ai-radius);
-  padding: 12px;
+  padding: var(--ai-spacing-sm);
   color: #4b5563;
   white-space: pre-wrap;
   overflow-wrap: break-word;
@@ -164,7 +168,7 @@
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: var(--ai-radius);
-  padding: 12px;
+  padding: var(--ai-spacing-sm);
   color: var(--ai-color-error);
 }
 
@@ -205,7 +209,7 @@
   display: flex;
   gap: var(--ai-spacing-sm);
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: var(--ai-spacing-lg);
   padding-top: var(--ai-spacing-md);
   border-top: 1px solid var(--ai-color-border);
 }
@@ -264,7 +268,7 @@
   background: var(--ai-color-surface);
   border: 1px solid var(--ai-color-border);
   border-radius: var(--ai-radius);
-  padding: 12px var(--ai-spacing-md);
+  padding: var(--ai-spacing-sm) var(--ai-spacing-md);
   box-shadow: 0 4px 12px rgb(0, 0, 0, 0.1);
   z-index: 1000000;
   max-width: 300px;

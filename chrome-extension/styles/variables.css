@@ -24,6 +24,7 @@
   --spacing-xxl: 48px;
 
   /* Typography */
+  --font-size-xxs: 10px;
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-base: 16px;
@@ -32,6 +33,7 @@
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 
   /* Layout */
   --popup-width: 480px;

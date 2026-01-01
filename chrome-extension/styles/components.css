@@ -41,7 +41,7 @@
 }
 
 .btn-small {
-  height: 32px;
+  height: var(--button-height);
   padding: 0 var(--spacing-sm);
   font-size: var(--font-size-xs);
 }
