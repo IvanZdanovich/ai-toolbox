@@ -10,9 +10,14 @@ export const fixtures = {
       id: 'template-email-001',
       name: 'Email Response',
       description: 'Generate professional email responses',
-      prompt: 'Write a professional email response to: {email_content}. Tone: {tone}.',
+      prompt:
+        'Write a professional email response to: {email_content}. Tone: {tone}.',
       inputs: [
-        { name: 'email_content', label: 'Email Content', placeholder: 'Paste email...' },
+        {
+          name: 'email_content',
+          label: 'Email Content',
+          placeholder: 'Paste email...',
+        },
         { name: 'tone', label: 'Tone', placeholder: 'e.g., formal, friendly' },
       ],
       createdAt: '2024-01-01T00:00:00.000Z',
@@ -25,7 +30,11 @@ export const fixtures = {
       description: 'Generate documentation for code',
       prompt: 'Document this {language} code: {code}',
       inputs: [
-        { name: 'language', label: 'Language', placeholder: 'JavaScript, Python...' },
+        {
+          name: 'language',
+          label: 'Language',
+          placeholder: 'JavaScript, Python...',
+        },
         { name: 'code', label: 'Code', placeholder: 'Paste code...' },
       ],
       createdAt: '2024-01-02T00:00:00.000Z',
@@ -129,7 +138,8 @@ export const fixtures = {
   // Sample user inputs for template execution
   userInputs: {
     email: {
-      email_content: 'Hi, I received a damaged product and would like a refund.',
+      email_content:
+        'Hi, I received a damaged product and would like a refund.',
       tone: 'professional and empathetic',
     },
 
@@ -142,7 +152,9 @@ export const fixtures = {
     },
 
     summary: {
-      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(20),
+      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(
+        20
+      ),
       length: '50',
     },
 
@@ -197,7 +209,9 @@ export const factories = {
     name: 'Test Template',
     description: 'A test template',
     prompt: 'Test prompt with {variable}',
-    inputs: [{ name: 'variable', label: 'Variable', placeholder: 'Enter value' }],
+    inputs: [
+      { name: 'variable', label: 'Variable', placeholder: 'Enter value' },
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ...overrides,
@@ -256,4 +270,3 @@ export const factories = {
 };
 
 export default fixtures;
-

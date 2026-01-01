@@ -10,7 +10,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils } from '../mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+} from '../mocks/chrome-api.mock.js';
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 // Mock storage module
@@ -123,9 +127,10 @@ describe('AI Service Integration', () => {
       // Given: Mock successful API response
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: 'OpenAI response' } }],
-        }),
+        json: () =>
+          Promise.resolve({
+            choices: [{ message: { content: 'OpenAI response' } }],
+          }),
       });
 
       // When: Processing a template
@@ -141,7 +146,7 @@ describe('AI Service Integration', () => {
           method: 'POST',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${fixtures.settings.withOpenAI.apiKey}`,
+            Authorization: `Bearer ${fixtures.settings.withOpenAI.apiKey}`,
           }),
         })
       );
@@ -154,14 +159,18 @@ describe('AI Service Integration', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 429,
-        json: () => Promise.resolve({
-          error: { message: 'Rate limit exceeded' },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: { message: 'Rate limit exceeded' },
+          }),
       });
 
       // When/Then: Should throw with error message
       await expect(
-        aiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+        aiService.processTemplate(
+          fixtures.templates.email,
+          fixtures.userInputs.email
+        )
       ).rejects.toThrow('Rate limit exceeded');
     });
 
@@ -171,7 +180,10 @@ describe('AI Service Integration', () => {
 
       // When/Then: Should throw error
       await expect(
-        aiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+        aiService.processTemplate(
+          fixtures.templates.email,
+          fixtures.userInputs.email
+        )
       ).rejects.toThrow();
     });
   });
@@ -186,9 +198,10 @@ describe('AI Service Integration', () => {
       // Given: Mock successful API response
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          content: [{ text: 'Claude response' }],
-        }),
+        json: () =>
+          Promise.resolve({
+            content: [{ text: 'Claude response' }],
+          }),
       });
 
       // When: Processing a template
@@ -242,7 +255,7 @@ describe('AI Service Integration', () => {
 
       // Then: At least some should succeed (rate limiting allows all)
       // The key test is that none were rejected due to rate limiting
-      const rateLimitErrors = errors.filter(e =>
+      const rateLimitErrors = errors.filter((e) =>
         e.message.includes('Rate limit exceeded')
       );
       expect(rateLimitErrors).toHaveLength(0);
@@ -261,7 +274,10 @@ describe('AI Service Integration', () => {
 
       // When/Then: Additional request should be rejected
       await expect(
-        aiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+        aiService.processTemplate(
+          fixtures.templates.email,
+          fixtures.userInputs.email
+        )
       ).rejects.toThrow('Rate limit exceeded');
     });
 
@@ -292,7 +308,10 @@ describe('AI Service Integration', () => {
 
       // When/Then: Should throw error about missing API key
       await expect(
-        aiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+        aiService.processTemplate(
+          fixtures.templates.email,
+          fixtures.userInputs.email
+        )
       ).rejects.toThrow('API key');
     });
 
@@ -306,7 +325,10 @@ describe('AI Service Integration', () => {
 
       // When/Then: Should throw error about missing API key
       await expect(
-        aiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+        aiService.processTemplate(
+          fixtures.templates.email,
+          fixtures.userInputs.email
+        )
       ).rejects.toThrow('API key');
     });
 
@@ -334,9 +356,10 @@ describe('AI Service Integration', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: 'Test successful' } }],
-        }),
+        json: () =>
+          Promise.resolve({
+            choices: [{ message: { content: 'Test successful' } }],
+          }),
       });
 
       // When: Testing connection
@@ -356,9 +379,10 @@ describe('AI Service Integration', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: () => Promise.resolve({
-          error: { message: 'Invalid API key' },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: { message: 'Invalid API key' },
+          }),
       });
 
       // When: Testing connection
@@ -401,7 +425,7 @@ describe('AI Service Error Scenarios', () => {
     vi.clearAllMocks();
   });
 
-it('should handle malformed API responses', async () => {
+  it('should handle malformed API responses', async () => {
     // Given: OpenAI provider
     vi.resetModules();
     const storage = (await import('../../shared/storage.js')).default;
@@ -446,7 +470,10 @@ it('should handle malformed API responses', async () => {
 
     // When/Then: Should throw with timeout error
     await expect(
-      aiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+      aiService.processTemplate(
+        fixtures.templates.email,
+        fixtures.userInputs.email
+      )
     ).rejects.toThrow();
   });
 
@@ -468,8 +495,10 @@ it('should handle malformed API responses', async () => {
 
     // When/Then: Should throw error
     await expect(
-      aiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+      aiService.processTemplate(
+        fixtures.templates.email,
+        fixtures.userInputs.email
+      )
     ).rejects.toThrow();
   });
 });
-

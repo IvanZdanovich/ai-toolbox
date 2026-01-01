@@ -11,7 +11,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils } from '../mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+} from '../mocks/chrome-api.mock.js';
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 // Mock DOM environment
@@ -146,15 +150,12 @@ describe('Side Panel Integration', () => {
   describe('Scenario: User views template list', () => {
     it('should display templates when available', async () => {
       // Given: Templates exist
-      const templates = [
-        fixtures.templates.email,
-        fixtures.templates.codeDoc,
-      ];
+      const templates = [fixtures.templates.email, fixtures.templates.codeDoc];
       mockTemplateManager.getAllTemplates.mockResolvedValue(templates);
 
       // When: Rendering templates
       const templatesList = document.getElementById('templatesList');
-      templates.forEach(template => {
+      templates.forEach((template) => {
         const card = document.createElement('div');
         card.className = 'template-card';
         card.innerHTML = `
@@ -243,7 +244,8 @@ describe('Side Panel Integration', () => {
       promptInput.value = '';
 
       // When: Checking validity
-      const isValid = nameInput.value.trim() !== '' && promptInput.value.trim() !== '';
+      const isValid =
+        nameInput.value.trim() !== '' && promptInput.value.trim() !== '';
 
       // Then: Should be invalid
       expect(isValid).toBe(false);
@@ -259,7 +261,7 @@ describe('Side Panel Integration', () => {
 
       // When: Opening execute modal
       modal.classList.remove('hidden');
-      template.inputs.forEach(input => {
+      template.inputs.forEach((input) => {
         const field = document.createElement('div');
         field.className = 'form-group';
         field.innerHTML = `
@@ -290,7 +292,10 @@ describe('Side Panel Integration', () => {
 
       // Then: Result should be returned
       expect(response.result).toBe(fixtures.aiResponses.emailResponse);
-      expect(mockAiService.processTemplate).toHaveBeenCalledWith(template, inputs);
+      expect(mockAiService.processTemplate).toHaveBeenCalledWith(
+        template,
+        inputs
+      );
     });
 
     it('should add execution to history', async () => {
@@ -330,7 +335,10 @@ describe('Side Panel Integration', () => {
 
       // When/Then: Should catch error
       await expect(
-        mockAiService.processTemplate(fixtures.templates.email, fixtures.userInputs.email)
+        mockAiService.processTemplate(
+          fixtures.templates.email,
+          fixtures.userInputs.email
+        )
       ).rejects.toThrow('API rate limit exceeded');
     });
   });
@@ -346,7 +354,7 @@ describe('Side Panel Integration', () => {
       ];
 
       mockTemplateManager.searchTemplates.mockImplementation((query) => {
-        return templates.filter(t =>
+        return templates.filter((t) =>
           t.name.toLowerCase().includes(query.toLowerCase())
         );
       });
@@ -416,7 +424,7 @@ describe('Side Panel Integration', () => {
       const historyList = document.getElementById('historyList');
       const entries = await mockHistoryManager.getAllHistory();
 
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         const item = document.createElement('div');
         item.className = 'history-entry';
         item.innerHTML = `
@@ -438,7 +446,8 @@ describe('Side Panel Integration', () => {
       const historyList = document.getElementById('historyList');
 
       const successEntry = document.createElement('div');
-      successEntry.innerHTML = '<span class="status-badge completed">completed</span>';
+      successEntry.innerHTML =
+        '<span class="status-badge completed">completed</span>';
       historyList.appendChild(successEntry);
 
       const failedEntry = document.createElement('div');
@@ -516,11 +525,11 @@ describe('Side Panel Error Handling', () => {
       await mockTemplateManager.getAllTemplates();
     } catch (error) {
       const templatesSection = document.getElementById('templates');
-      templatesSection.innerHTML = '<div class="error-state">Failed to load templates</div>';
+      templatesSection.innerHTML =
+        '<div class="error-state">Failed to load templates</div>';
     }
 
     // Then: Error state should be shown
     expect(document.querySelector('.error-state')).toBeTruthy();
   });
 });
-

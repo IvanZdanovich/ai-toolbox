@@ -4,7 +4,11 @@
  */
 
 import { beforeAll, afterAll, beforeEach, afterEach, vi, expect } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils } from './mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+} from './mocks/chrome-api.mock.js';
 
 // Global test timeout
 vi.setConfig({ testTimeout: 10000 });
@@ -50,7 +54,7 @@ globalThis.testHelpers = {
       if (await condition()) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, interval));
+      await new Promise((resolve) => setTimeout(resolve, interval));
     }
     throw new Error('waitFor timeout');
   },
@@ -58,7 +62,7 @@ globalThis.testHelpers = {
   /**
    * Wait for specified milliseconds
    */
-  wait: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+  wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 
   /**
    * Create a deferred promise
@@ -107,12 +111,14 @@ expect.extend({
    * Check if a value is a valid ISO date string
    */
   toBeISODateString(received) {
-    const pass = !isNaN(Date.parse(received)) &&
-                 typeof received === 'string' &&
-                 /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(received);
+    const pass =
+      !isNaN(Date.parse(received)) &&
+      typeof received === 'string' &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(received);
     return {
       pass,
-      message: () => `expected ${received} ${pass ? 'not ' : ''}to be a valid ISO date string`,
+      message: () =>
+        `expected ${received} ${pass ? 'not ' : ''}to be a valid ISO date string`,
     };
   },
 
@@ -123,10 +129,10 @@ expect.extend({
     const pass = typeof received === 'string' && received.length > 0;
     return {
       pass,
-      message: () => `expected ${received} ${pass ? 'not ' : ''}to be a valid ID`,
+      message: () =>
+        `expected ${received} ${pass ? 'not ' : ''}to be a valid ID`,
     };
   },
 });
 
 console.log('Test setup complete');
-

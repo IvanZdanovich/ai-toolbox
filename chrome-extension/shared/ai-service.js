@@ -223,20 +223,25 @@ class AIService {
         // Include additional error details if available
         if (error.error?.details) {
           const details = Array.isArray(error.error.details)
-            ? error.error.details.map(d => d.reason || d.message).join(', ')
+            ? error.error.details.map((d) => d.reason || d.message).join(', ')
             : JSON.stringify(error.error.details);
           errorMessage += `. Details: ${details}`;
         }
 
         // Add helpful suggestions for common errors
-        if (errorMessage.includes('quota') || errorMessage.includes('rate limit')) {
-          errorMessage += '\n\nSuggestions:\n' +
+        if (
+          errorMessage.includes('quota') ||
+          errorMessage.includes('rate limit')
+        ) {
+          errorMessage +=
+            '\n\nSuggestions:\n' +
             '• Wait a few minutes before trying again\n' +
             '• Check your API quota at https://ai.google.dev/gemini-api/docs/quota\n' +
             '• Consider upgrading your plan if you need higher limits\n' +
             '• Try using a different model (e.g., gemini-1.5-flash instead of gemini-2.0-flash)';
         } else if (errorMessage.includes('API key')) {
-          errorMessage += '\n\nPlease verify your API key at https://aistudio.google.com/app/apikey';
+          errorMessage +=
+            '\n\nPlease verify your API key at https://aistudio.google.com/app/apikey';
         }
       } catch {
         // If we can't parse the error, use the status text

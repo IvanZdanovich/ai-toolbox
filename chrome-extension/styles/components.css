@@ -286,7 +286,6 @@ select.form-input option:checked {
   overflow-y: auto;
 }
 
-
 .modal-body::-webkit-scrollbar {
   width: 6px;
 }

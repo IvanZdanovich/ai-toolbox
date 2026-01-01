@@ -9,7 +9,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils } from '../mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+} from '../mocks/chrome-api.mock.js';
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 describe('E2E: Complete Template Workflow', () => {
@@ -22,7 +26,8 @@ describe('E2E: Complete Template Workflow', () => {
 
     // Import all modules fresh
     storage = (await import('../../shared/storage.js')).default;
-    templateManager = (await import('../../shared/template-manager.js')).default;
+    templateManager = (await import('../../shared/template-manager.js'))
+      .default;
     historyManager = (await import('../../shared/history-manager.js')).default;
     aiService = (await import('../../shared/ai-service.js')).default;
   });
@@ -47,7 +52,8 @@ describe('E2E: Complete Template Workflow', () => {
       const newTemplate = {
         name: 'Customer Support Reply',
         description: 'Generate helpful customer support responses',
-        prompt: 'Write a helpful customer support response to: {customer_message}. Be {tone} and provide {solution_type} solutions.',
+        prompt:
+          'Write a helpful customer support response to: {customer_message}. Be {tone} and provide {solution_type} solutions.',
       };
 
       const createdTemplate = await templateManager.createTemplate(newTemplate);
@@ -56,7 +62,9 @@ describe('E2E: Complete Template Workflow', () => {
 
       // Step 3: Verify template is persisted
       const templatesAfterCreate = await templateManager.getAllTemplates();
-      const foundTemplate = templatesAfterCreate.find(t => t.id === createdTemplate.id);
+      const foundTemplate = templatesAfterCreate.find(
+        (t) => t.id === createdTemplate.id
+      );
       expect(foundTemplate).toBeDefined();
 
       // Step 4: Execute the template
@@ -84,7 +92,7 @@ describe('E2E: Complete Template Workflow', () => {
 
       // Step 6: Verify history is recorded
       const history = await historyManager.getAllHistory();
-      const foundEntry = history.find(h => h.id === historyEntry.id);
+      const foundEntry = history.find((h) => h.id === historyEntry.id);
       expect(foundEntry).toBeDefined();
       expect(foundEntry.templateName).toBe('Customer Support Reply');
     });
@@ -107,7 +115,9 @@ describe('E2E: Complete Template Workflow', () => {
 
       // Verify creation
       let templates = await templateManager.getAllTemplates();
-      expect(templates.filter(t => ['Template A', 'Template B'].includes(t.name))).toHaveLength(2);
+      expect(
+        templates.filter((t) => ['Template A', 'Template B'].includes(t.name))
+      ).toHaveLength(2);
 
       // Update template
       const updated = await templateManager.updateTemplate(template1.id, {
@@ -121,7 +131,7 @@ describe('E2E: Complete Template Workflow', () => {
       // Delete template
       await templateManager.deleteTemplate(template2.id);
       templates = await templateManager.getAllTemplates();
-      expect(templates.find(t => t.id === template2.id)).toBeUndefined();
+      expect(templates.find((t) => t.id === template2.id)).toBeUndefined();
 
       // Verify final state
       const finalTemplate = await templateManager.getTemplate(template1.id);
@@ -156,18 +166,33 @@ describe('E2E: Complete Template Workflow', () => {
       // Search for "email"
       const emailTemplates = await templateManager.searchTemplates('email');
       expect(emailTemplates.length).toBeGreaterThanOrEqual(2);
-      expect(emailTemplates.every(t =>
-        t.name.toLowerCase().includes('email') ||
-        t.description.toLowerCase().includes('email')
-      )).toBe(true);
+      expect(
+        emailTemplates.every(
+          (t) =>
+            t.name.toLowerCase().includes('email') ||
+            t.description.toLowerCase().includes('email')
+        )
+      ).toBe(true);
 
       // Search for "code"
       const codeTemplates = await templateManager.searchTemplates('code');
       expect(codeTemplates.length).toBeGreaterThanOrEqual(1);
 
       // Add history entries
-      await historyManager.addHistoryEntry('t1', 'Email Writer', {}, 'Email result', 'completed');
-      await historyManager.addHistoryEntry('t2', 'Code Reviewer', {}, 'Code result', 'completed');
+      await historyManager.addHistoryEntry(
+        't1',
+        'Email Writer',
+        {},
+        'Email result',
+        'completed'
+      );
+      await historyManager.addHistoryEntry(
+        't2',
+        'Code Reviewer',
+        {},
+        'Code result',
+        'completed'
+      );
 
       // Search history
       const emailHistory = await historyManager.searchHistory('email');
@@ -299,7 +324,8 @@ describe('E2E: Error Recovery Workflow', () => {
     vi.resetModules();
 
     storage = (await import('../../shared/storage.js')).default;
-    templateManager = (await import('../../shared/template-manager.js')).default;
+    templateManager = (await import('../../shared/template-manager.js'))
+      .default;
     historyManager = (await import('../../shared/history-manager.js')).default;
     aiService = (await import('../../shared/ai-service.js')).default;
   });
@@ -339,11 +365,14 @@ describe('E2E: Error Recovery Workflow', () => {
       expect(retryResult.result).toBeDefined();
 
       // Update history entry
-      const updatedEntry = await historyManager.updateHistoryEntry(failedEntry.id, {
-        status: 'completed',
-        result: retryResult.result,
-        duration: retryResult.duration,
-      });
+      const updatedEntry = await historyManager.updateHistoryEntry(
+        failedEntry.id,
+        {
+          status: 'completed',
+          result: retryResult.result,
+          duration: retryResult.duration,
+        }
+      );
 
       expect(updatedEntry.status).toBe('completed');
     });
@@ -358,7 +387,9 @@ describe('E2E: Error Recovery Workflow', () => {
 
       // Initialize should handle gracefully
       vi.resetModules();
-      const newTemplateManager = (await import('../../shared/template-manager.js')).default;
+      const newTemplateManager = (
+        await import('../../shared/template-manager.js')
+      ).default;
 
       // Should not crash
       await newTemplateManager.init();
@@ -381,8 +412,9 @@ describe('E2E: Error Recovery Workflow', () => {
       const inputs = fixtures.userInputs.email;
 
       // Should be rate limited
-      await expect(aiService.processTemplate(template, inputs))
-        .rejects.toThrow('Rate limit');
+      await expect(aiService.processTemplate(template, inputs)).rejects.toThrow(
+        'Rate limit'
+      );
 
       // Simulate time passing (clear old timestamps)
       aiService.requestTimestamps = [];
@@ -410,8 +442,10 @@ describe('E2E: Multi-session Persistence', () => {
       // Session 1: Create data
       vi.resetModules();
       let storage = (await import('../../shared/storage.js')).default;
-      let templateManager = (await import('../../shared/template-manager.js')).default;
-      let historyManager = (await import('../../shared/history-manager.js')).default;
+      let templateManager = (await import('../../shared/template-manager.js'))
+        .default;
+      let historyManager = (await import('../../shared/history-manager.js'))
+        .default;
 
       await templateManager.init();
       await historyManager.init();
@@ -438,15 +472,17 @@ describe('E2E: Multi-session Persistence', () => {
       // Session 2: Verify data persists
       vi.resetModules();
       storage = (await import('../../shared/storage.js')).default;
-      templateManager = (await import('../../shared/template-manager.js')).default;
-      historyManager = (await import('../../shared/history-manager.js')).default;
+      templateManager = (await import('../../shared/template-manager.js'))
+        .default;
+      historyManager = (await import('../../shared/history-manager.js'))
+        .default;
 
       await templateManager.init();
       await historyManager.init();
 
       // Verify templates
       const templates = await templateManager.getAllTemplates();
-      const found = templates.find(t => t.name === 'Persistent Template');
+      const found = templates.find((t) => t.name === 'Persistent Template');
       expect(found).toBeDefined();
 
       // Verify history
@@ -476,7 +512,8 @@ describe('E2E: Concurrent Operations', () => {
   describe('Workflow: Multiple simultaneous operations', () => {
     it('should handle concurrent template creations', async () => {
       vi.resetModules();
-      const templateManager = (await import('../../shared/template-manager.js')).default;
+      const templateManager = (await import('../../shared/template-manager.js'))
+        .default;
       await templateManager.init();
 
       // Create multiple templates concurrently
@@ -497,12 +534,15 @@ describe('E2E: Concurrent Operations', () => {
 
       // All should be persisted
       const templates = await templateManager.getAllTemplates();
-      expect(templates.filter(t => t.name.startsWith('Concurrent'))).toHaveLength(5);
+      expect(
+        templates.filter((t) => t.name.startsWith('Concurrent'))
+      ).toHaveLength(5);
     });
 
     it('should handle concurrent history additions', async () => {
       vi.resetModules();
-      const historyManager = (await import('../../shared/history-manager.js')).default;
+      const historyManager = (await import('../../shared/history-manager.js'))
+        .default;
       await historyManager.init();
 
       // Add multiple history entries concurrently
@@ -527,4 +567,3 @@ describe('E2E: Concurrent Operations', () => {
     });
   });
 });
-

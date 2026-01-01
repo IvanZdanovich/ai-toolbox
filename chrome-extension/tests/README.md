@@ -27,15 +27,15 @@ tests/
 
 ### Scenarios
 
-| Scenario | Description | Status |
-|----------|-------------|--------|
-| First-time user creates first template | Initialize with empty templates, seed defaults, create new template | ✅ |
-| User manages existing templates | Retrieve, update, delete operations | ✅ |
-| User searches templates | Search by name, description, handle empty results | ✅ |
-| Template variable extraction | Extract {variables} from prompts | ✅ |
-| Template limit enforcement | Enforce max 50 templates | ✅ |
-| Event emission | Emit events on CRUD operations | ✅ |
-| Error handling | Handle storage errors gracefully | ✅ |
+| Scenario                               | Description                                                         | Status |
+| -------------------------------------- | ------------------------------------------------------------------- | ------ |
+| First-time user creates first template | Initialize with empty templates, seed defaults, create new template | ✅     |
+| User manages existing templates        | Retrieve, update, delete operations                                 | ✅     |
+| User searches templates                | Search by name, description, handle empty results                   | ✅     |
+| Template variable extraction           | Extract {variables} from prompts                                    | ✅     |
+| Template limit enforcement             | Enforce max 50 templates                                            | ✅     |
+| Event emission                         | Emit events on CRUD operations                                      | ✅     |
+| Error handling                         | Handle storage errors gracefully                                    | ✅     |
 
 ### Key Test Cases
 
@@ -66,15 +66,15 @@ tests/
 
 ### Scenarios
 
-| Scenario | Description | Status |
-|----------|-------------|--------|
-| First execution recording | Initialize empty, record first entry | ✅ |
-| History retrieval | Get all, filter by template, get by ID | ✅ |
-| History search | Search by template name, result content | ✅ |
-| Status tracking | Record completed, failed, processing states | ✅ |
-| Limit enforcement | Enforce max 100 entries, remove oldest | ✅ |
-| History clearing | Clear all, clear by template | ✅ |
-| Error handling | Handle storage errors, non-existent entries | ✅ |
+| Scenario                  | Description                                 | Status |
+| ------------------------- | ------------------------------------------- | ------ |
+| First execution recording | Initialize empty, record first entry        | ✅     |
+| History retrieval         | Get all, filter by template, get by ID      | ✅     |
+| History search            | Search by template name, result content     | ✅     |
+| Status tracking           | Record completed, failed, processing states | ✅     |
+| Limit enforcement         | Enforce max 100 entries, remove oldest      | ✅     |
+| History clearing          | Clear all, clear by template                | ✅     |
+| Error handling            | Handle storage errors, non-existent entries | ✅     |
 
 ### Key Test Cases
 
@@ -99,15 +99,15 @@ tests/
 
 ### Scenarios
 
-| Scenario | Description | Status |
-|----------|-------------|--------|
-| Mock provider processing | Process template, get mock response | ✅ |
-| OpenAI provider | API calls, error handling | ✅ |
-| Claude provider | API calls with correct headers | ✅ |
-| Rate limiting | Allow within limit, reject excess, reset after window | ✅ |
-| Provider configuration | Require API key, switch providers | ✅ |
-| Connection testing | Test connection success/failure | ✅ |
-| Error scenarios | Malformed responses, timeouts, JSON errors | ✅ |
+| Scenario                 | Description                                           | Status |
+| ------------------------ | ----------------------------------------------------- | ------ |
+| Mock provider processing | Process template, get mock response                   | ✅     |
+| OpenAI provider          | API calls, error handling                             | ✅     |
+| Claude provider          | API calls with correct headers                        | ✅     |
+| Rate limiting            | Allow within limit, reject excess, reset after window | ✅     |
+| Provider configuration   | Require API key, switch providers                     | ✅     |
+| Connection testing       | Test connection success/failure                       | ✅     |
+| Error scenarios          | Malformed responses, timeouts, JSON errors            | ✅     |
 
 ### Key Test Cases
 
@@ -132,16 +132,16 @@ tests/
 
 ### Scenarios
 
-| Scenario | Description | Status |
-|----------|-------------|--------|
-| Basic CRUD | Store, retrieve, update, remove, clear | ✅ |
-| Cache behavior | Cache hits, invalidation on write | ✅ |
-| Templates storage | Store/retrieve template arrays | ✅ |
-| History storage | Store/retrieve history arrays | ✅ |
-| Settings storage | Merge with defaults | ✅ |
-| Chunked storage | Handle data > 8KB | ✅ |
-| Storage info | Report usage and limits | ✅ |
-| Error handling | Quota exceeded, corrupted data | ✅ |
+| Scenario          | Description                            | Status |
+| ----------------- | -------------------------------------- | ------ |
+| Basic CRUD        | Store, retrieve, update, remove, clear | ✅     |
+| Cache behavior    | Cache hits, invalidation on write      | ✅     |
+| Templates storage | Store/retrieve template arrays         | ✅     |
+| History storage   | Store/retrieve history arrays          | ✅     |
+| Settings storage  | Merge with defaults                    | ✅     |
+| Chunked storage   | Handle data > 8KB                      | ✅     |
+| Storage info      | Report usage and limits                | ✅     |
+| Error handling    | Quota exceeded, corrupted data         | ✅     |
 
 ### Key Test Cases
 
@@ -166,16 +166,16 @@ tests/
 
 ### Scenarios
 
-| Scenario | Description | Status |
-|----------|-------------|--------|
-| Template list display | Show templates, empty state | ✅ |
-| Template creation flow | Open modal, validate, create | ✅ |
-| Template execution flow | Input fields, process, show result | ✅ |
-| Search functionality | Filter as user types, debounce | ✅ |
-| Section navigation | Switch templates/history | ✅ |
-| History display | Show entries with status badges | ✅ |
-| Settings navigation | Open settings page | ✅ |
-| Error handling | Show toasts, error states | ✅ |
+| Scenario                | Description                        | Status |
+| ----------------------- | ---------------------------------- | ------ |
+| Template list display   | Show templates, empty state        | ✅     |
+| Template creation flow  | Open modal, validate, create       | ✅     |
+| Template execution flow | Input fields, process, show result | ✅     |
+| Search functionality    | Filter as user types, debounce     | ✅     |
+| Section navigation      | Switch templates/history           | ✅     |
+| History display         | Show entries with status badges    | ✅     |
+| Settings navigation     | Open settings page                 | ✅     |
+| Error handling          | Show toasts, error states          | ✅     |
 
 ### Key Test Cases
 
@@ -195,16 +195,16 @@ tests/
 
 ### Scenarios
 
-| Scenario | Description | Status |
-|----------|-------------|--------|
-| Extension installation | Initial setup, welcome notification | ✅ |
-| Extension update | Version migration, data migration | ✅ |
-| Message handling | Handle known actions, validate sender | ✅ |
-| Context menu management | Create, update, handle clicks | ✅ |
-| Side panel integration | Configure behavior, open panel | ✅ |
-| Tab management | Clean up on close, send messages | ✅ |
-| Badge management | Processing, complete, error states | ✅ |
-| Storage validation | Validate on startup, repair corruption | ✅ |
+| Scenario                | Description                            | Status |
+| ----------------------- | -------------------------------------- | ------ |
+| Extension installation  | Initial setup, welcome notification    | ✅     |
+| Extension update        | Version migration, data migration      | ✅     |
+| Message handling        | Handle known actions, validate sender  | ✅     |
+| Context menu management | Create, update, handle clicks          | ✅     |
+| Side panel integration  | Configure behavior, open panel         | ✅     |
+| Tab management          | Clean up on close, send messages       | ✅     |
+| Badge management        | Processing, complete, error states     | ✅     |
+| Storage validation      | Validate on startup, repair corruption | ✅     |
 
 ### Key Test Cases
 
@@ -223,6 +223,7 @@ tests/
 ## End-to-End Workflows
 
 ### Complete Template Workflow
+
 1. Initialize services
 2. Create template
 3. Verify persistence
@@ -231,24 +232,28 @@ tests/
 6. Verify history
 
 ### Settings Configuration Workflow
+
 1. Start with defaults
 2. Configure provider
 3. Persist settings
 4. Verify across sessions
 
 ### Error Recovery Workflow
+
 1. Handle failed execution
 2. Record failure
 3. Retry successfully
 4. Update history
 
 ### Multi-session Persistence
+
 1. Create data in session 1
 2. Verify in session 2
 3. Modify in session 2
 4. Verify changes persist
 
 ### Concurrent Operations
+
 1. Create templates concurrently
 2. Add history concurrently
 3. Verify all persisted
@@ -276,10 +281,9 @@ npm run test:watch
 
 ## Coverage Targets
 
-| Metric | Target |
-|--------|--------|
-| Branches | 70% |
-| Functions | 70% |
-| Lines | 70% |
-| Statements | 70% |
-
+| Metric     | Target |
+| ---------- | ------ |
+| Branches   | 70%    |
+| Functions  | 70%    |
+| Lines      | 70%    |
+| Statements | 70%    |

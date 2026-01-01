@@ -454,7 +454,7 @@ class AIToolboxBackground {
         await chrome.sidePanel.setOptions({
           tabId,
           path,
-          enabled: true
+          enabled: true,
         });
         console.log('Side panel path set for tab:', tabId, 'to:', path);
       } else {

@@ -112,7 +112,8 @@ Make the formula copy-paste ready.`,
           {
             name: 'data_structure',
             label: 'Data Structure',
-            placeholder: 'e.g., Column A: Category, Column B: Amount, Column C: Date',
+            placeholder:
+              'e.g., Column A: Category, Column B: Amount, Column C: Date',
             defaultValue: '',
           },
           {
@@ -160,7 +161,8 @@ Format the enhanced email ready to send.`,
           {
             name: 'context',
             label: 'Context',
-            placeholder: 'e.g., responding to client request, internal update, follow-up',
+            placeholder:
+              'e.g., responding to client request, internal update, follow-up',
             defaultValue: 'business email',
           },
         ],
@@ -348,7 +350,8 @@ So that [benefit/value]
       {
         id: generateId(),
         name: 'Goal Breakdown',
-        description: 'Break down big goals into actionable milestones and tasks',
+        description:
+          'Break down big goals into actionable milestones and tasks',
         prompt: `Break down this goal into actionable steps:
 
 **Main Goal:** {goal}
@@ -398,7 +401,8 @@ Provide:
           {
             name: 'goal',
             label: 'Main Goal',
-            placeholder: 'e.g., launch a SaaS product, learn machine learning, get promoted',
+            placeholder:
+              'e.g., launch a SaaS product, learn machine learning, get promoted',
             defaultValue: '',
           },
           {
@@ -422,7 +426,8 @@ Provide:
       {
         id: generateId(),
         name: 'Context-Aware Translation',
-        description: 'Translate text with cultural and contextual understanding',
+        description:
+          'Translate text with cultural and contextual understanding',
         prompt: `Translate this text with cultural context:
 
 **Text to Translate:**
@@ -473,7 +478,8 @@ Provide:
           {
             name: 'context',
             label: 'Context',
-            placeholder: 'e.g., business email, marketing copy, casual conversation',
+            placeholder:
+              'e.g., business email, marketing copy, casual conversation',
             defaultValue: 'business email',
           },
         ],
@@ -518,13 +524,15 @@ Provide:
           {
             name: 'text',
             label: 'Text with Idioms',
-            placeholder: 'Enter text containing idioms or cultural expressions...',
+            placeholder:
+              'Enter text containing idioms or cultural expressions...',
             defaultValue: '',
           },
           {
             name: 'source_culture',
             label: 'Source Culture',
-            placeholder: 'e.g., American English, British English, Spanish (Spain)',
+            placeholder:
+              'e.g., American English, British English, Spanish (Spain)',
             defaultValue: 'American English',
           },
           {

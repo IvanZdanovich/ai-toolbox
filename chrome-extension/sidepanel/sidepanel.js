@@ -70,7 +70,10 @@ class SidePanelApp {
 
       // Restore the last active section
       const lastSection = result.last_active_section;
-      if (lastSection && (lastSection === 'templates' || lastSection === 'history')) {
+      if (
+        lastSection &&
+        (lastSection === 'templates' || lastSection === 'history')
+      ) {
         this.currentSection = lastSection;
         console.log('SidePanelApp: Restored last active section:', lastSection);
       }
@@ -836,15 +839,19 @@ class SidePanelApp {
       // Ask background script to update the sidepanel path
       await chrome.runtime.sendMessage({
         action: 'setSidePanelPath',
-        path: 'settings/settings.html?from=sidepanel'
+        path: 'settings/settings.html?from=sidepanel',
       });
 
       // Navigate to settings
-      window.location.href = chrome.runtime.getURL('settings/settings.html?from=sidepanel');
+      window.location.href = chrome.runtime.getURL(
+        'settings/settings.html?from=sidepanel'
+      );
     } catch (error) {
       console.error('Failed to open settings page:', error);
       // Fall back to simple navigation
-      window.location.href = chrome.runtime.getURL('settings/settings.html?from=sidepanel');
+      window.location.href = chrome.runtime.getURL(
+        'settings/settings.html?from=sidepanel'
+      );
     }
   }
 

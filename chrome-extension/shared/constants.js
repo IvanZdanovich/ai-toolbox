@@ -31,8 +31,8 @@ export const HISTORY_STATUS = {
 
 export const DEFAULT_SETTINGS = {
   apiKey: '', // Legacy field, kept for backward compatibility
-  provider: AI_PROVIDERS.GEMINI,
-  defaultProvider: AI_PROVIDERS.GEMINI,
+  provider: AI_PROVIDERS.MOCK,
+  defaultProvider: AI_PROVIDERS.MOCK,
   theme: 'auto',
   geminiModel: 'gemini-2.0-flash-exp',
   // API keys stored per provider

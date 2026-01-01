@@ -10,7 +10,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils } from '../mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+} from '../mocks/chrome-api.mock.js';
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 // Mock the modules before importing
@@ -39,7 +43,9 @@ describe('Template Manager Integration', () => {
 
     // Import fresh instances
     storage = (await import('../../shared/storage.js')).default;
-    const TemplateManagerModule = await import('../../shared/template-manager.js');
+    const TemplateManagerModule = await import(
+      '../../shared/template-manager.js'
+    );
     templateManager = TemplateManagerModule.default;
 
     // Reset template manager state
@@ -103,8 +109,9 @@ describe('Template Manager Integration', () => {
       };
 
       // When/Then: Creating invalid template should throw
-      await expect(templateManager.createTemplate(invalidTemplate))
-        .rejects.toThrow();
+      await expect(
+        templateManager.createTemplate(invalidTemplate)
+      ).rejects.toThrow();
     });
   });
 
@@ -127,8 +134,8 @@ describe('Template Manager Integration', () => {
 
       // Then: All templates should be returned
       expect(templates).toHaveLength(3);
-      expect(templates.map(t => t.name)).toContain('Email Response');
-      expect(templates.map(t => t.name)).toContain('Code Documentation');
+      expect(templates.map((t) => t.name)).toContain('Email Response');
+      expect(templates.map((t) => t.name)).toContain('Code Documentation');
     });
 
     it('should update an existing template', async () => {
@@ -159,12 +166,14 @@ describe('Template Manager Integration', () => {
       // Then: Template should be removed
       const templates = await templateManager.getAllTemplates();
       expect(templates).toHaveLength(initialCount - 1);
-      expect(templates.find(t => t.id === templateId)).toBeUndefined();
+      expect(templates.find((t) => t.id === templateId)).toBeUndefined();
     });
 
     it('should find template by ID', async () => {
       // When: User retrieves a specific template
-      const template = await templateManager.getTemplate(fixtures.templates.codeDoc.id);
+      const template = await templateManager.getTemplate(
+        fixtures.templates.codeDoc.id
+      );
 
       // Then: Correct template should be returned
       expect(template).toBeDefined();
@@ -175,10 +184,22 @@ describe('Template Manager Integration', () => {
   describe('Scenario: User searches templates', () => {
     beforeEach(async () => {
       const templates = [
-        factories.createTemplate({ name: 'Email Response', description: 'For emails' }),
-        factories.createTemplate({ name: 'Code Review', description: 'For reviewing code' }),
-        factories.createTemplate({ name: 'Meeting Notes', description: 'For meetings' }),
-        factories.createTemplate({ name: 'Email Draft', description: 'Draft emails quickly' }),
+        factories.createTemplate({
+          name: 'Email Response',
+          description: 'For emails',
+        }),
+        factories.createTemplate({
+          name: 'Code Review',
+          description: 'For reviewing code',
+        }),
+        factories.createTemplate({
+          name: 'Meeting Notes',
+          description: 'For meetings',
+        }),
+        factories.createTemplate({
+          name: 'Email Draft',
+          description: 'Draft emails quickly',
+        }),
       ];
       storage.getTemplates.mockResolvedValue(templates);
       storage.getTemplatesSeeded.mockResolvedValue(true);
@@ -191,7 +212,7 @@ describe('Template Manager Integration', () => {
 
       // Then: Should return matching templates
       expect(results).toHaveLength(2);
-      expect(results.every(t => t.name.includes('Email'))).toBe(true);
+      expect(results.every((t) => t.name.includes('Email'))).toBe(true);
     });
 
     it('should find templates by description', async () => {
@@ -232,7 +253,8 @@ describe('Template Manager Integration', () => {
 
       const variables = templateManager.extractVariables
         ? templateManager.extractVariables(template.prompt)
-        : template.prompt.match(/\{([^}]+)\}/g)?.map(v => v.slice(1, -1)) || [];
+        : template.prompt.match(/\{([^}]+)\}/g)?.map((v) => v.slice(1, -1)) ||
+          [];
 
       // Then: All variables should be extracted
       expect(variables).toContain('type');
@@ -324,7 +346,9 @@ describe('Template Manager Error Handling', () => {
     const storage = (await import('../../shared/storage.js')).default;
     storage.getTemplates.mockRejectedValue(new Error('Storage unavailable'));
 
-    const TemplateManagerModule = await import('../../shared/template-manager.js');
+    const TemplateManagerModule = await import(
+      '../../shared/template-manager.js'
+    );
     const templateManager = TemplateManagerModule.default;
 
     // Suppress expected console.error
@@ -339,4 +363,3 @@ describe('Template Manager Error Handling', () => {
     consoleSpy.mockRestore();
   });
 });
-

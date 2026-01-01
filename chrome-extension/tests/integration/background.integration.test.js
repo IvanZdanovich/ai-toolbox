@@ -10,7 +10,12 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils, chromeMock } from '../mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+  chromeMock,
+} from '../mocks/chrome-api.mock.js';
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 describe('Background Service Worker Integration', () => {
@@ -105,12 +110,17 @@ describe('Background Service Worker Integration', () => {
 
       // When: Migration runs
       const migrateData = async () => {
-        const data = await chromeMock.storage.sync.get(['__schemaVersion', 'templates']);
+        const data = await chromeMock.storage.sync.get([
+          '__schemaVersion',
+          'templates',
+        ]);
         if (data.__schemaVersion < 2) {
           // Perform migration
           await chromeMock.storage.sync.set({
             __schemaVersion: 2,
-            templates: Array.isArray(data.templates) ? data.templates : [data.templates],
+            templates: Array.isArray(data.templates)
+              ? data.templates
+              : [data.templates],
           });
         }
       };
@@ -144,7 +154,10 @@ describe('Background Service Worker Integration', () => {
         chromeMock.runtime.onMessage._trigger(
           { action: 'getTemplates' },
           { id: chromeMock.runtime.id },
-          (r) => { response = r; resolve(); }
+          (r) => {
+            response = r;
+            resolve();
+          }
         );
       });
 
@@ -213,7 +226,11 @@ describe('Background Service Worker Integration', () => {
       // Given: Unknown action
       let errorResponse;
       const messageHandler = (request, sender, sendResponse) => {
-        const knownActions = ['getTemplates', 'processTemplate', 'openSidePanel'];
+        const knownActions = [
+          'getTemplates',
+          'processTemplate',
+          'openSidePanel',
+        ];
         if (!knownActions.includes(request.action)) {
           sendResponse({ error: 'Unknown action' });
           return;
@@ -228,7 +245,10 @@ describe('Background Service Worker Integration', () => {
         chromeMock.runtime.onMessage._trigger(
           { action: 'unknownAction' },
           { id: chromeMock.runtime.id },
-          (r) => { errorResponse = r; resolve(); }
+          (r) => {
+            errorResponse = r;
+            resolve();
+          }
         );
       });
 
@@ -352,7 +372,10 @@ describe('Background Service Worker Integration', () => {
     it('should clean up on tab close', async () => {
       // Given: Active processing for a tab
       const activeProcessing = new Map();
-      activeProcessing.set(1, { templateId: 'email-001', startTime: Date.now() });
+      activeProcessing.set(1, {
+        templateId: 'email-001',
+        startTime: Date.now(),
+      });
 
       const closeHandler = (tabId) => {
         activeProcessing.delete(tabId);
@@ -389,7 +412,10 @@ describe('Background Service Worker Integration', () => {
     it('should set badge for processing state', () => {
       // Given: Template is processing
       const setBadgeSpy = vi.spyOn(chromeMock.action, 'setBadgeText');
-      const setColorSpy = vi.spyOn(chromeMock.action, 'setBadgeBackgroundColor');
+      const setColorSpy = vi.spyOn(
+        chromeMock.action,
+        'setBadgeBackgroundColor'
+      );
 
       // When: Setting processing badge
       chromeMock.action.setBadgeText({ text: '...' });
@@ -415,7 +441,10 @@ describe('Background Service Worker Integration', () => {
 
     it('should set error badge on failure', () => {
       // Given: Processing failed
-      const setColorSpy = vi.spyOn(chromeMock.action, 'setBadgeBackgroundColor');
+      const setColorSpy = vi.spyOn(
+        chromeMock.action,
+        'setBadgeBackgroundColor'
+      );
 
       // When: Setting error badge
       chromeMock.action.setBadgeText({ text: '!' });
@@ -433,7 +462,11 @@ describe('Background Service Worker Integration', () => {
       // Given: Extension starts
       let validated = false;
       const startupHandler = async () => {
-        const data = await chromeMock.storage.sync.get(['templates', 'history', 'settings']);
+        const data = await chromeMock.storage.sync.get([
+          'templates',
+          'history',
+          'settings',
+        ]);
         validated = true;
         return data;
       };
@@ -466,4 +499,3 @@ describe('Background Service Worker Integration', () => {
     });
   });
 });
-

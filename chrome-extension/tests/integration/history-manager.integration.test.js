@@ -11,7 +11,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils } from '../mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+} from '../mocks/chrome-api.mock.js';
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 // Mock storage module
@@ -35,7 +39,9 @@ describe('History Manager Integration', () => {
     vi.resetModules();
 
     storage = (await import('../../shared/storage.js')).default;
-    const HistoryManagerModule = await import('../../shared/history-manager.js');
+    const HistoryManagerModule = await import(
+      '../../shared/history-manager.js'
+    );
     historyManager = HistoryManagerModule.default;
 
     // Reset state
@@ -107,8 +113,9 @@ describe('History Manager Integration', () => {
       // Then: History should be sorted newest first
       expect(history).toHaveLength(3);
       for (let i = 0; i < history.length - 1; i++) {
-        expect(new Date(history[i].timestamp).getTime())
-          .toBeGreaterThanOrEqual(new Date(history[i + 1].timestamp).getTime());
+        expect(new Date(history[i].timestamp).getTime()).toBeGreaterThanOrEqual(
+          new Date(history[i + 1].timestamp).getTime()
+        );
       }
     });
 
@@ -119,7 +126,9 @@ describe('History Manager Integration', () => {
       );
 
       // Then: Only matching entries should be returned
-      expect(filtered.every(h => h.templateId === fixtures.templates.email.id)).toBe(true);
+      expect(
+        filtered.every((h) => h.templateId === fixtures.templates.email.id)
+      ).toBe(true);
     });
 
     it('should retrieve specific history entry', async () => {
@@ -145,10 +154,22 @@ describe('History Manager Integration', () => {
   describe('Scenario: User searches history', () => {
     beforeEach(async () => {
       const history = [
-        factories.createHistoryEntry({ templateName: 'Email Response', result: 'Dear customer...' }),
-        factories.createHistoryEntry({ templateName: 'Code Review', result: 'Function looks good...' }),
-        factories.createHistoryEntry({ templateName: 'Email Draft', result: 'Hello team...' }),
-        factories.createHistoryEntry({ templateName: 'Meeting Notes', result: 'Action items...' }),
+        factories.createHistoryEntry({
+          templateName: 'Email Response',
+          result: 'Dear customer...',
+        }),
+        factories.createHistoryEntry({
+          templateName: 'Code Review',
+          result: 'Function looks good...',
+        }),
+        factories.createHistoryEntry({
+          templateName: 'Email Draft',
+          result: 'Hello team...',
+        }),
+        factories.createHistoryEntry({
+          templateName: 'Meeting Notes',
+          result: 'Action items...',
+        }),
       ];
       storage.getHistory.mockResolvedValue(history);
       await historyManager.init();
@@ -160,9 +181,11 @@ describe('History Manager Integration', () => {
 
       // Then: Should return matching entries
       expect(results.length).toBeGreaterThan(0);
-      expect(results.every(h =>
-        h.templateName.includes('Email') || h.result.includes('Email')
-      )).toBe(true);
+      expect(
+        results.every(
+          (h) => h.templateName.includes('Email') || h.result.includes('Email')
+        )
+      ).toBe(true);
     });
 
     it('should search history by result content', async () => {
@@ -271,7 +294,7 @@ describe('History Manager Integration', () => {
         ...factories.createHistoryEntries(maxEntries - 1),
         factories.createHistoryEntry({
           id: 'oldest-entry',
-          timestamp: oldestTimestamp
+          timestamp: oldestTimestamp,
         }),
       ];
       storage.getHistory.mockResolvedValue(history);
@@ -328,7 +351,7 @@ describe('History Manager Integration', () => {
 
         // Then: Only that template's history should be cleared
         const remaining = await historyManager.getAllHistory();
-        expect(remaining.every(h => h.templateId !== templateId)).toBe(true);
+        expect(remaining.every((h) => h.templateId !== templateId)).toBe(true);
       }
     });
   });
@@ -375,7 +398,9 @@ describe('History Manager Error Handling', () => {
     const storage = (await import('../../shared/storage.js')).default;
     storage.getHistory.mockRejectedValue(new Error('Storage unavailable'));
 
-    const HistoryManagerModule = await import('../../shared/history-manager.js');
+    const HistoryManagerModule = await import(
+      '../../shared/history-manager.js'
+    );
     const historyManager = HistoryManagerModule.default;
 
     // Suppress expected console.error
@@ -396,7 +421,9 @@ describe('History Manager Error Handling', () => {
     const storage = (await import('../../shared/storage.js')).default;
     storage.getHistory.mockResolvedValue([]);
 
-    const HistoryManagerModule = await import('../../shared/history-manager.js');
+    const HistoryManagerModule = await import(
+      '../../shared/history-manager.js'
+    );
     const historyManager = HistoryManagerModule.default;
     await historyManager.init();
 
@@ -406,4 +433,3 @@ describe('History Manager Error Handling', () => {
     ).rejects.toThrow();
   });
 });
-

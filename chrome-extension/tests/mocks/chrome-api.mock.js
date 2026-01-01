@@ -234,12 +234,16 @@ export const testUtils = {
     const calls = [];
     const fn = (...args) => {
       calls.push(args);
-      return typeof returnValue === 'function' ? returnValue(...args) : returnValue;
+      return typeof returnValue === 'function'
+        ? returnValue(...args)
+        : returnValue;
     };
     fn.calls = calls;
     fn.callCount = () => calls.length;
     fn.lastCall = () => calls[calls.length - 1];
-    fn.reset = () => { calls.length = 0; };
+    fn.reset = () => {
+      calls.length = 0;
+    };
     return fn;
   },
 };
@@ -260,4 +264,3 @@ export function uninstallChromeMock() {
 }
 
 export default chromeMock;
-

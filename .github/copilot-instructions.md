@@ -4,7 +4,7 @@ applyTo: '${WORKSPACE_ROOT}/chrome-extension/**'
 
 # Chrome Extension Development Standards
 
-**PURPOSE:** Build ultra-fast, secure Chrome extensions with minimal dependencies, clean architecture, 
+**PURPOSE:** Build ultra-fast, secure Chrome extensions with minimal dependencies, clean architecture,
 and polished UI/UX following modern web standards and Manifest V3 best practices.
 
 ## Core Principles
@@ -26,6 +26,7 @@ and polished UI/UX following modern web standards and Manifest V3 best practices
 ## Prohibited Practices
 
 **NEVER:**
+
 - Hard-code UI strings → always use `/_locales/` for internationalization
 - Add dependencies without bundle-size impact analysis and justification
 - Request `<all_urls>` or broad permissions → use specific match patterns only
@@ -81,6 +82,7 @@ extension/
 ```
 
 **Naming Conventions:**
+
 - Files: `kebab-case.js`
 - Exports/functions: `camelCase`
 - Constants: `UPPER_SNAKE_CASE`
@@ -89,29 +91,27 @@ extension/
 ## Manifest V3 Configuration
 
 **Required Setup:**
+
 ```json
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
   "version": "1.0.0",
   "default_locale": "en",
-  "permissions": [
-    "storage",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "https://api.example.com/*"
-  ],
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://api.example.com/*"],
   "background": {
     "service_worker": "src/background/service-worker.js",
     "type": "module"
   },
-  "content_scripts": [{
-    "matches": ["https://example.com/*"],
-    "js": ["src/content-scripts/main.js"],
-    "css": ["src/content-scripts/styles.css"],
-    "run_at": "document_start"
-  }],
+  "content_scripts": [
+    {
+      "matches": ["https://example.com/*"],
+      "js": ["src/content-scripts/main.js"],
+      "css": ["src/content-scripts/styles.css"],
+      "run_at": "document_start"
+    }
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
@@ -127,6 +127,7 @@ extension/
 ```
 
 **Rules:**
+
 - Request **minimum necessary permissions** only → justify all expansions in PR
 - Use `optional_permissions` for non-critical features requiring user consent
 - Prefer `declarativeNetRequest` over `webRequest` for network modifications
@@ -136,6 +137,7 @@ extension/
 ## Performance Optimization Patterns
 
 **Code Splitting & Lazy Loading:**
+
 ```javascript
 // ✅ Dynamic imports for heavy features
 async function enableAdvancedFeature() {
@@ -151,6 +153,7 @@ button.addEventListener('click', async () => {
 ```
 
 **Caching with TTL:**
+
 ```javascript
 // ✅ Cache with Time-To-Live
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -161,21 +164,22 @@ async function fetchWithCache(url) {
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data;
   }
-  
-  const data = await fetch(url).then(r => r.json());
+
+  const data = await fetch(url).then((r) => r.json());
   cache.set(url, { data, timestamp: Date.now() });
-  
+
   // Cleanup old entries
   if (cache.size > 100) {
     const oldest = [...cache.entries()][0];
     cache.delete(oldest[0]);
   }
-  
+
   return data;
 }
 ```
 
 **Batching Operations:**
+
 ```javascript
 // ✅ Batch storage writes
 class StorageBatcher {
@@ -183,21 +187,21 @@ class StorageBatcher {
     this.pending = new Map();
     this.timeoutId = null;
   }
-  
+
   set(key, value) {
     this.pending.set(key, value);
-    
+
     if (!this.timeoutId) {
       this.timeoutId = setTimeout(() => this.flush(), 100);
     }
   }
-  
+
   async flush() {
     if (this.pending.size === 0) return;
-    
+
     const updates = Object.fromEntries(this.pending);
     await chrome.storage.local.set(updates);
-    
+
     this.pending.clear();
     this.timeoutId = null;
   }
@@ -205,24 +209,32 @@ class StorageBatcher {
 ```
 
 **Debouncing & Throttling:**
+
 ```javascript
 // ✅ Debounce user input
 import { debounce } from './utils/debounce.js';
 
-searchInput.addEventListener('input', debounce(async (e) => {
-  const results = await searchAPI(e.target.value);
-  displayResults(results);
-}, 300));
+searchInput.addEventListener(
+  'input',
+  debounce(async (e) => {
+    const results = await searchAPI(e.target.value);
+    displayResults(results);
+  }, 300)
+);
 
 // ✅ Throttle scroll events
 import { throttle } from './utils/throttle.js';
 
-window.addEventListener('scroll', throttle(() => {
-  updateScrollIndicator();
-}, 100));
+window.addEventListener(
+  'scroll',
+  throttle(() => {
+    updateScrollIndicator();
+  }, 100)
+);
 ```
 
 **Efficient DOM Operations:**
+
 ```javascript
 // ✅ Use MutationObserver with limits
 const observer = new MutationObserver((mutations) => {
@@ -231,14 +243,14 @@ const observer = new MutationObserver((mutations) => {
     console.warn('Too many DOM mutations, skipping');
     return;
   }
-  
+
   processMutations(mutations);
 });
 
 observer.observe(document.body, {
   childList: true,
   subtree: true,
-  attributes: false // Only watch what you need
+  attributes: false, // Only watch what you need
 });
 
 // Cleanup
@@ -248,32 +260,37 @@ window.addEventListener('beforeunload', () => observer.disconnect());
 ## Dependency Management
 
 **Before Adding Any Dependency:**
+
 1. Check if native Web/Chrome API can solve it
 2. Estimate bundle size impact (use `bundlephobia.com`)
 3. Consider writing a small utility in `src/shared/utils/`
 4. Document justification in PR with alternatives considered
 
 **Rules:**
+
 - Lock all versions in `package.json`
 - Use `npm ci` in CI for reproducible builds
 - NO polyfills for Chrome 90+ (use native APIs)
 - Review bundle size report on every dependency change
 
 **Example PR Justification:**
+
 ```markdown
 ## Adding `date-fns` dependency
 
 **Why:** Need robust date formatting across 10+ locales
 **Size:** 12.3 KB (tree-shaken, only importing `format` and `parseISO`)
 **Alternatives considered:**
-  - `Intl.DateTimeFormat`: Limited format options, verbose API
-  - Custom utility: Would require 200+ lines, hard to maintain
-**Bundle impact:** +12KB (within budget, total remains 1.2MB)
+
+- `Intl.DateTimeFormat`: Limited format options, verbose API
+- Custom utility: Would require 200+ lines, hard to maintain
+  **Bundle impact:** +12KB (within budget, total remains 1.2MB)
 ```
 
 ## Build Configuration & Tooling
 
 **Vite Configuration:**
+
 ```javascript
 // vite.config.js
 import { defineConfig } from 'vite';
@@ -288,21 +305,22 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: true, // Remove console.logs in production
-        drop_debugger: true
-      }
+        drop_debugger: true,
+      },
     },
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['large-library'] // Separate vendor bundles
-        }
-      }
-    }
-  }
+          vendor: ['large-library'], // Separate vendor bundles
+        },
+      },
+    },
+  },
 });
 ```
 
 **Quality Checks:**
+
 - **Linting:** ESLint with `eslint-plugin-chrome-extension`
 - **Formatting:** Prettier with pre-commit hooks
 - **Type Checking:** TypeScript strict mode or JSDoc validation
@@ -310,6 +328,7 @@ export default defineConfig({
 - **Bundle Analysis:** Run `npm run build -- --analyze` before merging
 
 **CI Pipeline Requirements:**
+
 ```yaml
 # .github/workflows/ci.yml
 - name: Quality Gate
@@ -325,6 +344,7 @@ export default defineConfig({
 ## Security Best Practices
 
 **Input Sanitization:**
+
 ```javascript
 // ✅ Safe DOM insertion
 element.textContent = userInput; // Always safe
@@ -333,7 +353,7 @@ element.textContent = userInput; // Always safe
 import DOMPurify from 'dompurify';
 element.innerHTML = DOMPurify.sanitize(userHTML, {
   ALLOWED_TAGS: ['b', 'i', 'em', 'strong'],
-  ALLOWED_ATTR: []
+  ALLOWED_ATTR: [],
 });
 
 // ❌ NEVER use innerHTML with user input directly
@@ -341,6 +361,7 @@ element.innerHTML = userInput; // XSS vulnerability!
 ```
 
 **Message Validation:**
+
 ```javascript
 // ✅ Validate all incoming messages
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -349,14 +370,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.warn('Message from unauthorized sender');
     return;
   }
-  
+
   // Validate message structure
   const ALLOWED_ACTIONS = ['GET_DATA', 'SAVE_SETTINGS', 'CLEAR_CACHE'];
   if (!msg.type || !ALLOWED_ACTIONS.includes(msg.type)) {
     console.error('Invalid message type:', msg.type);
     return;
   }
-  
+
   // Process valid message
   handleMessage(msg).then(sendResponse);
   return true; // Async response
@@ -364,6 +385,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 ```
 
 **Secure Storage:**
+
 ```javascript
 // ✅ Encrypt sensitive data before storing
 import { encrypt, decrypt } from './utils/crypto.js';
@@ -382,7 +404,7 @@ async function getApiKey() {
 async function makeAuthenticatedRequest(url) {
   const apiKey = await getApiKey();
   const response = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${apiKey}` }
+    headers: { Authorization: `Bearer ${apiKey}` },
   });
   // Don't store apiKey in memory longer than needed
   return response.json();
@@ -390,6 +412,7 @@ async function makeAuthenticatedRequest(url) {
 ```
 
 **CSP Compliance:**
+
 ```javascript
 // ✅ Load resources securely
 const iconUrl = chrome.runtime.getURL('assets/icons/icon-48.png');
@@ -408,6 +431,7 @@ element.setAttribute('onclick', 'alert(1)'); // CSP violation!
 ## UI/UX Design System
 
 **CSS Design Tokens:**
+
 ```css
 /* src/shared/styles/tokens.css */
 :root {
@@ -417,27 +441,28 @@ element.setAttribute('onclick', 'alert(1)'); // CSP violation!
   --color-success: #28a745;
   --color-danger: #dc3545;
   --color-warning: #ffc107;
-  
+
   --color-bg: #ffffff;
   --color-bg-secondary: #f8f9fa;
   --color-text: #212529;
   --color-text-secondary: #6c757d;
   --color-border: #dee2e6;
-  
+
   /* Spacing - 8px base unit */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  
+
   /* Typography */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-size-sm: 12px;
   --font-size-base: 14px;
   --font-size-lg: 16px;
   --font-size-xl: 20px;
-  
+
   /* Effects */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -459,6 +484,7 @@ element.setAttribute('onclick', 'alert(1)'); // CSP violation!
 ```
 
 **Responsive Component Example:**
+
 ```javascript
 // popup.html
 <button class="btn btn--primary" aria-label="Save settings">
@@ -472,15 +498,15 @@ element.setAttribute('onclick', 'alert(1)'); // CSP violation!
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  
+
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   font-weight: 500;
-  
+
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  
+
   transition: all var(--transition);
 }
 
@@ -506,6 +532,7 @@ element.setAttribute('onclick', 'alert(1)'); // CSP violation!
 ```
 
 **Accessibility Checklist:**
+
 - ✅ All interactive elements have `aria-label` or visible text
 - ✅ Keyboard navigation works (Tab, Enter, Escape)
 - ✅ Focus indicators visible (`outline` or custom styling)
@@ -513,6 +540,7 @@ element.setAttribute('onclick', 'alert(1)'); // CSP violation!
 - ✅ Screen reader tested with Chrome + ChromeVox
 
 **Internationalization:**
+
 ```javascript
 // _locales/en/messages.json
 {
@@ -528,7 +556,7 @@ element.setAttribute('onclick', 'alert(1)'); // CSP violation!
 }
 
 // popup.js
-document.getElementById('save-btn').textContent = 
+document.getElementById('save-btn').textContent =
   chrome.i18n.getMessage('buttonSave');
 
 // Show localized error
@@ -541,6 +569,7 @@ function showError(messageKey) {
 ## Extension Architecture Patterns
 
 **Service Worker (Background):**
+
 ```javascript
 // src/background/service-worker.js
 const CURRENT_SCHEMA_VERSION = 2;
@@ -551,7 +580,8 @@ chrome.runtime.onInstalled.addListener(async ({ reason, previousVersion }) => {
     await initializeStorage();
     chrome.tabs.create({ url: 'src/options/options.html' });
   } else if (reason === 'update') {
-    const { __schemaVersion } = await chrome.storage.local.get('__schemaVersion');
+    const { __schemaVersion } =
+      await chrome.storage.local.get('__schemaVersion');
     if (__schemaVersion < CURRENT_SCHEMA_VERSION) {
       await migrateStorage(__schemaVersion || 1, CURRENT_SCHEMA_VERSION);
     }
@@ -562,7 +592,7 @@ chrome.runtime.onInstalled.addListener(async ({ reason, previousVersion }) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   handleMessage(msg, sender)
     .then(sendResponse)
-    .catch(error => sendResponse({ error: error.message }));
+    .catch((error) => sendResponse({ error: error.message }));
   return true; // Async response
 });
 
@@ -586,7 +616,9 @@ async function fetchWithRetry(url, maxRetries = 3) {
       return await response.json();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, i) * 1000)
+      );
     }
   }
 }
@@ -596,20 +628,21 @@ async function processLargeDataset(data) {
   await chrome.offscreen.createDocument({
     url: 'src/offscreen/offscreen.html',
     reasons: ['WORKERS'],
-    justification: 'Heavy ML model inference'
+    justification: 'Heavy ML model inference',
   });
-  
+
   const result = await chrome.runtime.sendMessage({
     type: 'PROCESS_DATA',
-    data
+    data,
   });
-  
+
   await chrome.offscreen.closeDocument();
   return result;
 }
 ```
 
 **Content Scripts with Shadow DOM:**
+
 ```javascript
 // src/content-scripts/main.js
 class ExtensionUI {
@@ -617,15 +650,15 @@ class ExtensionUI {
     this.container = null;
     this.shadow = null;
   }
-  
+
   inject() {
     // Create isolated container
     this.container = document.createElement('div');
     this.container.id = 'my-extension-root';
-    
+
     // Use closed shadow DOM for style isolation
     this.shadow = this.container.attachShadow({ mode: 'closed' });
-    
+
     // Load styles and content
     this.shadow.innerHTML = `
       <style>
@@ -661,26 +694,26 @@ class ExtensionUI {
         </div>
       </div>
     `;
-    
+
     // Attach to page
     document.documentElement.appendChild(this.container);
-    
+
     // Setup event listeners
     this.attachListeners();
   }
-  
+
   attachListeners() {
     const closeBtn = this.shadow.querySelector('.popup__close');
     closeBtn.addEventListener('click', () => this.remove());
-    
+
     // Listen for escape key
     document.addEventListener('keydown', this.handleKeydown);
   }
-  
+
   handleKeydown = (e) => {
     if (e.key === 'Escape') this.remove();
   };
-  
+
   remove() {
     document.removeEventListener('keydown', this.handleKeydown);
     this.container?.remove();
@@ -690,7 +723,7 @@ class ExtensionUI {
 // Observe DOM changes efficiently
 const observer = new MutationObserver((mutations) => {
   if (mutations.length > 100) return; // Performance guard
-  
+
   for (const mutation of mutations) {
     for (const node of mutation.addedNodes) {
       if (node.matches && node.matches('.target-element')) {
@@ -702,7 +735,7 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(document.body, {
   childList: true,
-  subtree: true
+  subtree: true,
 });
 
 // Cleanup on navigation
@@ -713,6 +746,7 @@ window.addEventListener('beforeunload', () => {
 ```
 
 **Storage Schema & Migration:**
+
 ```javascript
 // src/shared/storage.js
 const CURRENT_SCHEMA_VERSION = 2;
@@ -721,7 +755,7 @@ const DEFAULT_SETTINGS = {
   __schemaVersion: CURRENT_SCHEMA_VERSION,
   theme: 'auto',
   enableFeatureX: true,
-  apiEndpoint: 'https://api.example.com'
+  apiEndpoint: 'https://api.example.com',
 };
 
 async function initializeStorage() {
@@ -730,19 +764,19 @@ async function initializeStorage() {
 
 async function migrateStorage(fromVersion, toVersion) {
   console.log(`Migrating storage from v${fromVersion} to v${toVersion}`);
-  
+
   const data = await chrome.storage.local.get();
-  
+
   // Apply migrations sequentially
   if (fromVersion < 2) {
     // v1 → v2: Rename 'endpoint' to 'apiEndpoint'
     data.apiEndpoint = data.endpoint || DEFAULT_SETTINGS.apiEndpoint;
     delete data.endpoint;
   }
-  
+
   // Add future migrations here
   // if (fromVersion < 3) { ... }
-  
+
   data.__schemaVersion = toVersion;
   await chrome.storage.local.set(data);
   console.log('Migration completed');
@@ -756,19 +790,19 @@ async function saveLargeData(key, data) {
   const compressed = pako.deflate(json);
   await chrome.storage.local.set({
     [key]: Array.from(compressed),
-    [`${key}__compressed`]: true
+    [`${key}__compressed`]: true,
   });
 }
 
 async function loadLargeData(key) {
   const result = await chrome.storage.local.get([key, `${key}__compressed`]);
-  
+
   if (result[`${key}__compressed`]) {
     const compressed = new Uint8Array(result[key]);
     const json = pako.inflate(compressed, { to: 'string' });
     return JSON.parse(json);
   }
-  
+
   return result[key];
 }
 ```
@@ -776,6 +810,7 @@ async function loadLargeData(key) {
 ## Testing Requirements
 
 **Unit Tests (Vitest):**
+
 ```javascript
 // tests/utils/debounce.test.js
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -785,37 +820,37 @@ describe('debounce', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
-  
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
-  
+
   it('delays function execution', () => {
     const fn = vi.fn();
     const debounced = debounce(fn, 100);
-    
+
     debounced('arg1');
     expect(fn).not.toHaveBeenCalled();
-    
+
     vi.advanceTimersByTime(50);
     expect(fn).not.toHaveBeenCalled();
-    
+
     vi.advanceTimersByTime(50);
     expect(fn).toHaveBeenCalledOnce();
     expect(fn).toHaveBeenCalledWith('arg1');
   });
-  
+
   it('resets timer on subsequent calls', () => {
     const fn = vi.fn();
     const debounced = debounce(fn, 100);
-    
+
     debounced();
     vi.advanceTimersByTime(50);
     debounced(); // Reset timer
     vi.advanceTimersByTime(50);
-    
+
     expect(fn).not.toHaveBeenCalled();
-    
+
     vi.advanceTimersByTime(50);
     expect(fn).toHaveBeenCalledOnce();
   });
@@ -826,17 +861,17 @@ describe('storage migration', () => {
   beforeEach(async () => {
     await chrome.storage.local.clear();
   });
-  
+
   it('migrates from v1 to v2', async () => {
     // Setup v1 data
     await chrome.storage.local.set({
       __schemaVersion: 1,
-      endpoint: 'https://old-api.com'
+      endpoint: 'https://old-api.com',
     });
-    
+
     // Run migration
     await migrateStorage(1, 2);
-    
+
     // Verify v2 structure
     const data = await chrome.storage.local.get();
     expect(data.__schemaVersion).toBe(2);
@@ -847,6 +882,7 @@ describe('storage migration', () => {
 ```
 
 **E2E Tests (Playwright):**
+
 ```javascript
 // tests/e2e/popup.spec.js
 import { test, expect } from './fixtures';
@@ -854,30 +890,32 @@ import { test, expect } from './fixtures';
 test.describe('Extension Popup', () => {
   test('loads and displays default content', async ({ page, extensionId }) => {
     await page.goto(`chrome-extension://${extensionId}/src/popup/popup.html`);
-    
+
     await expect(page.locator('h1')).toContainText('My Extension');
     await expect(page.locator('.settings-btn')).toBeVisible();
   });
-  
+
   test('saves settings successfully', async ({ page, extensionId }) => {
     await page.goto(`chrome-extension://${extensionId}/src/popup/popup.html`);
-    
+
     // Interact with UI
     await page.locator('#theme-select').selectOption('dark');
     await page.locator('.save-btn').click();
-    
+
     // Verify success message
     await expect(page.locator('.toast--success')).toBeVisible();
-    await expect(page.locator('.toast--success')).toContainText('Settings saved');
+    await expect(page.locator('.toast--success')).toContainText(
+      'Settings saved'
+    );
   });
-  
+
   test('handles network errors gracefully', async ({ page, extensionId }) => {
     // Mock failing network request
-    await page.route('**/api/data', route => route.abort());
-    
+    await page.route('**/api/data', (route) => route.abort());
+
     await page.goto(`chrome-extension://${extensionId}/src/popup/popup.html`);
     await page.locator('.fetch-btn').click();
-    
+
     await expect(page.locator('.error-message')).toBeVisible();
     await expect(page.locator('.error-message')).toContainText('Network error');
   });
@@ -887,11 +925,11 @@ test.describe('Extension Popup', () => {
 test.describe('Content Script Integration', () => {
   test('injects UI on target page', async ({ page }) => {
     await page.goto('https://example.com');
-    
+
     // Wait for content script injection
     const extensionRoot = page.locator('#my-extension-root');
     await expect(extensionRoot).toBeAttached();
-    
+
     // Verify shadow DOM content
     const shadowContent = await page.evaluate(() => {
       const root = document.querySelector('#my-extension-root');
@@ -903,6 +941,7 @@ test.describe('Content Script Integration', () => {
 ```
 
 **Coverage Requirements:**
+
 - Unit tests: **> 80%** for `src/shared/`, `src/background/`
 - E2E tests: All critical user flows (popup load, settings save, content script injection)
 - Bundle-size: Automated check fails if > 2MB
@@ -910,6 +949,7 @@ test.describe('Content Script Integration', () => {
 ## CI/CD Pipeline
 
 **GitHub Actions Workflow:**
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI
@@ -922,30 +962,30 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Lint
         run: npm run lint
-      
+
       - name: Type check
         run: npm run typecheck
-      
+
       - name: Unit tests
         run: npm run test:unit -- --coverage
-      
+
       - name: Build extension
         run: npm run build
-      
+
       - name: Bundle size check
         run: |
           SIZE=$(du -sb build | cut -f1)
@@ -955,13 +995,13 @@ jobs:
             exit 1
           fi
           echo "✅ Bundle size OK: $SIZE bytes"
-      
+
       - name: E2E tests
         run: npm run test:e2e
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
-      
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -972,57 +1012,69 @@ jobs:
 ## Documentation Standards
 
 **README.md Structure:**
+
 ```markdown
 # Extension Name
 
 Brief description of what the extension does.
 
 ## Features
+
 - Feature 1
 - Feature 2
 
 ## Installation
+
 1. Clone repository
 2. `npm install`
 3. `npm run build`
 4. Load unpacked extension from `build/` directory
 
 ## Development
+
 See [DEVELOPMENT.md](DEVELOPMENT.md) for local setup and debugging.
 
 ## Architecture
+
 See [ARCHITECTURE.md](ARCHITECTURE.md) for technical details.
 
 ## License
+
 MIT
 ```
 
 **DEVELOPMENT.md:**
+
 ```markdown
 # Development Guide
 
 ## Local Setup
+
 1. Install Node.js 20+
 2. `npm install`
 3. `npm run dev` (watch mode)
 
 ## Loading Extension
+
 1. Open `chrome://extensions/`
 2. Enable "Developer mode"
 3. Click "Load unpacked"
 4. Select `build/` directory
 
 ## Debugging
+
 - **Background**: `chrome://extensions/` → "service worker"
 - **Popup**: Right-click popup → "Inspect"
 - **Content scripts**: Open DevTools on target page
 
 ## Testing
+
 - `npm run test:unit` - Unit tests
 - `npm run test:e2e` - E2E tests
 - `npm run test:watch` - Watch mode
 
 ## Build
+
 - `npm run build` - Production build
 - `npm run build:analyze` - Bundle analysis
 ```
@@ -1032,29 +1084,34 @@ MIT
 Before merging any PR:
 
 ### Performance
+
 - [ ] Bundle size < 1.5MB (CI check passes)
 - [ ] Heavy features use dynamic imports
 - [ ] No synchronous expensive operations in hot paths
 
 ### Security
+
 - [ ] Minimal permissions requested (justify any additions)
 - [ ] All user input sanitized
 - [ ] No `eval()`, inline scripts, or CSP violations
 - [ ] Sensitive data encrypted before storage
 
 ### Code Quality
+
 - [ ] ESLint passes with no warnings
 - [ ] TypeScript/JSDoc types for public APIs
 - [ ] No code duplication (DRY principle)
 - [ ] Comments explain "why", not "what"
 
 ### Testing
+
 - [ ] Unit test coverage > 80%
 - [ ] E2E tests for new features
 - [ ] Migration tests if storage schema changed
 - [ ] Manual testing on target sites
 
 ### UX/Accessibility
+
 - [ ] Screenshots attached for UI changes
 - [ ] Keyboard navigation works
 - [ ] ARIA labels for interactive elements
@@ -1062,11 +1119,13 @@ Before merging any PR:
 - [ ] All text localized (no hard-coded strings)
 
 ### Dependencies
+
 - [ ] Justification provided for new packages
 - [ ] Bundle size impact analyzed
 - [ ] Alternatives considered and documented
 
 ### Documentation
+
 - [ ] README.md updated if behavior changes
 - [ ] CHANGELOG.md entry added
 - [ ] Code comments for complex logic
@@ -1075,6 +1134,7 @@ Before merging any PR:
 ## Quick Reference Guide
 
 **Common Patterns:**
+
 ```javascript
 // Debounce input
 import { debounce } from './utils/debounce.js';
@@ -1102,6 +1162,7 @@ const response = await chrome.runtime.sendMessage({ type: 'ACTION', data });
 ```
 
 **Performance Checklist:**
+
 - ✅ Use dynamic imports for heavy features
 - ✅ Debounce/throttle event handlers
 - ✅ Cache API responses with TTL
@@ -1110,6 +1171,7 @@ const response = await chrome.runtime.sendMessage({ type: 'ACTION', data });
 - ✅ Clean up listeners on unmount
 
 **Security Checklist:**
+
 - ✅ Use `textContent` for user input
 - ✅ Validate all messages
 - ✅ Encrypt sensitive storage
@@ -1117,6 +1179,7 @@ const response = await chrome.runtime.sendMessage({ type: 'ACTION', data });
 - ✅ CSP compliant
 
 **Accessibility Checklist:**
+
 - ✅ ARIA labels on interactive elements
 - ✅ Keyboard navigation (Tab, Enter, Escape)
 - ✅ Focus indicators visible
@@ -1125,4 +1188,4 @@ const response = await chrome.runtime.sendMessage({ type: 'ACTION', data });
 
 ---
 
-**Summary:** These standards ensure sub-150ms UI response times, minimal bundle sizes through code splitting, strict security via CSP and input sanitization, and comprehensive testing. Follow these patterns to build production-ready Chrome extensions that are fast, secure, and accessible. 
+**Summary:** These standards ensure sub-150ms UI response times, minimal bundle sizes through code splitting, strict security via CSP and input sanitization, and comprehensive testing. Follow these patterns to build production-ready Chrome extensions that are fast, secure, and accessible.

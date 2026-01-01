@@ -10,7 +10,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { installChromeMock, uninstallChromeMock, testUtils } from '../mocks/chrome-api.mock.js';
+import {
+  installChromeMock,
+  uninstallChromeMock,
+  testUtils,
+} from '../mocks/chrome-api.mock.js';
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 describe('Storage Service Integration', () => {
@@ -156,7 +160,7 @@ describe('Storage Service Integration', () => {
 
       // Then: Templates should match
       expect(retrieved).toHaveLength(3);
-      expect(retrieved.map(t => t.id)).toEqual(templates.map(t => t.id));
+      expect(retrieved.map((t) => t.id)).toEqual(templates.map((t) => t.id));
     });
 
     it('should return empty array for no templates', async () => {
@@ -273,7 +277,7 @@ describe('Storage Service Integration', () => {
 
     it('should handle chunked templates', async () => {
       // Given: Many large templates
-      const templates = factories.createTemplates(30).map(t => ({
+      const templates = factories.createTemplates(30).map((t) => ({
         ...t,
         prompt: 'x'.repeat(500), // Large prompts
         description: 'y'.repeat(200),
@@ -355,10 +359,10 @@ describe('Storage Error Handling', () => {
     // Storage should handle gracefully
   });
 
-it('should handle corrupted data', async () => {
+  it('should handle corrupted data', async () => {
     // Given: Corrupted data in storage
     testUtils.setStorageState({
-      templates: 'not-valid-json-array'
+      templates: 'not-valid-json-array',
     });
 
     vi.resetModules();
@@ -370,10 +374,11 @@ it('should handle corrupted data', async () => {
 
     // Then: Should return empty array or handle gracefully
     // The actual implementation may return the corrupted string or empty array
-    expect(templates === undefined ||
-           templates === null ||
-           templates === 'not-valid-json-array' ||
-           Array.isArray(templates)).toBe(true);
+    expect(
+      templates === undefined ||
+        templates === null ||
+        templates === 'not-valid-json-array' ||
+        Array.isArray(templates)
+    ).toBe(true);
   });
 });
-

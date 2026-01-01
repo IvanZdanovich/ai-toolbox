@@ -15,6 +15,7 @@ A Chrome extension that provides an AI-powered template toolbox for automating r
 ### Load the Extension (Chrome/Edge)
 
 1. **Download or clone this repository**
+
    ```bash
    git clone https://github.com/IvanZdanovich/ai-toolbox.git
    ```
@@ -47,10 +48,12 @@ A Chrome extension that provides an AI-powered template toolbox for automating r
 ## Development
 
 ### Prerequisites
+
 - Node.js 20+
 - Chrome or Edge browser
 
 ### Setup
+
 ```bash
 npm install
 npm test          # Run tests
