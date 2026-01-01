@@ -332,6 +332,222 @@ html {
 }
 
 /* ========================================
+   TEMPLATE VARIABLES (Template Modal)
+   ======================================== */
+
+.template-variables {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.variables-header h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.variables-header .form-help {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.help-details {
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-surface);
+}
+
+.help-summary {
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  user-select: none;
+  list-style: none;
+}
+
+.help-summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: var(--spacing-xs);
+  transition: transform 0.2s;
+}
+
+.help-details[open] .help-summary::before {
+  transform: rotate(90deg);
+}
+
+.help-summary:hover {
+  background: var(--color-background-hover);
+}
+
+.help-content {
+  padding: var(--spacing-sm);
+  padding-top: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.help-content p {
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.help-content strong {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help-content code {
+  background: var(--color-background);
+  padding: 2px 4px;
+  border-radius: var(--border-radius);
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--color-primary);
+}
+
+.help-example {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--color-background);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--border-radius);
+}
+
+.help-example ul {
+  margin: var(--spacing-xs) 0 0 0;
+  padding-left: var(--spacing-md);
+  list-style: disc;
+}
+
+.help-example li {
+  margin-bottom: 2px;
+}
+
+.variables-grid-header {
+  display: grid; /* Always show headers when variables exist */
+  grid-template-columns: 1fr; /* Stack on mobile */
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+}
+
+.grid-header-label {
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: var(--spacing-xs) 0;
+}
+
+/* Show as grid on wider screens */
+@media (min-width: 500px) {
+  .variables-grid-header {
+    grid-template-columns: 2fr 2fr 1fr;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .grid-header-label {
+    padding: 0;
+  }
+}
+
+.variable-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.variable-group .form-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: monospace;
+  background: var(--color-surface);
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--color-primary);
+}
+
+.variable-inputs {
+  display: grid;
+  gap: var(--spacing-sm);
+  grid-template-columns: 1fr;
+}
+
+.variable-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.input-mini-label {
+  display: block;
+  font-size: 9px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 2px;
+}
+
+.variable-inputs .form-input {
+  font-size: var(--font-size-sm);
+  width: 100%;
+}
+
+.variable-input-wrapper:nth-child(1) .form-input {
+  /* Label field - slightly emphasized */
+  font-weight: var(--font-weight-medium);
+}
+
+.variable-input-wrapper:nth-child(2) .form-input {
+  /* Placeholder field */
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.variable-input-wrapper:nth-child(3) .form-input {
+  /* Default value field */
+  background: var(--color-background);
+  border-style: dashed;
+}
+
+/* Responsive layout for wider panels */
+@media (min-width: 500px) {
+  .variable-inputs {
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: var(--spacing-xs);
+  }
+
+  .input-mini-label {
+    display: none; /* Hide mini labels when column headers are visible */
+  }
+
+  .variable-input-wrapper {
+    gap: 0;
+  }
+}
+
+/* ========================================
    SCROLLBAR STYLING
    ======================================== */
 

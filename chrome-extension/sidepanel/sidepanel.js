@@ -36,6 +36,7 @@ class SidePanelApp {
       ]);
 
       await this.loadData();
+      await this.restoreUIState();
       this.setupEventListeners();
       this.render();
 
@@ -60,6 +61,25 @@ class SidePanelApp {
     } catch (error) {
       console.error('Failed to load data:', error);
       throw error;
+    }
+  }
+
+  async restoreUIState() {
+    try {
+      const result = await chrome.storage.local.get(['last_active_section']);
+
+      // Restore the last active section
+      const lastSection = result.last_active_section;
+      if (lastSection && (lastSection === 'templates' || lastSection === 'history')) {
+        this.currentSection = lastSection;
+        console.log('SidePanelApp: Restored last active section:', lastSection);
+      }
+
+      // Mark that we're now on the sidepanel
+      await chrome.storage.local.set({ last_active_page: 'sidepanel' });
+    } catch (error) {
+      console.error('Failed to restore UI state:', error);
+      // Keep default section if restore fails
     }
   }
 
@@ -195,6 +215,9 @@ class SidePanelApp {
     });
 
     this.currentSection = section;
+
+    // Save current section to storage for persistence
+    chrome.storage.local.set({ last_active_section: section });
 
     if (section === 'templates') {
       this.renderTemplates();
@@ -428,20 +451,65 @@ class SidePanelApp {
       return;
     }
 
+    // Get existing input definitions if editing a template
+    const existingInputs = this.currentTemplate?.inputs || [];
+    const existingInputMap = new Map(
+      existingInputs.map((input) => [input.name, input])
+    );
+
     container.innerHTML = `
-      <h4>Template Variables</h4>
+      <div class="variables-header">
+        <h4>Template Variables</h4>
+        <p class="form-help">Configure how each variable appears and behaves</p>
+      </div>
       ${variables
-        .map(
-          (variable) => `
+        .map((variable) => {
+          const existingInput = existingInputMap.get(variable);
+          const label =
+            existingInput?.label ||
+            variable
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (l) => l.toUpperCase());
+          const defaultValue = existingInput?.defaultValue || '';
+          const placeholder =
+            existingInput?.placeholder ||
+            `Enter ${variable.replace(/_/g, ' ')}...`;
+
+          return `
         <div class="variable-group">
-          <label class="form-label">${variable}</label>
-          <input type="text" class="form-input" 
-                 data-variable="${variable}" 
-                 placeholder="Label for ${variable}" 
-                 value="${variable.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}">
+          <label class="form-label" title="Variable: {${variable}}">{${variable}}</label>
+          <div class="variable-inputs">
+            <div class="variable-input-wrapper">
+              <span class="input-mini-label">Label</span>
+              <input type="text" class="form-input" 
+                     data-variable="${variable}" 
+                     data-field="label"
+                     placeholder="e.g., Topic" 
+                     value="${label}"
+                     title="The label shown above the input field">
+            </div>
+            <div class="variable-input-wrapper">
+              <span class="input-mini-label">Placeholder (hint text)</span>
+              <input type="text" class="form-input" 
+                     data-variable="${variable}" 
+                     data-field="placeholder"
+                     placeholder="e.g., Message" 
+                     value="${placeholder}"
+                     title="Hint text shown inside the empty input">
+            </div>
+            <div class="variable-input-wrapper">
+              <span class="input-mini-label">Default Value</span>
+              <input type="text" class="form-input" 
+                     data-variable="${variable}" 
+                     data-field="defaultValue"
+                     placeholder="e.g., Addressee" 
+                     value="${defaultValue}"
+                     title="Pre-filled value that users can override">
+            </div>
+          </div>
         </div>
-      `
-        )
+      `;
+        })
         .join('')}
     `;
   }
@@ -468,15 +536,45 @@ class SidePanelApp {
       prompt: document.getElementById('templatePrompt').value.trim(),
     };
 
-    const variableInputs = document.querySelectorAll(
-      '#templateVariables [data-variable]'
-    );
-    if (variableInputs.length > 0) {
-      templateData.inputs = Array.from(variableInputs).map((input) => ({
-        name: input.dataset.variable,
-        label: input.value.trim() || input.dataset.variable,
-        placeholder: `Enter ${input.dataset.variable.replace(/_/g, ' ')}...`,
-      }));
+    // Group inputs by variable name
+    const variableGroups = document.querySelectorAll('.variable-group');
+    if (variableGroups.length > 0) {
+      const inputsMap = new Map();
+
+      variableGroups.forEach((group) => {
+        const inputs = group.querySelectorAll('[data-variable]');
+        const variable = inputs[0]?.dataset.variable;
+
+        if (variable) {
+          const inputData = {
+            name: variable,
+            label: '',
+            placeholder: '',
+            defaultValue: '',
+          };
+
+          inputs.forEach((input) => {
+            const field = input.dataset.field;
+            if (field) {
+              inputData[field] = input.value.trim();
+            }
+          });
+
+          // Set defaults if not provided
+          if (!inputData.label) {
+            inputData.label = variable
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (l) => l.toUpperCase());
+          }
+          if (!inputData.placeholder) {
+            inputData.placeholder = `Enter ${variable.replace(/_/g, ' ')}...`;
+          }
+
+          inputsMap.set(variable, inputData);
+        }
+      });
+
+      templateData.inputs = Array.from(inputsMap.values());
     }
 
     try {
@@ -592,7 +690,7 @@ class SidePanelApp {
         <div class="form-group">
           <label class="form-label" for="input_${input.name}">${input.label}</label>
           <textarea id="input_${input.name}" name="${input.name}" class="form-textarea" 
-                    placeholder="${input.placeholder}" rows="2"></textarea>
+                    placeholder="${input.placeholder}" rows="2">${input.defaultValue || ''}</textarea>
         </div>
       `
         )
@@ -730,11 +828,24 @@ class SidePanelApp {
   }
 
   // Settings methods
-  openSettingsPage() {
-    // Load the settings page within the sidepanel
-    window.location.href = chrome.runtime.getURL(
-      'settings/settings.html?from=sidepanel'
-    );
+  async openSettingsPage() {
+    try {
+      // Save current state
+      await chrome.storage.local.set({ last_active_page: 'settings' });
+
+      // Ask background script to update the sidepanel path
+      await chrome.runtime.sendMessage({
+        action: 'setSidePanelPath',
+        path: 'settings/settings.html?from=sidepanel'
+      });
+
+      // Navigate to settings
+      window.location.href = chrome.runtime.getURL('settings/settings.html?from=sidepanel');
+    } catch (error) {
+      console.error('Failed to open settings page:', error);
+      // Fall back to simple navigation
+      window.location.href = chrome.runtime.getURL('settings/settings.html?from=sidepanel');
+    }
   }
 
   escapeHtml(text) {

@@ -3,6 +3,8 @@ export const STORAGE_KEYS = {
   HISTORY: 'history',
   SETTINGS: 'settings',
   TEMPLATES_SEEDED: 'templates_seeded',
+  LAST_ACTIVE_SECTION: 'last_active_section',
+  LAST_ACTIVE_PAGE: 'last_active_page',
 };
 
 export const AI_PROVIDERS = {
@@ -28,10 +30,19 @@ export const HISTORY_STATUS = {
 };
 
 export const DEFAULT_SETTINGS = {
-  apiKey: '',
-  provider: AI_PROVIDERS.MOCK,
-  defaultProvider: AI_PROVIDERS.MOCK,
+  apiKey: '', // Legacy field, kept for backward compatibility
+  provider: AI_PROVIDERS.GEMINI,
+  defaultProvider: AI_PROVIDERS.GEMINI,
   theme: 'auto',
+  geminiModel: 'gemini-2.0-flash-exp',
+  // API keys stored per provider
+  apiKeys: {
+    openai: '',
+    claude: '',
+    gemini: '',
+    llama: '',
+    grok: '',
+  },
 };
 
 export const LIMITS = {

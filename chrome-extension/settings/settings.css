@@ -199,7 +199,16 @@ body {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   line-height: 1.4;
-  border: var(--border-width) solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  font-style: italic;
+  display: none; /* Hidden by default */
+}
+
+.provider-description:not(:empty) {
+  display: block;
 }
 
 .api-key-input-group {
@@ -265,6 +274,11 @@ body {
   background-color: var(--color-background);
   border: var(--border-width) solid var(--color-error);
   color: var(--color-error);
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .connection-status.error::before {
@@ -318,6 +332,11 @@ body {
 
 .storage-bar-fill.error {
   background-color: var(--color-error);
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .storage-text {
@@ -377,26 +396,27 @@ body {
 }
 
 .coffee-link {
-  background-color: #fd4;
-  color: #333;
-  border-color: #fd4;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
 }
 
 .coffee-link:hover {
-  background-color: #fc1;
-  border-color: #fc1;
+  background-color: var(--color-background-hover);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
+  opacity: 0.9;
 }
 
 .github-link {
-  background-color: #f6f8fa;
-  color: #24292f;
-  border-color: #d0d7de;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
 }
 
 .github-link:hover {
-  background-color: #f3f4f6;
-  border-color: #d0d7de;
+  background-color: var(--color-background-hover);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
 }
 

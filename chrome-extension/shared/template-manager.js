@@ -36,44 +36,132 @@ class TemplateManager {
     }
 
     const defaultTemplates = [
-      // === TICKET & TASK MANAGEMENT ===
+      // === SOCIAL MEDIA & CONTENT ===
       {
         id: generateId(),
-        name: 'Jira Ticket from Draft',
-        description:
-          'Create a well-structured Jira ticket from a brief title/idea',
-        prompt: `Create a Jira ticket based on this draft title: "{draft_title}"
+        name: 'Social Media Post',
+        description: 'Create engaging social media posts for any platform',
+        prompt: `Create a social media post based on:
 
-Project context: {project_context}
+**Topic/Message:** {topic}
 
-Format the response as:
-**Title:** [Clear, actionable ticket title]
+**Platform:** {platform}
 
-**Type:** [Bug/Story/Task/Improvement]
+**Tone:** {tone}
 
-**Description:**
-[2-3 sentences explaining the issue or feature]
+Create an engaging post that:
+- Captures attention with a strong hook
+- Delivers the message clearly and concisely
+- Includes a call-to-action if appropriate
+- Uses platform best practices (hashtags for Instagram/Twitter, professional tone for LinkedIn)
+- Stays within platform character limits
 
-**Acceptance Criteria:**
-- [ ] [Specific, testable criterion 1]
-- [ ] [Specific, testable criterion 2]
-- [ ] [Specific, testable criterion 3]
-
-**Technical Notes:**
-[Any implementation hints or considerations]
-
-**Priority:** [Low/Medium/High/Critical]
-**Story Points:** [1/2/3/5/8]`,
+Format the post ready to publish (no meta-commentary).`,
         inputs: [
           {
-            name: 'draft_title',
-            label: 'Draft Title/Idea',
-            placeholder: 'e.g., fix login button not working on mobile',
+            name: 'topic',
+            label: 'Topic/Message',
+            placeholder: 'What do you want to share?',
+            defaultValue: '',
           },
           {
-            name: 'project_context',
-            label: 'Project Context (optional)',
-            placeholder: 'e.g., React web app, e-commerce platform',
+            name: 'platform',
+            label: 'Platform',
+            placeholder: 'e.g., Twitter/X, LinkedIn, Instagram, Facebook',
+            defaultValue: 'LinkedIn',
+          },
+          {
+            name: 'tone',
+            label: 'Tone',
+            placeholder: 'e.g., professional, casual, inspirational, humorous',
+            defaultValue: 'professional',
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+
+      // === PRODUCTIVITY & DATA ===
+      {
+        id: generateId(),
+        name: 'Excel Formula Helper',
+        description: 'Generate Excel/Google Sheets formulas from plain English',
+        prompt: `Generate an Excel/Google Sheets formula for this task:
+
+**What I Need:** {goal}
+
+**Data Structure:** {data_structure}
+
+**Sheet Type:** {sheet_type}
+
+Provide:
+1. **Formula:** The exact formula to use
+2. **Explanation:** Step-by-step breakdown of how it works
+3. **Example:** A concrete example with sample data
+4. **Notes:** Any important considerations or limitations
+5. **Alternatives:** Other approaches if applicable
+
+Make the formula copy-paste ready.`,
+        inputs: [
+          {
+            name: 'goal',
+            label: 'What You Need',
+            placeholder: 'e.g., sum values where column A contains "Sales"',
+            defaultValue: '',
+          },
+          {
+            name: 'data_structure',
+            label: 'Data Structure',
+            placeholder: 'e.g., Column A: Category, Column B: Amount, Column C: Date',
+            defaultValue: '',
+          },
+          {
+            name: 'sheet_type',
+            label: 'Sheet Type',
+            placeholder: 'Excel or Google Sheets',
+            defaultValue: 'Google Sheets',
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+
+      // === EMAIL & COMMUNICATION ===
+      {
+        id: generateId(),
+        name: 'Email Triage & Enhancement',
+        description: 'Analyze, prioritize, and improve draft emails',
+        prompt: `Analyze and enhance this email:
+
+**Draft Email:**
+{draft_email}
+
+**Context:** {context}
+
+Provide:
+1. **Priority Assessment:** [Urgent/High/Medium/Low] with reasoning
+2. **Key Action Items:** What needs to be done
+3. **Enhanced Version:** Improved draft that is:
+   - Clear and concise
+   - Properly structured
+   - Professional and polished
+   - Action-oriented where appropriate
+4. **Suggested Subject Line:** If not provided
+5. **Recommendations:** Any additional improvements
+
+Format the enhanced email ready to send.`,
+        inputs: [
+          {
+            name: 'draft_email',
+            label: 'Draft Email',
+            placeholder: 'Paste your rough email draft...',
+            defaultValue: '',
+          },
+          {
+            name: 'context',
+            label: 'Context',
+            placeholder: 'e.g., responding to client request, internal update, follow-up',
+            defaultValue: 'business email',
           },
         ],
         createdAt: new Date().toISOString(),
@@ -81,127 +169,23 @@ Format the response as:
       },
       {
         id: generateId(),
-        name: 'Bug Report',
-        description: 'Generate a detailed bug report from symptoms',
-        prompt: `Create a detailed bug report based on these symptoms: "{symptoms}"
-
-Environment: {environment}
-
-Format as:
-**Bug Title:** [Concise description]
-
-**Environment:**
-- Browser/Device: {environment}
-- Version: [If known]
-
-**Steps to Reproduce:**
-1. [First step]
-2. [Second step]
-3. [Continue as needed]
-
-**Expected Behavior:**
-[What should happen]
-
-**Actual Behavior:**
-[What actually happens]
-
-**Severity:** [Critical/Major/Minor/Trivial]
-
-**Possible Cause:**
-[Technical hypothesis if applicable]
-
-**Screenshots/Logs:**
-[Placeholder for attachments]`,
-        inputs: [
-          {
-            name: 'symptoms',
-            label: 'Bug Symptoms',
-            placeholder: 'Describe what went wrong...',
-          },
-          {
-            name: 'environment',
-            label: 'Environment',
-            placeholder: 'e.g., Chrome 120, Windows 11, iPhone 15',
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-
-      // === LANGUAGE & COMMUNICATION ===
-      {
-        id: generateId(),
-        name: 'Foreign Phrase Explanation',
-        description:
-          'Get detailed explanation of complex phrases in a foreign language',
-        prompt: `Explain this {language} phrase in detail: "{phrase}"
-
-Provide the explanation in {native_language} with the following format:
-
-**Phrase:** {phrase}
-
-**Literal Translation:**
-[Word-by-word translation]
-
-**Meaning:**
-[What it actually means in context]
-
-**Usage Context:**
-[When and how to use this phrase - formal/informal, situations]
-
-**Example Sentences:**
-1. [Original language example] → [Translation]
-2. [Original language example] → [Translation]
-
-**Similar Expressions:**
-- [Alternative phrase 1] - [meaning]
-- [Alternative phrase 2] - [meaning]
-
-**Common Mistakes:**
-[What learners often get wrong with this phrase]
-
-**Cultural Note:**
-[Any cultural context that helps understand the phrase]`,
-        inputs: [
-          {
-            name: 'phrase',
-            label: 'Phrase to Explain',
-            placeholder: 'Enter the foreign phrase...',
-          },
-          {
-            name: 'language',
-            label: 'Source Language',
-            placeholder: 'e.g., German, Japanese, Spanish',
-          },
-          {
-            name: 'native_language',
-            label: 'Explain In',
-            placeholder: 'e.g., English',
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: generateId(),
-        name: 'Message Response Draft',
-        description:
-          'Create a full response from an original message and your draft ideas',
+        name: 'Email/Message Response',
+        description: 'Generate complete responses to emails or messages',
         prompt: `Write a complete response based on:
 
 **Original Message:**
 {original_message}
 
-**My Draft/Key Points:**
-{draft_response}
+**Your Key Points:**
+{key_points}
 
 **Tone:** {tone}
 
-Create a polished, complete response that:
+Create a polished response that:
 - Addresses all points from the original message
-- Incorporates my draft ideas naturally
+- Incorporates your key points naturally
 - Maintains the specified tone
-- Is clear and professional
+- Is clear, professional, and well-structured
 - Includes appropriate greeting and closing
 
 Format the response ready to send (no meta-commentary).`,
@@ -210,104 +194,86 @@ Format the response ready to send (no meta-commentary).`,
             name: 'original_message',
             label: 'Original Message',
             placeholder: 'Paste the message you are responding to...',
+            defaultValue: '',
           },
           {
-            name: 'draft_response',
-            label: 'Your Draft/Key Points',
-            placeholder:
-              'Your rough ideas, bullet points, or partial response...',
+            name: 'key_points',
+            label: 'Your Key Points',
+            placeholder: 'Main points you want to address or include...',
+            defaultValue: '',
           },
           {
             name: 'tone',
             label: 'Tone',
             placeholder: 'e.g., professional, friendly, apologetic, firm',
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: generateId(),
-        name: 'Email Reply',
-        description: 'Generate professional email response',
-        prompt: `Write a professional email response:
-
-**Original Email:**
-{email_content}
-
-**Key Points to Address:**
-{key_points}
-
-**Tone:** {tone}
-
-Format as a ready-to-send email with:
-- Appropriate greeting
-- Clear, organized response to each point
-- Professional closing
-- Signature placeholder [Your Name]`,
-        inputs: [
-          {
-            name: 'email_content',
-            label: 'Original Email',
-            placeholder: "Paste the email you're responding to...",
-          },
-          {
-            name: 'key_points',
-            label: 'Key Points to Include',
-            placeholder: 'Main points you want to address...',
-          },
-          {
-            name: 'tone',
-            label: 'Tone',
-            placeholder: 'e.g., formal, friendly, apologetic',
+            defaultValue: 'professional',
           },
         ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
 
-      // === DEVELOPMENT & TECHNICAL ===
+      // === TICKET & TASK MANAGEMENT ===
       {
         id: generateId(),
-        name: 'Code Documentation',
-        description: 'Generate comprehensive code documentation',
-        prompt: `Create documentation for this {language} code:
+        name: 'Bug Ticket from Title',
+        description: 'Create detailed bug tickets from brief title drafts',
+        prompt: `Create a detailed bug ticket from this title: "{title_draft}"
 
-\`\`\`{language}
-{code}
-\`\`\`
+**Environment:** {environment}
 
 Format as:
-## Overview
-[Brief description of what this code does]
+**Title:** [Clear, specific bug title]
 
-## Parameters
-| Name | Type | Description | Required |
-|------|------|-------------|----------|
-[Table of parameters]
+**Type:** Bug
 
-## Returns
-[What the function/method returns]
+**Priority:** [Critical/High/Medium/Low]
 
-## Example Usage
-\`\`\`{language}
-[Practical example]
-\`\`\`
+**Description:**
+[2-3 sentences describing the bug and its impact]
 
-## Notes
-- [Important considerations]
-- [Edge cases]
-- [Performance notes if relevant]`,
+**Environment:**
+- {environment}
+- [Additional relevant environment details]
+
+**Steps to Reproduce:**
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+4. [Observe the issue]
+
+**Expected Behavior:**
+[What should happen]
+
+**Actual Behavior:**
+[What actually happens]
+
+**Impact:**
+[How this affects users/system]
+
+**Possible Cause:**
+[Technical hypothesis if obvious from the title]
+
+**Acceptance Criteria:**
+- [ ] Bug is reproducible
+- [ ] Root cause identified
+- [ ] Fix implemented
+- [ ] Tests added
+- [ ] No regression in related features
+
+**Labels:** bug, {environment}`,
         inputs: [
           {
-            name: 'code',
-            label: 'Code Snippet',
-            placeholder: 'Paste your code here...',
+            name: 'title_draft',
+            label: 'Bug Title Draft',
+            placeholder: 'e.g., login button not working on mobile',
+            defaultValue: '',
           },
           {
-            name: 'language',
-            label: 'Programming Language',
-            placeholder: 'e.g., JavaScript, Python, TypeScript',
+            name: 'environment',
+            label: 'Environment (optional)',
+            placeholder: 'e.g., Chrome 131, iOS 18, production',
+            defaultValue: 'Chrome 131, macOS',
           },
         ],
         createdAt: new Date().toISOString(),
@@ -315,223 +281,263 @@ Format as:
       },
       {
         id: generateId(),
-        name: 'Git Commit Message',
-        description: 'Generate conventional commit message from changes',
-        prompt: `Generate a conventional commit message for these changes:
+        name: 'Story Ticket from Title',
+        description: 'Create user story tickets from brief title drafts',
+        prompt: `Create a user story ticket from this title: "{title_draft}"
 
-**Changes Made:**
-{changes}
-
-**Context:** {context}
+**Project Context:** {project_context}
 
 Format as:
-\`\`\`
-<type>(<scope>): <short description>
+**Title:** [Clear, user-focused story title]
 
-<detailed body explaining what and why>
+**Type:** Story
 
-<footer with issue references if applicable>
-\`\`\`
+**User Story:**
+As a [user type]
+I want to [action/feature]
+So that [benefit/value]
 
-Types: feat, fix, docs, style, refactor, test, chore
-Keep the first line under 72 characters.`,
-        inputs: [
-          {
-            name: 'changes',
-            label: 'Changes Made',
-            placeholder: 'Describe what you changed...',
-          },
-          {
-            name: 'context',
-            label: 'Context/Ticket (optional)',
-            placeholder: 'e.g., JIRA-123, fixes login issue',
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: generateId(),
-        name: 'PR Description',
-        description: 'Generate pull request description from changes',
-        prompt: `Create a pull request description:
+**Description:**
+[2-3 sentences providing context and background]
 
-**Title/Summary:** {title}
-**Changes:** {changes}
-**Ticket:** {ticket}
+**Acceptance Criteria:**
+- [ ] [Specific, testable criterion 1]
+- [ ] [Specific, testable criterion 2]
+- [ ] [Specific, testable criterion 3]
+- [ ] [UI/UX criterion if applicable]
+- [ ] [Edge case handling]
 
-Format as:
-## Summary
-[2-3 sentence overview]
+**Technical Notes:**
+- [Implementation approach suggestions]
+- [Dependencies or prerequisites]
+- [Potential challenges]
 
-## Changes
-- [Change 1]
-- [Change 2]
-- [Continue as needed]
+**Design Notes:**
+[UI/UX considerations if applicable]
 
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Testing
-- [ ] [Test case 1]
-- [ ] [Test case 2]
-
-## Screenshots (if applicable)
-[Placeholder]
-
-## Checklist
-- [ ] Code follows project style guidelines
-- [ ] Self-review completed
-- [ ] Tests added/updated
+**Definition of Done:**
+- [ ] Code implemented and reviewed
+- [ ] Unit tests written
+- [ ] Integration tested
 - [ ] Documentation updated
+- [ ] Stakeholder approved
 
-Closes {ticket}`,
+**Priority:** [High/Medium/Low]
+**Story Points:** [1/2/3/5/8/13]
+
+**Labels:** feature, {project_context}`,
         inputs: [
           {
-            name: 'title',
-            label: 'PR Title/Summary',
-            placeholder: 'Brief description of the PR...',
+            name: 'title_draft',
+            label: 'Story Title Draft',
+            placeholder: 'e.g., add dark mode to settings page',
+            defaultValue: '',
           },
           {
-            name: 'changes',
-            label: 'Changes Made',
-            placeholder: 'List the main changes...',
-          },
-          {
-            name: 'ticket',
-            label: 'Ticket Reference',
-            placeholder: 'e.g., JIRA-123, #456',
+            name: 'project_context',
+            label: 'Project Context (optional)',
+            placeholder: 'e.g., React web app, mobile app, API service',
+            defaultValue: 'web application',
           },
         ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
 
-      // === MEETINGS & NOTES ===
+      // === PLANNING & STRATEGY ===
       {
         id: generateId(),
-        name: 'Meeting Summary',
-        description: 'Convert meeting notes into structured summary',
-        prompt: `Convert these meeting notes into a structured summary:
+        name: 'Goal Breakdown',
+        description: 'Break down big goals into actionable milestones and tasks',
+        prompt: `Break down this goal into actionable steps:
 
-**Raw Notes:**
-{meeting_notes}
+**Main Goal:** {goal}
 
-**Meeting Type:** {meeting_type}
+**Timeline:** {timeline}
 
-Format as:
-# Meeting Summary
-**Date:** [Today's date]
-**Type:** {meeting_type}
-**Attendees:** [Extract from notes or mark as TBD]
-
-## Key Discussion Points
-1. [Main topic 1]
-2. [Main topic 2]
-3. [Continue as needed]
-
-## Decisions Made
-- ✅ [Decision 1]
-- ✅ [Decision 2]
-
-## Action Items
-| Task | Owner | Due Date |
-|------|-------|----------|
-| [Task 1] | [Person] | [Date] |
-| [Task 2] | [Person] | [Date] |
-
-## Next Steps
-- [Immediate next step]
-- [Follow-up items]
-
-## Open Questions
-- [Unresolved question 1]
-- [Unresolved question 2]`,
-        inputs: [
-          {
-            name: 'meeting_notes',
-            label: 'Meeting Notes',
-            placeholder: 'Paste your raw meeting notes...',
-          },
-          {
-            name: 'meeting_type',
-            label: 'Meeting Type',
-            placeholder: 'e.g., Sprint Planning, 1:1, Team Sync, Client Call',
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-
-      // === CONTENT & WRITING ===
-      {
-        id: generateId(),
-        name: 'Text Rewrite',
-        description: 'Rewrite text in a different style or tone',
-        prompt: `Rewrite the following text:
-
-**Original Text:**
-{original_text}
-
-**Target Style:** {style}
-**Purpose:** {purpose}
-
-Provide the rewritten version that:
-- Maintains the core message
-- Adapts to the specified style
-- Is appropriate for the stated purpose
-- Improves clarity where possible
-
-Output only the rewritten text, ready to use.`,
-        inputs: [
-          {
-            name: 'original_text',
-            label: 'Original Text',
-            placeholder: 'Paste text to rewrite...',
-          },
-          {
-            name: 'style',
-            label: 'Target Style',
-            placeholder: 'e.g., formal, casual, concise, detailed, persuasive',
-          },
-          {
-            name: 'purpose',
-            label: 'Purpose',
-            placeholder: 'e.g., blog post, email, documentation, social media',
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: generateId(),
-        name: "Explain Like I'm 5",
-        description: 'Simplify complex concepts into easy explanations',
-        prompt: `Explain this concept in simple terms:
-
-**Concept:** {concept}
-
-**Context/Field:** {context}
+**Current State:** {current_state}
 
 Provide:
-1. **Simple Explanation** (2-3 sentences a child could understand)
-2. **Analogy** (real-world comparison)
-3. **Key Points** (3 bullet points)
-4. **Common Misconceptions** (what people often get wrong)
-5. **Learn More** (what to explore next)`,
+## Goal Overview
+[1-2 sentence summary of the goal]
+
+## Key Milestones
+1. **Milestone 1** ([timeframe])
+   - [What will be achieved]
+
+2. **Milestone 2** ([timeframe])
+   - [What will be achieved]
+
+3. **Milestone 3** ([timeframe])
+   - [What will be achieved]
+
+## Immediate Next Steps (Week 1-2)
+- [ ] [Specific actionable task 1]
+- [ ] [Specific actionable task 2]
+- [ ] [Specific actionable task 3]
+
+## Success Metrics
+- [How to measure milestone 1]
+- [How to measure milestone 2]
+- [How to measure final goal]
+
+## Potential Obstacles
+- [Challenge 1] → [Mitigation strategy]
+- [Challenge 2] → [Mitigation strategy]
+
+## Resources Needed
+- [Resource/tool/skill 1]
+- [Resource/tool/skill 2]
+
+## Timeline Summary
+- **Start:** [Date based on current state]
+- **Milestone 1:** [Date]
+- **Milestone 2:** [Date]
+- **Target Completion:** {timeline}`,
         inputs: [
           {
-            name: 'concept',
-            label: 'Concept to Explain',
-            placeholder: 'e.g., blockchain, machine learning, recursion',
+            name: 'goal',
+            label: 'Main Goal',
+            placeholder: 'e.g., launch a SaaS product, learn machine learning, get promoted',
+            defaultValue: '',
+          },
+          {
+            name: 'timeline',
+            label: 'Timeline',
+            placeholder: 'e.g., 6 months, by Q2 2026, 1 year',
+            defaultValue: '6 months',
+          },
+          {
+            name: 'current_state',
+            label: 'Current State',
+            placeholder: 'e.g., have an idea, completed research, built MVP',
+            defaultValue: 'starting from scratch',
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+
+      // === LANGUAGE & TRANSLATION ===
+      {
+        id: generateId(),
+        name: 'Context-Aware Translation',
+        description: 'Translate text with cultural and contextual understanding',
+        prompt: `Translate this text with cultural context:
+
+**Text to Translate:**
+{text}
+
+**From:** {from_language}
+**To:** {to_language}
+**Context:** {context}
+
+Provide:
+1. **Direct Translation:**
+[Accurate translation maintaining original meaning]
+
+2. **Culturally Adapted Version:**
+[Translation adjusted for target culture and context]
+
+3. **Key Differences:**
+- [Notable adaptation 1 and why]
+- [Notable adaptation 2 and why]
+
+4. **Tone & Formality:**
+[How formality level was preserved or adjusted]
+
+5. **Alternative Phrasings:**
+- [Option 1]: [When to use this]
+- [Option 2]: [When to use this]
+
+**Recommended Version:** [Which translation to use based on context]`,
+        inputs: [
+          {
+            name: 'text',
+            label: 'Text to Translate',
+            placeholder: 'Enter the text you want to translate...',
+            defaultValue: '',
+          },
+          {
+            name: 'from_language',
+            label: 'From Language',
+            placeholder: 'e.g., English, Spanish, Japanese',
+            defaultValue: 'English',
+          },
+          {
+            name: 'to_language',
+            label: 'To Language',
+            placeholder: 'e.g., French, German, Chinese',
+            defaultValue: 'Spanish',
           },
           {
             name: 'context',
-            label: 'Field/Context',
-            placeholder: 'e.g., computer science, finance, biology',
+            label: 'Context',
+            placeholder: 'e.g., business email, marketing copy, casual conversation',
+            defaultValue: 'business email',
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: generateId(),
+        name: 'Idiom Localization',
+        description: 'Replace idioms with culturally equivalent expressions',
+        prompt: `Localize idioms in this text:
+
+**Original Text:**
+{text}
+
+**Source Culture:** {source_culture}
+**Target Culture:** {target_culture}
+**Context:** {context}
+
+Provide:
+1. **Identified Idioms:**
+[List idioms found in the text]
+
+2. **Localized Version:**
+[Full text with idioms replaced by culturally equivalent expressions]
+
+3. **Idiom Mappings:**
+| Original Idiom | Meaning | Target Equivalent | Why This Works |
+|----------------|---------|-------------------|----------------|
+| [idiom 1] | [meaning] | [replacement] | [cultural reasoning] |
+| [idiom 2] | [meaning] | [replacement] | [cultural reasoning] |
+
+4. **Alternative Approaches:**
+- [If direct idiom replacement isn't ideal, suggest alternatives]
+
+5. **Cultural Notes:**
+[Any important cultural considerations for the target audience]
+
+**Recommended Final Text:**
+[The best localized version for the target culture and context]`,
+        inputs: [
+          {
+            name: 'text',
+            label: 'Text with Idioms',
+            placeholder: 'Enter text containing idioms or cultural expressions...',
+            defaultValue: '',
+          },
+          {
+            name: 'source_culture',
+            label: 'Source Culture',
+            placeholder: 'e.g., American English, British English, Spanish (Spain)',
+            defaultValue: 'American English',
+          },
+          {
+            name: 'target_culture',
+            label: 'Target Culture',
+            placeholder: 'e.g., Japanese, German, Brazilian Portuguese',
+            defaultValue: 'Spanish (Latin America)',
+          },
+          {
+            name: 'context',
+            label: 'Context',
+            placeholder: 'e.g., marketing, business, literature, casual',
+            defaultValue: 'business',
           },
         ],
         createdAt: new Date().toISOString(),
@@ -602,6 +608,7 @@ Provide:
             .replace(/\b\w/g, (l) => l.toUpperCase()),
         placeholder:
           input.placeholder || `Enter ${input.name.replace(/_/g, ' ')}...`,
+        defaultValue: input.defaultValue || '',
       }));
     }
 
@@ -654,6 +661,7 @@ Provide:
               .replace(/\b\w/g, (l) => l.toUpperCase()),
           placeholder:
             input.placeholder || `Enter ${input.name.replace(/_/g, ' ')}...`,
+          defaultValue: input.defaultValue || '',
         }));
       }
     }

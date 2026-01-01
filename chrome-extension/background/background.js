@@ -124,6 +124,11 @@ class AIToolboxBackground {
           break;
         }
 
+        case 'setSidePanelPath':
+          await this.setSidePanelPath(sender.tab?.id, request.path);
+          sendResponse({ success: true });
+          break;
+
         default:
           sendResponse({ error: 'Unknown action' });
       }
@@ -440,6 +445,23 @@ class AIToolboxBackground {
     } catch (error) {
       console.error('Failed to get side panel state:', error);
       return { enabled: false, path: null };
+    }
+  }
+
+  async setSidePanelPath(tabId, path) {
+    try {
+      if (chrome.sidePanel && chrome.sidePanel.setOptions) {
+        await chrome.sidePanel.setOptions({
+          tabId,
+          path,
+          enabled: true
+        });
+        console.log('Side panel path set for tab:', tabId, 'to:', path);
+      } else {
+        console.warn('Side panel setOptions API not available');
+      }
+    } catch (error) {
+      console.error('Failed to set side panel path:', error);
     }
   }
 

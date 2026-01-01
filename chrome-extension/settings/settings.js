@@ -13,10 +13,15 @@ class SettingsPage {
     try {
       console.log('SettingsPage: Starting initialization...');
 
+      // Setup event listeners first, so buttons always work
+      this.setupEventListeners();
+
       await Promise.all([aiService.init(), this.loadSettings()]);
 
-      this.setupEventListeners();
       this.populateForm();
+
+      // Mark that we're on the settings page
+      await chrome.storage.local.set({ last_active_page: 'settings' });
 
       console.log('SettingsPage initialized successfully');
     } catch (error) {
@@ -35,63 +40,147 @@ class SettingsPage {
   }
 
   setupEventListeners() {
+    console.log('Setting up event listeners...');
+
     // Back button
-    document.getElementById('backBtn').addEventListener('click', () => {
-      this.goBack();
-    });
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', async () => {
+        console.log('Back button clicked');
+        await this.goBack();
+      });
+    } else {
+      console.error('Back button element not found!');
+    }
 
     // Form submission
-    document.getElementById('settingsForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.saveSettings();
-    });
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+      settingsForm.addEventListener('submit', async (e) => {
+        console.log('Form submitted');
+        e.preventDefault();
+        await this.saveSettings();
+      });
+    } else {
+      console.error('Settings form element not found!');
+    }
+
+    // Save settings button (backup handler)
+    const saveBtn = document.getElementById('saveSettingsBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async (e) => {
+        console.log('Save button clicked');
+        e.preventDefault();
+        await this.saveSettings();
+      });
+    } else {
+      console.error('Save settings button element not found!');
+    }
 
     // AI Provider change
-    document.getElementById('aiProvider').addEventListener('change', (e) => {
-      this.updateApiKeyVisibility(e.target.value);
-    });
+    const providerSelect = document.getElementById('aiProvider');
+    if (providerSelect) {
+      providerSelect.addEventListener('change', (e) => {
+        const newProvider = e.target.value;
+        this.updateApiKeyVisibility(newProvider);
+
+        // Load the API key for the newly selected provider
+        const apiKeyInput = document.getElementById('apiKey');
+        if (apiKeyInput) {
+          const providerApiKey = this.getApiKeyForProvider(newProvider);
+          apiKeyInput.value = providerApiKey || '';
+        }
+      });
+    }
+
+    // API Key help link - open in new tab without affecting sidepanel
+    const apiKeyHelp = document.getElementById('apiKeyHelp');
+    if (apiKeyHelp) {
+      apiKeyHelp.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = e.target.href;
+        if (url && url !== '#') {
+          chrome.tabs.create({ url });
+        }
+      });
+    }
 
     // Test connection
-    document
-      .getElementById('testConnectionBtn')
-      .addEventListener('click', () => {
+    const testBtn = document.getElementById('testConnectionBtn');
+    if (testBtn) {
+      testBtn.addEventListener('click', () => {
         this.testConnection();
       });
+    }
 
     // Data export/import
-    document.getElementById('exportDataBtn').addEventListener('click', () => {
-      this.exportData();
-    });
+    const exportBtn = document.getElementById('exportDataBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        this.exportData();
+      });
+    }
 
-    document.getElementById('importDataBtn').addEventListener('click', () => {
-      document.getElementById('importFileInput').click();
-    });
+    const importBtn = document.getElementById('importDataBtn');
+    if (importBtn) {
+      importBtn.addEventListener('click', () => {
+        const importInput = document.getElementById('importFileInput');
+        if (importInput) {
+          importInput.click();
+        }
+      });
+    }
 
-    document
-      .getElementById('importFileInput')
-      .addEventListener('change', (e) => {
+    const importFileInput = document.getElementById('importFileInput');
+    if (importFileInput) {
+      importFileInput.addEventListener('change', (e) => {
         this.importData(e.target.files[0]);
       });
+    }
+
+    console.log('Event listeners setup complete');
   }
 
   populateForm() {
     const providerSelect = document.getElementById('aiProvider');
     const apiKeyInput = document.getElementById('apiKey');
     const providers = aiService.getAvailableProviders();
+    const currentProvider = this.settings.provider || 'gemini';
 
-    // Populate AI providers
-    providerSelect.innerHTML = providers
-      .map(
-        (provider) => `<option value="${provider.id}">${provider.name}</option>`
-      )
+    // Build simple HTML string with selected attribute
+    const optionsHTML = providers
+      .map((provider) => {
+        const selected = provider.id === currentProvider ? ' selected' : '';
+        return `<option value="${provider.id}"${selected}>${provider.name}</option>`;
+      })
       .join('');
 
-    // Set current values
-    providerSelect.value = this.settings.provider;
-    apiKeyInput.value = this.settings.apiKey || '';
+    providerSelect.innerHTML = optionsHTML;
 
-    this.updateApiKeyVisibility(this.settings.provider);
+    // Ensure the select is visible and has proper styles
+    providerSelect.style.color = 'inherit';
+    providerSelect.style.webkitTextFillColor = 'inherit';
+
+    // Load API key for current provider
+    const currentApiKey = this.getApiKeyForProvider(currentProvider);
+    apiKeyInput.value = currentApiKey || '';
+
+    this.updateApiKeyVisibility(currentProvider);
     this.updateStorageInfo();
+  }
+
+  getApiKeyForProvider(provider) {
+    // Check new apiKeys structure first
+    if (this.settings.apiKeys && this.settings.apiKeys[provider]) {
+      return this.settings.apiKeys[provider];
+    }
+
+    // Fallback to legacy apiKey field if it matches current provider
+    if (this.settings.apiKey && provider === this.settings.provider) {
+      return this.settings.apiKey;
+    }
+
+    return '';
   }
 
   updateApiKeyVisibility(provider) {
@@ -162,7 +251,26 @@ class SettingsPage {
     testBtn.textContent = 'Testing...';
 
     try {
-      await aiService.updateSettings({ provider, apiKey });
+      // Initialize apiKeys object if it doesn't exist
+      if (!this.settings.apiKeys) {
+        this.settings.apiKeys = {
+          openai: '',
+          claude: '',
+          gemini: '',
+          llama: '',
+          grok: '',
+        };
+      }
+
+      // Temporarily update the API key for testing
+      this.settings.apiKeys[provider] = apiKey;
+
+      await aiService.updateSettings({
+        provider,
+        apiKey,
+        apiKeys: this.settings.apiKeys,
+      });
+
       const result = await aiService.testConnection();
 
       statusEl.className = `connection-status ${result.success ? 'success' : 'error'}`;
@@ -185,7 +293,27 @@ class SettingsPage {
     const apiKey = document.getElementById('apiKey').value;
 
     try {
-      await aiService.updateSettings({ provider, apiKey });
+      // Initialize apiKeys object if it doesn't exist
+      if (!this.settings.apiKeys) {
+        this.settings.apiKeys = {
+          openai: '',
+          claude: '',
+          gemini: '',
+          llama: '',
+          grok: '',
+        };
+      }
+
+      // Save the API key for the selected provider
+      this.settings.apiKeys[provider] = apiKey;
+
+      // Update settings with new provider and per-provider API keys
+      await aiService.updateSettings({
+        provider,
+        apiKey, // Keep for backward compatibility
+        apiKeys: this.settings.apiKeys,
+      });
+
       this.settings = await storage.getSettings();
       Toast.show('Settings saved successfully', 'success');
     } catch (error) {
@@ -256,7 +384,7 @@ class SettingsPage {
     }
   }
 
-  goBack() {
+  async goBack() {
     // Try to determine where to go back to
     const referrer = document.referrer;
     const urlParams = new URLSearchParams(window.location.search);
@@ -268,6 +396,13 @@ class SettingsPage {
         url: chrome.runtime.getURL('popup/popup.html'),
       });
     } else if (from === 'sidepanel') {
+      // Reset the sidepanel path to default
+      await chrome.storage.local.set({ last_active_page: 'sidepanel' });
+      await chrome.runtime.sendMessage({
+        action: 'setSidePanelPath',
+        path: 'sidepanel/sidepanel.html',
+      });
+
       // Go back to sidepanel in current window
       window.location.href = '../sidepanel/sidepanel.html';
     } else if (referrer && referrer.includes(chrome.runtime.getURL(''))) {
@@ -286,10 +421,16 @@ class SettingsPage {
   }
 }
 
-// Initialize the settings page when the DOM loads
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize the settings page
+// For ES modules loaded at end of body, DOM is already ready
+// But we check document.readyState to be safe
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    const settingsPage = new SettingsPage();
+    window.settingsPage = settingsPage;
+  });
+} else {
+  // DOM already loaded, initialize immediately
   const settingsPage = new SettingsPage();
-
-  // Expose for debugging
   window.settingsPage = settingsPage;
-});
+}

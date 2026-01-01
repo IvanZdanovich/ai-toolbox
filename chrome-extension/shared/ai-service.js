@@ -89,7 +89,8 @@ class AIService {
   }
 
   async processWithOpenAI(prompt) {
-    if (!this.settings.apiKey) {
+    const apiKey = this.getApiKey(AI_PROVIDERS.OPENAI);
+    if (!apiKey) {
       throw new Error(
         'OpenAI API key not configured. Please add your API key in settings.'
       );
@@ -99,7 +100,7 @@ class AIService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.settings.apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -128,7 +129,8 @@ class AIService {
   }
 
   async processWithClaude(prompt) {
-    if (!this.settings.apiKey) {
+    const apiKey = this.getApiKey(AI_PROVIDERS.CLAUDE);
+    if (!apiKey) {
       throw new Error(
         'Claude API key not configured. Please add your API key in settings.'
       );
@@ -138,7 +140,7 @@ class AIService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': this.settings.apiKey,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       },
@@ -168,14 +170,18 @@ class AIService {
   }
 
   async processWithGemini(prompt) {
-    if (!this.settings.apiKey) {
+    const apiKey = this.getApiKey(AI_PROVIDERS.GEMINI);
+    if (!apiKey) {
       throw new Error(
         'Gemini API key not configured. Please add your API key in settings.'
       );
     }
 
+    // Try gemini-2.0-flash first, with fallback to gemini-1.5-flash
+    const model = this.settings.geminiModel || 'gemini-2.0-flash-exp';
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.settings.apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -202,22 +208,58 @@ class AIService {
     );
 
     if (!response.ok) {
-      const error = await response
-        .json()
-        .catch(() => ({ error: { message: 'Unknown error' } }));
-      throw new Error(
-        error.error?.message || `Gemini API error: ${response.status}`
-      );
+      let errorMessage = `Gemini API error: ${response.status}`;
+      try {
+        const error = await response.json();
+        // Gemini returns error in different formats
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        } else if (typeof error.error === 'string') {
+          errorMessage = error.error;
+        }
+
+        // Include additional error details if available
+        if (error.error?.details) {
+          const details = Array.isArray(error.error.details)
+            ? error.error.details.map(d => d.reason || d.message).join(', ')
+            : JSON.stringify(error.error.details);
+          errorMessage += `. Details: ${details}`;
+        }
+
+        // Add helpful suggestions for common errors
+        if (errorMessage.includes('quota') || errorMessage.includes('rate limit')) {
+          errorMessage += '\n\nSuggestions:\n' +
+            '• Wait a few minutes before trying again\n' +
+            '• Check your API quota at https://ai.google.dev/gemini-api/docs/quota\n' +
+            '• Consider upgrading your plan if you need higher limits\n' +
+            '• Try using a different model (e.g., gemini-1.5-flash instead of gemini-2.0-flash)';
+        } else if (errorMessage.includes('API key')) {
+          errorMessage += '\n\nPlease verify your API key at https://aistudio.google.com/app/apikey';
+        }
+      } catch {
+        // If we can't parse the error, use the status text
+        errorMessage = `Gemini API error: ${response.status} ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
+
+    // Check for errors in successful response
+    if (data.error) {
+      throw new Error(data.error.message || 'Gemini API returned an error');
+    }
+
     return (
       data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated'
     );
   }
 
   async processWithLlama(prompt) {
-    if (!this.settings.apiKey) {
+    const apiKey = this.getApiKey(AI_PROVIDERS.LLAMA);
+    if (!apiKey) {
       throw new Error(
         'Llama API key not configured. Please add your API key in settings.'
       );
@@ -229,7 +271,7 @@ class AIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.settings.apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           inputs: prompt,
@@ -258,7 +300,8 @@ class AIService {
   }
 
   async processWithGrok(prompt) {
-    if (!this.settings.apiKey) {
+    const apiKey = this.getApiKey(AI_PROVIDERS.GROK);
+    if (!apiKey) {
       throw new Error(
         'Grok API key not configured. Please add your API key in settings.'
       );
@@ -268,7 +311,7 @@ class AIService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.settings.apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'grok-3',
@@ -339,6 +382,22 @@ class AIService {
     await storage.setSettings(this.settings);
   }
 
+  getApiKey(provider) {
+    const targetProvider = provider || this.settings.provider;
+
+    // Check new apiKeys structure first
+    if (this.settings.apiKeys && this.settings.apiKeys[targetProvider]) {
+      return this.settings.apiKeys[targetProvider];
+    }
+
+    // Fallback to legacy apiKey field if it matches current provider
+    if (this.settings.apiKey && targetProvider === this.settings.provider) {
+      return this.settings.apiKey;
+    }
+
+    return '';
+  }
+
   getAvailableProviders() {
     return [
       {
@@ -349,36 +408,36 @@ class AIService {
       },
       {
         id: AI_PROVIDERS.OPENAI,
-        name: 'OpenAI',
-        description: 'OpenAI API for high-quality text generation',
+        name: 'OpenAI (GPT-4, GPT-4o)',
+        description: 'Industry-leading language models from OpenAI',
         requiresApiKey: true,
         apiKeyUrl: 'https://platform.openai.com/api-keys',
       },
       {
         id: AI_PROVIDERS.CLAUDE,
         name: 'Anthropic Claude',
-        description: 'Anthropic API for safe and helpful AI responses',
+        description: 'Claude 3.5 Sonnet - Advanced reasoning and coding',
         requiresApiKey: true,
-        apiKeyUrl: 'https://console.anthropic.com/',
+        apiKeyUrl: 'https://console.anthropic.com/settings/keys',
       },
       {
         id: AI_PROVIDERS.GEMINI,
         name: 'Google Gemini',
-        description: 'Google AI API for multimodal capabilities',
+        description: 'Gemini 2.0 - Fast and multimodal AI from Google',
         requiresApiKey: true,
         apiKeyUrl: 'https://aistudio.google.com/app/apikey',
       },
       {
         id: AI_PROVIDERS.LLAMA,
         name: 'Meta Llama',
-        description: 'Llama models via Hugging Face Inference API',
+        description: 'Llama 3.1 - Open-source models via Groq or Together AI',
         requiresApiKey: true,
-        apiKeyUrl: 'https://huggingface.co/settings/tokens',
+        apiKeyUrl: 'https://console.groq.com/keys',
       },
       {
         id: AI_PROVIDERS.GROK,
         name: 'xAI Grok',
-        description: 'xAI API for real-time knowledge and reasoning',
+        description: 'Grok - Real-time knowledge with wit and personality',
         requiresApiKey: true,
         apiKeyUrl: 'https://console.x.ai/',
       },

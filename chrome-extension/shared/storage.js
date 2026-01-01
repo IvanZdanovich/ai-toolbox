@@ -190,7 +190,26 @@ class ChromeStorage {
 
   async getSettings() {
     const settings = await this.get(STORAGE_KEYS.SETTINGS);
-    return { ...DEFAULT_SETTINGS, ...settings };
+    const mergedSettings = { ...DEFAULT_SETTINGS, ...settings };
+
+    // Migrate old apiKey field to new apiKeys structure
+    if (settings && settings.apiKey && settings.provider && !settings.apiKeys) {
+      // Old format: single apiKey field
+      // Migrate to new format: apiKeys object
+      mergedSettings.apiKeys = { ...DEFAULT_SETTINGS.apiKeys };
+      mergedSettings.apiKeys[settings.provider] = settings.apiKey;
+
+      // Save migrated settings
+      await this.setSettings(mergedSettings);
+      console.log(`Migrated API key for provider: ${settings.provider}`);
+    }
+
+    // Ensure apiKeys object exists
+    if (!mergedSettings.apiKeys) {
+      mergedSettings.apiKeys = { ...DEFAULT_SETTINGS.apiKeys };
+    }
+
+    return mergedSettings;
   }
 
   async setSettings(settings) {
