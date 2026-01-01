@@ -1,0 +1,557 @@
+/* Side Panel Specific Styles */
+
+/* Note: Uses CSS variables from ../styles/variables.css */
+
+/* ========================================
+   LAYOUT - Sidepanel-specific sizing
+   ======================================== */
+
+.sidepanel-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  min-width: var(--sidepanel-width);
+  max-width: none;
+  overflow: hidden;
+  background: var(--color-background);
+  transition: width 0.3s ease;
+}
+
+/* Expandable interface */
+body {
+  min-width: var(--sidepanel-width);
+  width: 100%;
+  max-width: none;
+  resize: horizontal;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+html {
+  width: auto;
+  min-width: var(--sidepanel-width);
+  box-sizing: border-box;
+}
+
+/* Ensure containers adapt to width changes */
+.sidepanel-container,
+.nav-tabs,
+.sidepanel-content,
+.sidepanel-footer {
+  width: 100%;
+}
+
+/* ========================================
+   NAVIGATION - Sidepanel tabs
+   ======================================== */
+
+.nav-tabs {
+  display: flex;
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.nav-tab {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-bottom: 2px solid transparent;
+}
+
+.nav-tab:hover {
+  color: var(--color-text-primary);
+  background: var(--color-background-hover);
+}
+
+.nav-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background: var(--color-background);
+}
+
+/* ========================================
+   FOOTER - Sidepanel footer
+   ======================================== */
+
+.sidepanel-footer {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-spacer {
+  flex: 1;
+}
+
+.footer-btn {
+  background: none;
+  border: none;
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-fast);
+  color: var(--color-text-secondary);
+}
+
+.footer-btn:hover {
+  background: var(--color-background-hover);
+  color: var(--color-text-primary);
+}
+
+.footer-btn-right {
+  order: 3;
+}
+
+/* ========================================
+   MAIN CONTENT AREA
+   ======================================== */
+
+.sidepanel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+  gap: var(--spacing-sm);
+  min-height: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.section-header .btn {
+  min-width: 120px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ========================================
+   SEARCH BOX
+   ======================================== */
+
+.search-box {
+  flex: 1;
+  max-width: 300px;
+  min-width: 150px;
+}
+
+.search-box .form-input {
+  height: var(--button-height);
+  font-size: var(--font-size-xs);
+}
+
+.search-box .form-input::placeholder {
+  font-size: var(--font-size-xs);
+}
+
+/* ========================================
+   TEMPLATES LIST
+   ======================================== */
+
+.templates-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Template card overrides for sidepanel context */
+.template-card-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.template-card:hover .template-card-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: background-color var(--transition-fast);
+  color: var(--color-text-secondary);
+}
+
+.action-btn:hover {
+  background: var(--color-background-hover);
+  color: var(--color-text-primary);
+}
+
+/* ========================================
+   HISTORY LIST
+   ======================================== */
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.history-entry {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.history-entry:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-background);
+}
+
+.history-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.history-entry-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.history-entry:hover .history-entry-title {
+  color: var(--color-primary);
+}
+
+.history-entry-time {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.status-badge {
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xxs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.status-badge.completed {
+  background: rgb(5, 150, 105, 0.1);
+  color: var(--color-success);
+}
+
+.status-badge.failed {
+  background: rgb(220, 38, 38, 0.1);
+  color: var(--color-error);
+}
+
+.history-entry-inputs {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.history-entry-result {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.history-entry-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* ========================================
+   EMPTY STATES
+   ======================================== */
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xxl) var(--spacing-md);
+  color: var(--color-text-secondary);
+}
+
+.empty-state h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+/* ========================================
+   TEMPLATE VARIABLES (Template Modal)
+   ======================================== */
+
+.template-variables {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.variables-header h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.variables-header .form-help {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.help-details {
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-surface);
+}
+
+.help-summary {
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  user-select: none;
+  list-style: none;
+}
+
+.help-summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: var(--spacing-xs);
+  transition: transform 0.2s;
+}
+
+.help-details[open] .help-summary::before {
+  transform: rotate(90deg);
+}
+
+.help-summary:hover {
+  background: var(--color-background-hover);
+}
+
+.help-content {
+  padding: var(--spacing-sm);
+  padding-top: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.help-content p {
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.help-content strong {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help-content code {
+  background: var(--color-background);
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border-radius: var(--border-radius);
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--color-primary);
+}
+
+.help-example {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--color-background);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--border-radius);
+}
+
+.help-example ul {
+  margin: var(--spacing-xs) 0 0 0;
+  padding-left: var(--spacing-md);
+  list-style: disc;
+}
+
+.help-example li {
+  margin-bottom: 2px;
+}
+
+.variables-grid-header {
+  display: grid; /* Always show headers when variables exist */
+  grid-template-columns: 1fr; /* Stack on mobile */
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+}
+
+.grid-header-label {
+  font-size: var(--font-size-xxs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: var(--spacing-xs) 0;
+}
+
+/* Show as grid on wider screens */
+@media (min-width: 500px) {
+  .variables-grid-header {
+    grid-template-columns: 2fr 2fr 1fr;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .grid-header-label {
+    padding: 0;
+  }
+}
+
+.variable-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.variable-group .form-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: monospace;
+  background: var(--color-surface);
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--color-primary);
+}
+
+.variable-inputs {
+  display: grid;
+  gap: var(--spacing-sm);
+  grid-template-columns: 1fr;
+}
+
+.variable-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.input-mini-label {
+  display: block;
+  font-size: 9px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: var(--spacing-xxs);
+}
+
+.variable-inputs .form-input {
+  font-size: var(--font-size-sm);
+  width: 100%;
+}
+
+.variable-input-wrapper:nth-child(1) .form-input {
+  /* Label field - slightly emphasized */
+  font-weight: var(--font-weight-medium);
+}
+
+.variable-input-wrapper:nth-child(2) .form-input {
+  /* Placeholder field */
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.variable-input-wrapper:nth-child(3) .form-input {
+  /* Default value field */
+  background: var(--color-background);
+  border-style: dashed;
+}
+
+/* Responsive layout for wider panels */
+@media (min-width: 500px) {
+  .variable-inputs {
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: var(--spacing-xs);
+  }
+
+  .input-mini-label {
+    display: none; /* Hide mini labels when column headers are visible */
+  }
+
+  .variable-input-wrapper {
+    gap: 0;
+  }
+}
+
+/* ========================================
+   SCROLLBAR STYLING
+   ======================================== */
+
+/* Scrollbar styling inherited from global styles in base.css */
+
+/* All scrollable elements use consistent theme-aware scrollbars */
+

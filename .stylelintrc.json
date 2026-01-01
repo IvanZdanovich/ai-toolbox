@@ -1,0 +1,13 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "ignoreFiles": ["chrome-extension/coverage/**/*.css"],
+  "rules": {
+    "selector-class-pattern": null,
+    "custom-property-pattern": null,
+    "color-function-notation": "legacy",
+    "alpha-value-notation": "number",
+    "declaration-block-no-redundant-longhand-properties": null,
+    "shorthand-property-no-redundant-values": null,
+    "media-feature-range-notation": "prefix"
+  }
+}

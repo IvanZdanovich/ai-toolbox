@@ -1,0 +1,1013 @@
+import templateManager from '../shared/template-manager.js';
+import historyManager from '../shared/history-manager.js';
+import aiService from '../shared/ai-service.js';
+import storage from '../shared/storage.js';
+import {
+  formatRelativeTime,
+  truncateText,
+  debounce,
+  copyToClipboard,
+  downloadAsJson,
+} from '../shared/helpers.js';
+import { EVENTS, HISTORY_STATUS } from '../shared/constants.js';
+import Toast from '../shared/components/toast.js';
+import Modal from '../shared/components/modal.js';
+
+class SidePanelApp {
+  constructor() {
+    this.currentSection = 'templates';
+    this.templates = [];
+    this.history = [];
+    this.settings = null;
+    this.currentTemplate = null;
+    this.searchTimeout = null;
+
+    this.init();
+  }
+
+  async init() {
+    try {
+      console.log('SidePanelApp: Starting initialization...');
+
+      await Promise.all([
+        templateManager.init(),
+        historyManager.init(),
+        aiService.init(),
+      ]);
+
+      await this.loadData();
+      await this.restoreUIState();
+      this.setupEventListeners();
+      this.render();
+
+      // Validate storage persistence
+      const validation = await storage.validatePersistence();
+      if (validation) {
+        console.log('SidePanelApp: Storage validation completed', validation);
+      }
+
+      console.log('SidePanelApp initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize SidePanelApp:', error);
+      Toast.show('Failed to initialize application', 'error');
+    }
+  }
+
+  async loadData() {
+    try {
+      this.templates = await templateManager.getAllTemplates();
+      this.history = await historyManager.getAllHistory();
+      this.settings = await storage.getSettings();
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      throw error;
+    }
+  }
+
+  async restoreUIState() {
+    try {
+      const result = await chrome.storage.local.get(['last_active_section']);
+
+      // Restore the last active section
+      const lastSection = result.last_active_section;
+      if (
+        lastSection &&
+        (lastSection === 'templates' || lastSection === 'history')
+      ) {
+        this.currentSection = lastSection;
+        console.log('SidePanelApp: Restored last active section:', lastSection);
+      }
+
+      // Mark that we're now on the sidepanel
+      await chrome.storage.local.set({ last_active_page: 'sidepanel' });
+    } catch (error) {
+      console.error('Failed to restore UI state:', error);
+      // Keep default section if restore fails
+    }
+  }
+
+  setupEventListeners() {
+    // Navigation tabs
+    document.querySelectorAll('.nav-tab').forEach((tab) => {
+      tab.addEventListener('click', (e) => {
+        this.switchSection(e.target.dataset.section);
+      });
+    });
+
+    // Footer buttons
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      this.openSettingsPage();
+    });
+
+    // Template section
+    document
+      .getElementById('createTemplateBtn')
+      .addEventListener('click', () => {
+        this.showTemplateModal();
+      });
+
+    document.getElementById('templateSearch').addEventListener(
+      'input',
+      debounce((e) => this.searchTemplates(e.target.value), 300)
+    );
+
+    // History section
+    document.getElementById('historySearch').addEventListener(
+      'input',
+      debounce((e) => this.searchHistory(e.target.value), 300)
+    );
+
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+      this.clearHistory();
+    });
+
+    this.setupModalEventListeners();
+    this.setupManagerEventListeners();
+  }
+
+  setupModalEventListeners() {
+    // Template modal
+    document
+      .getElementById('templateModalClose')
+      .addEventListener('click', () => {
+        Modal.hide('template');
+      });
+
+    document
+      .getElementById('templateModalCancel')
+      .addEventListener('click', () => {
+        Modal.hide('template');
+      });
+
+    document.getElementById('templateForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.saveTemplate();
+    });
+
+    document.getElementById('templatePrompt').addEventListener('input', (e) => {
+      this.updateTemplateVariables(e.target.value);
+    });
+
+    // Generate buttons
+    document
+      .getElementById('generateDescriptionBtn')
+      .addEventListener('click', () => {
+        this.generateDescription();
+      });
+
+    document
+      .getElementById('generatePromptBtn')
+      .addEventListener('click', () => {
+        this.generatePrompt();
+      });
+
+    // Execute modal
+    document
+      .getElementById('executeModalClose')
+      .addEventListener('click', () => {
+        Modal.hide('execute');
+      });
+
+    document
+      .getElementById('executeModalCancel')
+      .addEventListener('click', () => {
+        Modal.hide('execute');
+      });
+
+    document.getElementById('executeForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.executeTemplate();
+    });
+
+    document.getElementById('copyResultBtn').addEventListener('click', () => {
+      this.copyResult();
+    });
+  }
+
+  setupManagerEventListeners() {
+    // Template manager events
+    templateManager.on(EVENTS.TEMPLATE_CREATED, (template) => {
+      this.templates.push(template);
+      this.renderTemplates();
+      Toast.show('Template created successfully', 'success');
+    });
+
+    templateManager.on(EVENTS.TEMPLATE_UPDATED, (template) => {
+      const index = this.templates.findIndex((t) => t.id === template.id);
+      if (index !== -1) {
+        this.templates[index] = template;
+        this.renderTemplates();
+      }
+      Toast.show('Template updated successfully', 'success');
+    });
+
+    templateManager.on(EVENTS.TEMPLATE_DELETED, (template) => {
+      this.templates = this.templates.filter((t) => t.id !== template.id);
+      this.renderTemplates();
+      Toast.show('Template deleted successfully', 'success');
+    });
+
+    // History manager events
+    historyManager.on(EVENTS.HISTORY_UPDATED, () => {
+      this.loadData().then(() => {
+        if (this.currentSection === 'history') {
+          this.renderHistory();
+        }
+      });
+    });
+  }
+
+  switchSection(section) {
+    if (section === this.currentSection) {
+      return;
+    }
+
+    document.querySelectorAll('.nav-tab').forEach((tab) => {
+      tab.classList.toggle('active', tab.dataset.section === section);
+    });
+
+    document.querySelectorAll('.section').forEach((sec) => {
+      sec.classList.toggle('active', sec.id === section);
+    });
+
+    this.currentSection = section;
+
+    // Save current section to storage for persistence
+    chrome.storage.local.set({ last_active_section: section });
+
+    if (section === 'templates') {
+      this.renderTemplates();
+    } else if (section === 'history') {
+      this.renderHistory();
+    }
+  }
+
+  render() {
+    this.renderTemplates();
+    this.renderHistory();
+  }
+
+  renderTemplates() {
+    const container = document.getElementById('templatesList');
+    const emptyState = document.getElementById('templatesEmpty');
+
+    if (this.templates.length === 0) {
+      container.innerHTML = '';
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    container.innerHTML = this.templates
+      .map(
+        (template) => `
+      <div class="template-card" data-template-id="${template.id}">
+        <div class="template-card-header">
+          <h3 class="template-card-title">${this.escapeHtml(template.name)}</h3>
+          <div class="template-card-actions">
+            <button class="action-btn edit" data-action="edit" title="Edit template">
+              ✏️
+            </button>
+            <button class="action-btn duplicate" data-action="duplicate" title="Duplicate template">
+              📋
+            </button>
+            <button class="action-btn export" data-action="export" title="Export template">
+              📤
+            </button>
+            <button class="action-btn delete" data-action="delete" title="Delete template">
+              🗑️
+            </button>
+          </div>
+        </div>
+        ${template.description ? `<p class="template-card-description">${this.escapeHtml(template.description)}</p>` : ''}
+        <p class="template-card-meta">
+          Variables: ${template.inputs.length} • 
+          Created: ${formatRelativeTime(template.createdAt)}
+        </p>
+      </div>
+    `
+      )
+      .join('');
+
+    this.setupTemplateCardEventListeners(container);
+  }
+
+  renderHistory() {
+    const container = document.getElementById('historyList');
+    const emptyState = document.getElementById('historyEmpty');
+
+    if (this.history.length === 0) {
+      container.innerHTML = '';
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    container.innerHTML = this.history
+      .map(
+        (entry) => `
+      <div class="history-entry" data-entry-id="${entry.id}">
+        <div class="history-entry-header">
+          <h4 class="history-entry-title">${this.escapeHtml(entry.templateName)}</h4>
+          <div class="history-entry-time">
+            <span class="status-badge ${entry.status}">${entry.status}</span>
+            ${formatRelativeTime(entry.timestamp)}
+          </div>
+        </div>
+        ${
+          Object.keys(entry.inputs).length > 0
+            ? `
+          <div class="history-entry-inputs">
+            ${Object.entries(entry.inputs)
+              .map(
+                ([key, value]) =>
+                  `<strong>${key}:</strong> ${truncateText(String(value), 50)}`
+              )
+              .join(' • ')}
+          </div>
+        `
+            : ''
+        }
+        <div class="history-entry-result">
+          ${entry.result ? truncateText(entry.result, 150) : 'No result'}
+        </div>
+        <div class="history-entry-actions">
+          <button class="btn btn-small btn-secondary" data-action="copy">Copy Result</button>
+          <button class="btn btn-small btn-secondary" data-action="rerun">Rerun</button>
+          <button class="btn btn-small btn-secondary" data-action="delete">🗑️</button>
+        </div>
+      </div>
+    `
+      )
+      .join('');
+
+    this.setupHistoryEventListeners(container);
+  }
+
+  setupTemplateCardEventListeners(container) {
+    container.querySelectorAll('.template-card').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (!e.target.closest('.template-card-actions')) {
+          this.executeTemplateById(card.dataset.templateId);
+        }
+      });
+
+      card.querySelectorAll('.action-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = btn.dataset.action;
+          const templateId = card.dataset.templateId;
+
+          switch (action) {
+            case 'edit':
+              this.editTemplate(templateId);
+              break;
+            case 'duplicate':
+              this.duplicateTemplate(templateId);
+              break;
+            case 'export':
+              this.exportTemplate(templateId);
+              break;
+            case 'delete':
+              this.deleteTemplate(templateId);
+              break;
+          }
+        });
+      });
+    });
+  }
+
+  setupHistoryEventListeners(container) {
+    container.querySelectorAll('.history-entry').forEach((entry) => {
+      entry.querySelectorAll('[data-action]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = btn.dataset.action;
+          const entryId = entry.dataset.entryId;
+          const historyEntry = this.history.find((h) => h.id === entryId);
+
+          switch (action) {
+            case 'copy':
+              if (historyEntry && historyEntry.result) {
+                copyToClipboard(historyEntry.result)
+                  .then(() => {
+                    Toast.show('Result copied to clipboard', 'success');
+                  })
+                  .catch(() => {
+                    Toast.show('Failed to copy result', 'error');
+                  });
+              }
+              break;
+            case 'rerun':
+              if (historyEntry) {
+                this.rerunFromHistory(historyEntry);
+              }
+              break;
+            case 'delete':
+              this.deleteHistoryEntry(entryId);
+              break;
+          }
+        });
+      });
+    });
+  }
+
+  async searchTemplates(query) {
+    try {
+      const results = await templateManager.searchTemplates(query);
+      this.templates = results;
+      this.renderTemplates();
+    } catch (error) {
+      console.error('Search failed:', error);
+      Toast.show('Search failed', 'error');
+    }
+  }
+
+  async searchHistory(query) {
+    try {
+      const results = await historyManager.searchHistory(query);
+      this.history = results;
+      this.renderHistory();
+    } catch (error) {
+      console.error('History search failed:', error);
+      Toast.show('History search failed', 'error');
+    }
+  }
+
+  // Template methods (copied from popup.js)
+  showTemplateModal(template = null) {
+    this.currentTemplate = template;
+    const title = document.getElementById('templateModalTitle');
+    const form = document.getElementById('templateForm');
+
+    if (template) {
+      title.textContent = 'Edit Template';
+      document.getElementById('templateName').value = template.name;
+      document.getElementById('templateDescription').value =
+        template.description || '';
+      document.getElementById('templatePrompt').value = template.prompt;
+      this.updateTemplateVariables(template.prompt);
+    } else {
+      title.textContent = 'Create Template';
+      form.reset();
+      this.updateTemplateVariables('');
+    }
+
+    Modal.show('template');
+  }
+
+  updateTemplateVariables(prompt) {
+    const container = document.getElementById('templateVariables');
+    const variables = this.extractVariables(prompt);
+
+    if (variables.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    // Get existing input definitions if editing a template
+    const existingInputs = this.currentTemplate?.inputs || [];
+    const existingInputMap = new Map(
+      existingInputs.map((input) => [input.name, input])
+    );
+
+    container.innerHTML = `
+      <div class="variables-header">
+        <h4>Template Variables</h4>
+        <p class="form-help">Configure how each variable appears and behaves</p>
+      </div>
+      ${variables
+        .map((variable) => {
+          const existingInput = existingInputMap.get(variable);
+          const label =
+            existingInput?.label ||
+            variable
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (l) => l.toUpperCase());
+          const defaultValue = existingInput?.defaultValue || '';
+          const placeholder =
+            existingInput?.placeholder ||
+            `Enter ${variable.replace(/_/g, ' ')}...`;
+
+          return `
+        <div class="variable-group">
+          <label class="form-label" title="Variable: {${variable}}">{${variable}}</label>
+          <div class="variable-inputs">
+            <div class="variable-input-wrapper">
+              <span class="input-mini-label">Label</span>
+              <input type="text" class="form-input" 
+                     data-variable="${variable}" 
+                     data-field="label"
+                     placeholder="e.g., Topic" 
+                     value="${label}"
+                     title="The label shown above the input field">
+            </div>
+            <div class="variable-input-wrapper">
+              <span class="input-mini-label">Placeholder (hint text)</span>
+              <input type="text" class="form-input" 
+                     data-variable="${variable}" 
+                     data-field="placeholder"
+                     placeholder="e.g., Message" 
+                     value="${placeholder}"
+                     title="Hint text shown inside the empty input">
+            </div>
+            <div class="variable-input-wrapper">
+              <span class="input-mini-label">Default Value</span>
+              <input type="text" class="form-input" 
+                     data-variable="${variable}" 
+                     data-field="defaultValue"
+                     placeholder="e.g., Addressee" 
+                     value="${defaultValue}"
+                     title="Pre-filled value that users can override">
+            </div>
+          </div>
+        </div>
+      `;
+        })
+        .join('')}
+    `;
+  }
+
+  async generateDescription() {
+    const nameInput = document.getElementById('templateName');
+    const descriptionInput = document.getElementById('templateDescription');
+    const generateBtn = document.getElementById('generateDescriptionBtn');
+
+    const templateName = nameInput.value.trim();
+    if (!templateName) {
+      Toast.show('Please enter a template name first', 'warning');
+      nameInput.focus();
+      return;
+    }
+
+    // Disable button and show loading state
+    generateBtn.disabled = true;
+    const originalText = generateBtn.innerHTML;
+    generateBtn.innerHTML = '<span class="btn-icon">⏳</span>Generating...';
+
+    try {
+      const prompt = `Generate a concise, professional description (max 50 words) for a template named "${templateName}". The description should explain what this template does and when to use it. Return only the description text without quotes or extra formatting.`;
+
+      const response = await aiService.processTemplate({
+        name: 'Generate Description',
+        prompt: prompt,
+        inputs: [],
+      }, {});
+
+      // AI service returns { result, duration, provider, ... }
+      const result = response?.result || response;
+
+      if (result && typeof result === 'string' && result.trim()) {
+        descriptionInput.value = result.trim();
+        Toast.show('Description generated successfully', 'success');
+      } else {
+        throw new Error('Empty response from AI service');
+      }
+    } catch (error) {
+      console.error('Failed to generate description:', error);
+      Toast.show(
+        `Failed to generate description: ${error.message}`,
+        'error'
+      );
+    } finally {
+      // Re-enable button and restore text
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = originalText;
+    }
+  }
+
+  async generatePrompt() {
+    const nameInput = document.getElementById('templateName');
+    const descriptionInput = document.getElementById('templateDescription');
+    const promptInput = document.getElementById('templatePrompt');
+    const generateBtn = document.getElementById('generatePromptBtn');
+
+    const templateName = nameInput.value.trim();
+    if (!templateName) {
+      Toast.show('Please enter a template name first', 'warning');
+      nameInput.focus();
+      return;
+    }
+
+    const description = descriptionInput.value.trim();
+
+    // Disable button and show loading state
+    generateBtn.disabled = true;
+    const originalText = generateBtn.innerHTML;
+    generateBtn.innerHTML = '<span class="btn-icon">⏳</span>Generating...';
+
+    try {
+      let promptTemplate = `Generate a professional AI prompt template for a template named "${templateName}".`;
+
+      if (description) {
+        promptTemplate += ` Description: ${description}.`;
+      }
+
+      promptTemplate += `
+
+Requirements:
+1. Create a clear, effective prompt that accomplishes the template's purpose
+2. Use {variable_name} syntax for any dynamic inputs (e.g., {topic}, {style}, {audience})
+3. Include 1-4 relevant variables that users would want to customize
+4. Make the prompt specific and actionable
+5. Keep it concise (max 200 words)
+6. Return ONLY the prompt template without any explanations or formatting
+
+Example format: "Write an email about {topic} for {audience}. Include key points about {details}."
+
+Generate the prompt template now:`;
+
+      const result = await aiService.processTemplate({
+        name: 'Generate Prompt',
+        prompt: promptTemplate,
+        inputs: [],
+      }, {});
+
+      // AI service returns { result, duration, provider, ... }
+      const generatedPrompt = result?.result || result;
+
+      if (generatedPrompt && typeof generatedPrompt === 'string' && generatedPrompt.trim()) {
+        promptInput.value = generatedPrompt.trim();
+        // Trigger the input event to update variables display
+        promptInput.dispatchEvent(new Event('input', { bubbles: true }));
+        Toast.show('Prompt generated successfully', 'success');
+      } else {
+        throw new Error('Empty response from AI service');
+      }
+    } catch (error) {
+      console.error('Failed to generate prompt:', error);
+      Toast.show(
+        `Failed to generate prompt: ${error.message}`,
+        'error'
+      );
+    } finally {
+      // Re-enable button and restore text
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = originalText;
+    }
+  }
+
+  extractVariables(prompt) {
+    const variables = [];
+    const regex = /\{([^}]+)\}/g;
+    let match;
+
+    while ((match = regex.exec(prompt)) !== null) {
+      const variable = match[1].trim();
+      if (!variables.includes(variable)) {
+        variables.push(variable);
+      }
+    }
+
+    return variables;
+  }
+
+  async saveTemplate() {
+    const templateData = {
+      name: document.getElementById('templateName').value.trim(),
+      description: document.getElementById('templateDescription').value.trim(),
+      prompt: document.getElementById('templatePrompt').value.trim(),
+    };
+
+    // Group inputs by variable name
+    const variableGroups = document.querySelectorAll('.variable-group');
+    if (variableGroups.length > 0) {
+      const inputsMap = new Map();
+
+      variableGroups.forEach((group) => {
+        const inputs = group.querySelectorAll('[data-variable]');
+        const variable = inputs[0]?.dataset.variable;
+
+        if (variable) {
+          const inputData = {
+            name: variable,
+            label: '',
+            placeholder: '',
+            defaultValue: '',
+          };
+
+          inputs.forEach((input) => {
+            const field = input.dataset.field;
+            if (field) {
+              inputData[field] = input.value.trim();
+            }
+          });
+
+          // Set defaults if not provided
+          if (!inputData.label) {
+            inputData.label = variable
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (l) => l.toUpperCase());
+          }
+          if (!inputData.placeholder) {
+            inputData.placeholder = `Enter ${variable.replace(/_/g, ' ')}...`;
+          }
+
+          inputsMap.set(variable, inputData);
+        }
+      });
+
+      templateData.inputs = Array.from(inputsMap.values());
+    }
+
+    try {
+      if (this.currentTemplate) {
+        await templateManager.updateTemplate(
+          this.currentTemplate.id,
+          templateData
+        );
+      } else {
+        await templateManager.createTemplate(templateData);
+      }
+
+      Modal.hide('template');
+      this.currentTemplate = null;
+    } catch (error) {
+      console.error('Failed to save template:', error);
+      Toast.show(`Failed to save template: ${error.message}`, 'error');
+    }
+  }
+
+  async editTemplate(templateId) {
+    const template = await templateManager.getTemplate(templateId);
+    if (template) {
+      this.showTemplateModal(template);
+    }
+  }
+
+  async duplicateTemplate(templateId) {
+    try {
+      await templateManager.duplicateTemplate(templateId);
+    } catch (error) {
+      console.error('Failed to duplicate template:', error);
+      Toast.show(`Failed to duplicate template: ${error.message}`, 'error');
+    }
+  }
+
+  async exportTemplate(templateId) {
+    try {
+      const template = await templateManager.getTemplate(templateId);
+      if (!template) {
+        Toast.show('Template not found', 'error');
+        return;
+      }
+
+      const exportData = {
+        templates: [template],
+        exportedAt: new Date().toISOString(),
+        version: '0.9.0',
+      };
+
+      const sanitizedName = template.name
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+
+      const filename = `${sanitizedName}-template.json`;
+      downloadAsJson(exportData, filename);
+
+      Toast.show('Template exported successfully', 'success');
+    } catch (error) {
+      console.error('Failed to export template:', error);
+      Toast.show('Failed to export template', 'error');
+    }
+  }
+
+  async deleteTemplate(templateId) {
+    const confirmed = await Modal.confirm(
+      'Delete Template',
+      'Are you sure you want to delete this template? This action cannot be undone.',
+      { confirmText: 'Delete', confirmClass: 'btn-danger' }
+    );
+
+    if (confirmed) {
+      try {
+        await templateManager.deleteTemplate(templateId);
+      } catch (error) {
+        console.error('Failed to delete template:', error);
+        Toast.show(`Failed to delete template: ${error.message}`, 'error');
+      }
+    }
+  }
+
+  async executeTemplateById(templateId) {
+    const template = await templateManager.getTemplate(templateId);
+    if (template) {
+      this.showExecuteModal(template);
+    }
+  }
+
+  showExecuteModal(template) {
+    this.currentTemplate = template;
+
+    const loadingEl = document.getElementById('executeLoading');
+    const resultEl = document.getElementById('executeResult');
+    const errorEl = document.getElementById('executeError');
+    const runBtn = document.getElementById('executeModalRun');
+
+    loadingEl.classList.add('hidden');
+    resultEl.classList.add('hidden');
+    errorEl.classList.add('hidden');
+    runBtn.disabled = false;
+    runBtn.textContent = 'Run Template';
+
+    const title = document.getElementById('executeModalTitle');
+    const inputsContainer = document.getElementById('executeInputs');
+
+    title.textContent = `Execute: ${template.name}`;
+
+    if (template.inputs && template.inputs.length > 0) {
+      inputsContainer.innerHTML = template.inputs
+        .map(
+          (input) => `
+        <div class="form-group">
+          <label class="form-label" for="input_${input.name}">${input.label}</label>
+          <textarea id="input_${input.name}" name="${input.name}" class="form-textarea" 
+                    placeholder="${input.placeholder}" rows="2">${input.defaultValue || ''}</textarea>
+        </div>
+      `
+        )
+        .join('');
+    } else {
+      inputsContainer.innerHTML =
+        '<p>This template has no variables to fill.</p>';
+    }
+
+    Modal.show('execute');
+  }
+
+  async executeTemplate() {
+    if (!this.currentTemplate) {
+      return;
+    }
+
+    const form = document.getElementById('executeForm');
+    const formData = new FormData(form);
+    const inputs = Object.fromEntries(formData.entries());
+
+    const loadingEl = document.getElementById('executeLoading');
+    const errorEl = document.getElementById('executeError');
+    const resultEl = document.getElementById('executeResult');
+    const runBtn = document.getElementById('executeModalRun');
+
+    loadingEl.classList.remove('hidden');
+    errorEl.classList.add('hidden');
+    resultEl.classList.add('hidden');
+    runBtn.disabled = true;
+    runBtn.textContent = 'Processing...';
+
+    try {
+      const result = await aiService.processTemplate(
+        this.currentTemplate,
+        inputs
+      );
+
+      document.getElementById('resultContent').textContent = result.result;
+      document.getElementById('resultMeta').innerHTML = `
+        <span>Provider: ${result.provider}</span>
+        <span>Duration: ${result.duration}ms</span>
+      `;
+
+      await historyManager.addHistoryEntry(
+        this.currentTemplate.id,
+        this.currentTemplate.name,
+        inputs,
+        result.result,
+        HISTORY_STATUS.COMPLETED
+      );
+
+      resultEl.classList.remove('hidden');
+      Toast.show('Template executed successfully', 'success');
+    } catch (error) {
+      console.error('Template execution failed:', error);
+      errorEl.querySelector('.error-message').textContent = error.message;
+      errorEl.classList.remove('hidden');
+
+      await historyManager.addHistoryEntry(
+        this.currentTemplate.id,
+        this.currentTemplate.name,
+        inputs,
+        '',
+        HISTORY_STATUS.FAILED
+      );
+    } finally {
+      loadingEl.classList.add('hidden');
+      runBtn.disabled = false;
+      runBtn.textContent = 'Run Template';
+    }
+  }
+
+  copyResult() {
+    const resultContent = document.getElementById('resultContent').textContent;
+    if (resultContent) {
+      copyToClipboard(resultContent)
+        .then(() => {
+          Toast.show('Result copied to clipboard', 'success');
+        })
+        .catch(() => {
+          Toast.show('Failed to copy result', 'error');
+        });
+    }
+  }
+
+  async rerunFromHistory(historyEntry) {
+    const template = await templateManager.getTemplate(historyEntry.templateId);
+    if (template) {
+      this.showExecuteModal(template);
+
+      setTimeout(() => {
+        Object.entries(historyEntry.inputs).forEach(([key, value]) => {
+          const input = document.getElementById(`input_${key}`);
+          if (input) {
+            input.value = value;
+          }
+        });
+      }, 150);
+    }
+  }
+
+  async deleteHistoryEntry(entryId) {
+    const confirmed = await Modal.confirm(
+      'Delete History Entry',
+      'Are you sure you want to delete this history entry?'
+    );
+
+    if (confirmed) {
+      try {
+        await historyManager.deleteHistoryEntry(entryId);
+      } catch (error) {
+        console.error('Failed to delete history entry:', error);
+        Toast.show('Failed to delete history entry', 'error');
+      }
+    }
+  }
+
+  async clearHistory() {
+    const confirmed = await Modal.confirm(
+      'Clear All History',
+      'Are you sure you want to clear all history? This cannot be undone.',
+      { confirmText: 'Clear All', confirmClass: 'btn-danger' }
+    );
+
+    if (confirmed) {
+      try {
+        const clearedCount = await historyManager.clearHistory();
+        Toast.show(`Cleared ${clearedCount} history entries`, 'success');
+      } catch (error) {
+        console.error('Failed to clear history:', error);
+        Toast.show('Failed to clear history', 'error');
+      }
+    }
+  }
+
+  // Settings methods
+  async openSettingsPage() {
+    try {
+      // Save current state
+      await chrome.storage.local.set({ last_active_page: 'settings' });
+
+      // Ask background script to update the sidepanel path
+      await chrome.runtime.sendMessage({
+        action: 'setSidePanelPath',
+        path: 'settings/settings.html?from=sidepanel',
+      });
+
+      // Navigate to settings
+      window.location.href = chrome.runtime.getURL(
+        'settings/settings.html?from=sidepanel'
+      );
+    } catch (error) {
+      console.error('Failed to open settings page:', error);
+      // Fall back to simple navigation
+      window.location.href = chrome.runtime.getURL(
+        'settings/settings.html?from=sidepanel'
+      );
+    }
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Cleanup method for when the side panel is closed
+  cleanup() {
+    // Reserved for future cleanup needs
+  }
+}
+
+// Initialize the app when the sidepanel loads
+document.addEventListener('DOMContentLoaded', () => {
+  const app = new SidePanelApp();
+
+  // Expose app for debugging
+  window.aiToolboxSidePanel = app;
+
+  // Cleanup when page unloads
+  window.addEventListener('beforeunload', () => {
+    app.cleanup();
+  });
+});
