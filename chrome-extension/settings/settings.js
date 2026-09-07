@@ -251,32 +251,14 @@ class SettingsPage {
     testBtn.textContent = 'Testing...';
 
     try {
-      // Initialize apiKeys object if it doesn't exist
-      if (!this.settings.apiKeys) {
-        this.settings.apiKeys = {
-          openai: '',
-          claude: '',
-          gemini: '',
-          llama: '',
-          grok: '',
-        };
-      }
+      // Validates against a temporary copy of the settings — testing must not
+      // persist an unsaved provider/key the user never confirmed with Save.
+      const result = await aiService.validateApiKey(provider, apiKey);
 
-      // Temporarily update the API key for testing
-      this.settings.apiKeys[provider] = apiKey;
-
-      await aiService.updateSettings({
-        provider,
-        apiKey,
-        apiKeys: this.settings.apiKeys,
-      });
-
-      const result = await aiService.testConnection();
-
-      statusEl.className = `connection-status ${result.success ? 'success' : 'error'}`;
-      statusEl.textContent = result.success
+      statusEl.className = `connection-status ${result.valid ? 'success' : 'error'}`;
+      statusEl.textContent = result.valid
         ? 'Connection successful!'
-        : `Connection failed: ${result.error}`;
+        : result.message;
       statusEl.classList.remove('hidden');
     } catch (error) {
       statusEl.className = 'connection-status error';

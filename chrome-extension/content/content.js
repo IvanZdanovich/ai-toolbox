@@ -65,6 +65,30 @@ class AIToolboxContent {
           this.showProcessingOverlay(request.template, request.selectedText);
           sendResponse({ success: true });
           break;
+        case 'showResultOverlay':
+          this.showResultOverlay(
+            request.template,
+            request.selectedText,
+            request.result
+          );
+          sendResponse({ success: true });
+          break;
+        case 'showErrorOverlay':
+          this.showErrorOverlay(
+            request.template,
+            request.selectedText,
+            request.error
+          );
+          sendResponse({ success: true });
+          break;
+        case 'showError':
+          this.showErrorOverlay(
+            { name: 'AI Toolbox' },
+            '',
+            request.message
+          );
+          sendResponse({ success: true });
+          break;
         case 'hideOverlay':
           this.hideOverlay();
           sendResponse({ success: true });
@@ -209,13 +233,26 @@ class AIToolboxContent {
     return true;
   }
 
+  // Only these input types expose selectionStart/selectionEnd; reading them
+  // on any other type (number, email, date, ...) throws InvalidStateError.
+  static SELECTABLE_INPUT_TYPES = new Set([
+    'text',
+    'search',
+    'url',
+    'tel',
+    'password',
+  ]);
+
   insertAtCursor(text) {
     const activeElement = document.activeElement;
 
     if (
       activeElement &&
       (activeElement.tagName === 'TEXTAREA' ||
-        activeElement.tagName === 'INPUT')
+        (activeElement.tagName === 'INPUT' &&
+          AIToolboxContent.SELECTABLE_INPUT_TYPES.has(
+            (activeElement.type || 'text').toLowerCase()
+          )))
     ) {
       const start = activeElement.selectionStart;
       const end = activeElement.selectionEnd;
@@ -246,143 +283,118 @@ class AIToolboxContent {
     return false;
   }
 
-  showProcessingOverlay(template, selectedText) {
+  // Builds the shared overlay shell (header, close button, mount, reveal
+  // animation) and returns it so callers can wire up their own body actions.
+  mountOverlay(title, bodyHtml, extraClass = '') {
     this.hideOverlay();
 
     const overlay = this.createOverlay();
     overlay.innerHTML = `
-      <div class="ai-toolbox-overlay">
+      <div class="ai-toolbox-overlay${extraClass ? ` ${extraClass}` : ''}">
         <div class="ai-toolbox-header">
-          <h3>Processing with AI Toolbox</h3>
+          <h3>${this.escapeHtml(title)}</h3>
           <button class="ai-toolbox-close">&times;</button>
         </div>
         <div class="ai-toolbox-content">
-          <div class="ai-toolbox-template">
-            <strong>Template:</strong> ${this.escapeHtml(template.name)}
-          </div>
-          <div class="ai-toolbox-input">
-            <strong>Selected Text:</strong>
-            <div class="ai-toolbox-text">${this.escapeHtml(selectedText.substring(0, 200))}${selectedText.length > 200 ? '...' : ''}</div>
-          </div>
-          <div class="ai-toolbox-status">
-            <div class="ai-toolbox-spinner"></div>
-            <span>Processing...</span>
-          </div>
+          ${bodyHtml}
         </div>
       </div>
     `;
 
     document.body.appendChild(overlay);
     this.overlayVisible = true;
-
-    overlay.querySelector('.ai-toolbox-close').addEventListener('click', () => {
-      this.hideOverlay();
-    });
-
-    setTimeout(() => {
-      overlay.classList.add('visible');
-    }, 10);
-  }
-
-  showResultOverlay(template, selectedText, result) {
-    this.hideOverlay();
-
-    const overlay = this.createOverlay();
-    overlay.innerHTML = `
-      <div class="ai-toolbox-overlay">
-        <div class="ai-toolbox-header">
-          <h3>AI Processing Complete</h3>
-          <button class="ai-toolbox-close">&times;</button>
-        </div>
-        <div class="ai-toolbox-content">
-          <div class="ai-toolbox-template">
-            <strong>Template:</strong> ${this.escapeHtml(template.name)}
-          </div>
-          <div class="ai-toolbox-result">
-            <strong>Result:</strong>
-            <div class="ai-toolbox-text ai-toolbox-result-text">${this.escapeHtml(result)}</div>
-          </div>
-          <div class="ai-toolbox-actions">
-            <button class="ai-toolbox-btn ai-toolbox-btn-primary" data-action="insert">Insert Text</button>
-            <button class="ai-toolbox-btn ai-toolbox-btn-secondary" data-action="copy">Copy to Clipboard</button>
-            <button class="ai-toolbox-btn ai-toolbox-btn-secondary" data-action="close">Close</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    this.overlayVisible = true;
-
-    const closeBtn = overlay.querySelector('.ai-toolbox-close');
-    const insertBtn = overlay.querySelector('[data-action="insert"]');
-    const copyBtn = overlay.querySelector('[data-action="copy"]');
-    const closeActionBtn = overlay.querySelector('[data-action="close"]');
-
-    closeBtn.addEventListener('click', () => this.hideOverlay());
-    closeActionBtn.addEventListener('click', () => this.hideOverlay());
-
-    insertBtn.addEventListener('click', () => {
-      this.insertText(result);
-      this.hideOverlay();
-    });
-
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard
-        .writeText(result)
-        .then(() => {
-          this.showToast('Result copied to clipboard', 'success');
-        })
-        .catch(() => {
-          this.showToast('Failed to copy result', 'error');
-        });
-    });
-
-    setTimeout(() => {
-      overlay.classList.add('visible');
-    }, 10);
-  }
-
-  showErrorOverlay(template, selectedText, error) {
-    this.hideOverlay();
-
-    const overlay = this.createOverlay();
-    overlay.innerHTML = `
-      <div class="ai-toolbox-overlay ai-toolbox-error">
-        <div class="ai-toolbox-header">
-          <h3>AI Processing Failed</h3>
-          <button class="ai-toolbox-close">&times;</button>
-        </div>
-        <div class="ai-toolbox-content">
-          <div class="ai-toolbox-template">
-            <strong>Template:</strong> ${this.escapeHtml(template.name)}
-          </div>
-          <div class="ai-toolbox-error-message">
-            <strong>Error:</strong> ${this.escapeHtml(error)}
-          </div>
-          <div class="ai-toolbox-actions">
-            <button class="ai-toolbox-btn ai-toolbox-btn-secondary" data-action="close">Close</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    this.overlayVisible = true;
-
-    overlay.querySelector('.ai-toolbox-close').addEventListener('click', () => {
-      this.hideOverlay();
-    });
 
     overlay
-      .querySelector('[data-action="close"]')
-      .addEventListener('click', () => {
-        this.hideOverlay();
+      .querySelectorAll('.ai-toolbox-close, [data-action="close"]')
+      .forEach((btn) => {
+        btn.addEventListener('click', () => this.hideOverlay());
       });
 
     setTimeout(() => {
       overlay.classList.add('visible');
     }, 10);
+
+    return overlay;
+  }
+
+  templateRow(template) {
+    return `
+      <div class="ai-toolbox-template">
+        <strong>Template:</strong> ${this.escapeHtml(template?.name)}
+      </div>
+    `;
+  }
+
+  showProcessingOverlay(template, selectedText) {
+    const text = String(selectedText || '');
+    this.mountOverlay(
+      'Processing with AI Toolbox',
+      `
+        ${this.templateRow(template)}
+        <div class="ai-toolbox-input">
+          <strong>Selected Text:</strong>
+          <div class="ai-toolbox-text">${this.escapeHtml(text.substring(0, 200))}${text.length > 200 ? '...' : ''}</div>
+        </div>
+        <div class="ai-toolbox-status">
+          <div class="ai-toolbox-spinner"></div>
+          <span>Processing...</span>
+        </div>
+      `
+    );
+  }
+
+  showResultOverlay(template, selectedText, result) {
+    const overlay = this.mountOverlay(
+      'AI Processing Complete',
+      `
+        ${this.templateRow(template)}
+        <div class="ai-toolbox-result">
+          <strong>Result:</strong>
+          <div class="ai-toolbox-text ai-toolbox-result-text">${this.escapeHtml(result)}</div>
+        </div>
+        <div class="ai-toolbox-actions">
+          <button class="ai-toolbox-btn ai-toolbox-btn-primary" data-action="insert">Insert Text</button>
+          <button class="ai-toolbox-btn ai-toolbox-btn-secondary" data-action="copy">Copy to Clipboard</button>
+          <button class="ai-toolbox-btn ai-toolbox-btn-secondary" data-action="close">Close</button>
+        </div>
+      `
+    );
+
+    overlay
+      .querySelector('[data-action="insert"]')
+      .addEventListener('click', () => {
+        this.insertText(result);
+        this.hideOverlay();
+      });
+
+    overlay
+      .querySelector('[data-action="copy"]')
+      .addEventListener('click', () => {
+        navigator.clipboard
+          .writeText(result)
+          .then(() => {
+            this.showToast('Result copied to clipboard', 'success');
+          })
+          .catch(() => {
+            this.showToast('Failed to copy result', 'error');
+          });
+      });
+  }
+
+  showErrorOverlay(template, selectedText, error) {
+    this.mountOverlay(
+      'AI Processing Failed',
+      `
+        ${this.templateRow(template)}
+        <div class="ai-toolbox-error-message">
+          <strong>Error:</strong> ${this.escapeHtml(error)}
+        </div>
+        <div class="ai-toolbox-actions">
+          <button class="ai-toolbox-btn ai-toolbox-btn-secondary" data-action="close">Close</button>
+        </div>
+      `,
+      'ai-toolbox-error'
+    );
   }
 
   createOverlay() {

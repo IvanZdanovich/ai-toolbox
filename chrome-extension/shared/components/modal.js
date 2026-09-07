@@ -1,3 +1,5 @@
+import { sanitizeText } from '../helpers.js';
+
 class Modal {
   constructor() {
     this.activeModal = null;
@@ -30,7 +32,10 @@ class Modal {
       modal.classList.add('show');
     }, 10);
 
-    const firstInput = modal.querySelector('input, textarea, select, button');
+    // Focus the first real field, not the header's close button
+    const firstInput = modal.querySelector(
+      '.modal-body input, .modal-body textarea, .modal-body select'
+    );
     if (firstInput) {
       firstInput.focus();
     }
@@ -89,16 +94,39 @@ class Modal {
     });
   }
 
+  // Removes a detached dialog and wires Escape to dismiss it with cancelValue.
+  dismissable(modal, resolve, cancelValue) {
+    const cleanup = () => {
+      document.removeEventListener('keydown', onKeydown);
+      modal.classList.remove('show');
+      setTimeout(() => {
+        if (modal.parentNode) {
+          modal.parentNode.removeChild(modal);
+        }
+      }, 200);
+    };
+
+    const onKeydown = (e) => {
+      if (e.key === 'Escape') {
+        cleanup();
+        resolve(cancelValue);
+      }
+    };
+
+    document.addEventListener('keydown', onKeydown);
+    return cleanup;
+  }
+
   createConfirmModal(title, message, options, resolve) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
       <div class="modal">
         <div class="modal-header">
-          <h2 class="modal-title">${this.escapeHtml(title)}</h2>
+          <h2 class="modal-title">${sanitizeText(title)}</h2>
         </div>
         <div class="modal-body">
-          <p>${this.escapeHtml(message)}</p>
+          <p>${sanitizeText(message)}</p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary cancel-btn">${options.cancelText || 'Cancel'}</button>
@@ -107,14 +135,7 @@ class Modal {
       </div>
     `;
 
-    const cleanup = () => {
-      modal.classList.remove('show');
-      setTimeout(() => {
-        if (modal.parentNode) {
-          modal.parentNode.removeChild(modal);
-        }
-      }, 200);
-    };
+    const cleanup = this.dismissable(modal, resolve, false);
 
     modal.querySelector('.cancel-btn').addEventListener('click', () => {
       cleanup();
@@ -160,11 +181,11 @@ class Modal {
     modal.innerHTML = `
       <div class="modal">
         <div class="modal-header">
-          <h2 class="modal-title">${this.escapeHtml(title)}</h2>
+          <h2 class="modal-title">${sanitizeText(title)}</h2>
         </div>
         <div class="modal-body">
-          <p>${this.escapeHtml(message)}</p>
-          <input type="text" class="form-input prompt-input" value="${this.escapeHtml(defaultValue)}" placeholder="${this.escapeHtml(options.placeholder || '')}">
+          <p>${sanitizeText(message)}</p>
+          <input type="text" class="form-input prompt-input" value="${sanitizeText(defaultValue)}" placeholder="${sanitizeText(options.placeholder || '')}">
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary cancel-btn">${options.cancelText || 'Cancel'}</button>
@@ -175,14 +196,7 @@ class Modal {
 
     const input = modal.querySelector('.prompt-input');
 
-    const cleanup = () => {
-      modal.classList.remove('show');
-      setTimeout(() => {
-        if (modal.parentNode) {
-          modal.parentNode.removeChild(modal);
-        }
-      }, 200);
-    };
+    const cleanup = this.dismissable(modal, resolve, null);
 
     const submit = () => {
       const value = input.value.trim();
@@ -206,12 +220,6 @@ class Modal {
     // Removed click-outside behavior to prevent auto-closing
 
     return modal;
-  }
-
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 }
 

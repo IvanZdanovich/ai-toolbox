@@ -8,6 +8,9 @@ import {
   debounce,
   copyToClipboard,
   downloadAsJson,
+  sanitizeText,
+  variableLabel,
+  variablePlaceholder,
 } from '../shared/helpers.js';
 import { EVENTS, HISTORY_STATUS } from '../shared/constants.js';
 import Toast from '../shared/components/toast.js';
@@ -264,7 +267,7 @@ class SidePanelApp {
         (template) => `
       <div class="template-card" data-template-id="${template.id}">
         <div class="template-card-header">
-          <h3 class="template-card-title">${this.escapeHtml(template.name)}</h3>
+          <h3 class="template-card-title">${sanitizeText(template.name)}</h3>
           <div class="template-card-actions">
             <button class="action-btn edit" data-action="edit" title="Edit template">
               ✏️
@@ -280,7 +283,7 @@ class SidePanelApp {
             </button>
           </div>
         </div>
-        ${template.description ? `<p class="template-card-description">${this.escapeHtml(template.description)}</p>` : ''}
+        ${template.description ? `<p class="template-card-description">${sanitizeText(template.description)}</p>` : ''}
         <p class="template-card-meta">
           Variables: ${template.inputs.length} • 
           Created: ${formatRelativeTime(template.createdAt)}
@@ -310,7 +313,7 @@ class SidePanelApp {
         (entry) => `
       <div class="history-entry" data-entry-id="${entry.id}">
         <div class="history-entry-header">
-          <h4 class="history-entry-title">${this.escapeHtml(entry.templateName)}</h4>
+          <h4 class="history-entry-title">${sanitizeText(entry.templateName)}</h4>
           <div class="history-entry-time">
             <span class="status-badge ${entry.status}">${entry.status}</span>
             ${formatRelativeTime(entry.timestamp)}
@@ -323,7 +326,7 @@ class SidePanelApp {
             ${Object.entries(entry.inputs)
               .map(
                 ([key, value]) =>
-                  `<strong>${key}:</strong> ${truncateText(String(value), 50)}`
+                  `<strong>${sanitizeText(key)}:</strong> ${sanitizeText(truncateText(String(value), 50))}`
               )
               .join(' • ')}
           </div>
@@ -331,7 +334,7 @@ class SidePanelApp {
             : ''
         }
         <div class="history-entry-result">
-          ${entry.result ? truncateText(entry.result, 150) : 'No result'}
+          ${entry.result ? sanitizeText(truncateText(entry.result, 150)) : 'No result'}
         </div>
         <div class="history-entry-actions">
           <button class="btn btn-small btn-secondary" data-action="copy">Copy Result</button>
@@ -481,45 +484,40 @@ class SidePanelApp {
       ${variables
         .map((variable) => {
           const existingInput = existingInputMap.get(variable);
-          const label =
-            existingInput?.label ||
-            variable
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (l) => l.toUpperCase());
+          const label = existingInput?.label || variableLabel(variable);
           const defaultValue = existingInput?.defaultValue || '';
           const placeholder =
-            existingInput?.placeholder ||
-            `Enter ${variable.replace(/_/g, ' ')}...`;
+            existingInput?.placeholder || variablePlaceholder(variable);
 
           return `
         <div class="variable-group">
-          <label class="form-label" title="Variable: {${variable}}">{${variable}}</label>
+          <label class="form-label" title="Variable: {${sanitizeText(variable)}}">{${sanitizeText(variable)}}</label>
           <div class="variable-inputs">
             <div class="variable-input-wrapper">
               <span class="input-mini-label">Label</span>
-              <input type="text" class="form-input" 
-                     data-variable="${variable}" 
+              <input type="text" class="form-input"
+                     data-variable="${sanitizeText(variable)}"
                      data-field="label"
-                     placeholder="e.g., Topic" 
-                     value="${label}"
+                     placeholder="e.g., Topic"
+                     value="${sanitizeText(label)}"
                      title="The label shown above the input field">
             </div>
             <div class="variable-input-wrapper">
               <span class="input-mini-label">Placeholder (hint text)</span>
-              <input type="text" class="form-input" 
-                     data-variable="${variable}" 
+              <input type="text" class="form-input"
+                     data-variable="${sanitizeText(variable)}"
                      data-field="placeholder"
-                     placeholder="e.g., Message" 
-                     value="${placeholder}"
+                     placeholder="e.g., Message"
+                     value="${sanitizeText(placeholder)}"
                      title="Hint text shown inside the empty input">
             </div>
             <div class="variable-input-wrapper">
               <span class="input-mini-label">Default Value</span>
-              <input type="text" class="form-input" 
-                     data-variable="${variable}" 
+              <input type="text" class="form-input"
+                     data-variable="${sanitizeText(variable)}"
                      data-field="defaultValue"
-                     placeholder="e.g., Addressee" 
-                     value="${defaultValue}"
+                     placeholder="e.g., Addressee"
+                     value="${sanitizeText(defaultValue)}"
                      title="Pre-filled value that users can override">
             </div>
           </div>
@@ -697,12 +695,10 @@ Generate the prompt template now:`;
 
           // Set defaults if not provided
           if (!inputData.label) {
-            inputData.label = variable
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (l) => l.toUpperCase());
+            inputData.label = variableLabel(variable);
           }
           if (!inputData.placeholder) {
-            inputData.placeholder = `Enter ${variable.replace(/_/g, ' ')}...`;
+            inputData.placeholder = variablePlaceholder(variable);
           }
 
           inputsMap.set(variable, inputData);
@@ -823,9 +819,9 @@ Generate the prompt template now:`;
         .map(
           (input) => `
         <div class="form-group">
-          <label class="form-label" for="input_${input.name}">${input.label}</label>
-          <textarea id="input_${input.name}" name="${input.name}" class="form-textarea" 
-                    placeholder="${input.placeholder}" rows="2">${input.defaultValue || ''}</textarea>
+          <label class="form-label" for="input_${sanitizeText(input.name)}">${sanitizeText(input.label)}</label>
+          <textarea id="input_${sanitizeText(input.name)}" name="${sanitizeText(input.name)}" class="form-textarea"
+                    placeholder="${sanitizeText(input.placeholder)}" rows="2">${sanitizeText(input.defaultValue || '')}</textarea>
         </div>
       `
         )
@@ -915,16 +911,16 @@ Generate the prompt template now:`;
   async rerunFromHistory(historyEntry) {
     const template = await templateManager.getTemplate(historyEntry.templateId);
     if (template) {
+      // showExecuteModal() builds the fields synchronously via innerHTML,
+      // so they are queryable as soon as it returns.
       this.showExecuteModal(template);
 
-      setTimeout(() => {
-        Object.entries(historyEntry.inputs).forEach(([key, value]) => {
-          const input = document.getElementById(`input_${key}`);
-          if (input) {
-            input.value = value;
-          }
-        });
-      }, 150);
+      Object.entries(historyEntry.inputs).forEach(([key, value]) => {
+        const input = document.getElementById(`input_${key}`);
+        if (input) {
+          input.value = value;
+        }
+      });
     }
   }
 
@@ -985,12 +981,6 @@ Generate the prompt template now:`;
         'settings/settings.html?from=sidepanel'
       );
     }
-  }
-
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   // Cleanup method for when the side panel is closed

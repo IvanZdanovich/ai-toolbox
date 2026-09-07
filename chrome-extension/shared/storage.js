@@ -16,7 +16,7 @@ class ChromeStorage {
       const result = await this.storage.get(key);
       const value = result[key];
 
-      if (value) {
+      if (value !== undefined) {
         this.cache.set(key, value);
         console.debug(
           `Storage: Retrieved ${key} from storage, cached for future use`
@@ -41,11 +41,15 @@ class ChromeStorage {
         `Storage: Setting ${key}, size: ${serialized.length} bytes`
       );
 
+      // Only one representation may exist at a time: getTemplates()/getHistory()
+      // read the plain key first, so a stale one would shadow the chunks.
       if (serialized.length > LIMITS.STORAGE_CHUNK_SIZE) {
         console.debug(`Storage: Using chunked storage for ${key}`);
         await this.setChunked(key, value);
+        await this.storage.remove(key);
       } else {
         await this.storage.set(data);
+        await this.removeChunks(key);
       }
 
       this.cache.set(key, value);
@@ -58,6 +62,9 @@ class ChromeStorage {
   }
 
   async setChunked(key, value) {
+    // Drop any previous chunks first so a shorter value can't leave orphans.
+    await this.removeChunks(key);
+
     const serialized = JSON.stringify(value);
     const chunkSize = LIMITS.STORAGE_CHUNK_SIZE;
     const chunks = [];
@@ -74,6 +81,23 @@ class ChromeStorage {
     chunkData[`${key}_chunks`] = chunks.length;
 
     await this.storage.set(chunkData);
+  }
+
+  // Removes the chunk keys for `key`, leaving the plain key untouched.
+  async removeChunks(key) {
+    const chunkCountResult = await this.storage.get(`${key}_chunks`);
+    const chunkCount = chunkCountResult[`${key}_chunks`];
+
+    if (!chunkCount) {
+      return;
+    }
+
+    const keysToRemove = [`${key}_chunks`];
+    for (let i = 0; i < chunkCount; i++) {
+      keysToRemove.push(`${key}_chunk_${i}`);
+    }
+
+    await this.storage.remove(keysToRemove);
   }
 
   async getChunked(key) {
@@ -107,19 +131,8 @@ class ChromeStorage {
 
   async remove(key) {
     try {
-      const chunkCountResult = await this.storage.get(`${key}_chunks`);
-      const chunkCount = chunkCountResult[`${key}_chunks`];
-
-      const keysToRemove = [key];
-
-      if (chunkCount) {
-        keysToRemove.push(`${key}_chunks`);
-        for (let i = 0; i < chunkCount; i++) {
-          keysToRemove.push(`${key}_chunk_${i}`);
-        }
-      }
-
-      await this.storage.remove(keysToRemove);
+      await this.removeChunks(key);
+      await this.storage.remove(key);
       this.cache.delete(key);
       return true;
     } catch (error) {
@@ -232,10 +245,15 @@ class ChromeStorage {
       const history = await this.getHistory();
       const settings = await this.getSettings();
 
+      // Keys live under settings.apiKeys[provider]; apiKey is the legacy field.
+      const hasApiKey = !!(
+        settings?.apiKeys?.[settings?.provider] || settings?.apiKey
+      );
+
       console.log(`Storage validation results:
         - Templates: ${templates?.length || 0} items
-        - History: ${history?.length || 0} items  
-        - Settings: Provider=${settings?.provider}, API Key=${settings?.apiKey ? 'Present' : 'Not set'}`);
+        - History: ${history?.length || 0} items
+        - Settings: Provider=${settings?.provider}, API Key=${hasApiKey ? 'Present' : 'Not set'}`);
 
       const storageInfo = await this.getStorageInfo();
       if (storageInfo) {
@@ -248,7 +266,7 @@ class ChromeStorage {
         templates: templates?.length || 0,
         history: history?.length || 0,
         hasSettings: !!settings?.provider,
-        hasApiKey: !!settings?.apiKey,
+        hasApiKey,
         storageInfo,
       };
     } catch (error) {
@@ -285,6 +303,12 @@ class ChromeStorage {
       if (area === 'sync') {
         for (const key in changes) {
           this.cache.delete(key);
+          // Chunked writes report `foo_chunk_0`/`foo_chunks`, never `foo`,
+          // so map them back to the logical key the cache is keyed by.
+          const chunkMatch = key.match(/^(.+?)_(?:chunks|chunk_\d+)$/);
+          if (chunkMatch) {
+            this.cache.delete(chunkMatch[1]);
+          }
         }
         callback(changes, area);
       }

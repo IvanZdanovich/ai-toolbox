@@ -62,7 +62,7 @@ npm run lint      # Check code quality
 
 ## License
 
-ISC
+MIT
 
 ## Author
 

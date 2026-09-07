@@ -87,15 +87,19 @@ export function extractVariables(prompt) {
   return variables;
 }
 
+export function variableLabel(variable) {
+  return variable.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+export function variablePlaceholder(variable) {
+  return `Enter ${variable.replace(/_/g, ' ')}...`;
+}
+
 export function replaceVariables(template, values) {
-  let result = template;
-
-  Object.entries(values).forEach(([key, value]) => {
-    const regex = new RegExp(`\\{\\s*${key}\\s*\\}`, 'g');
-    result = result.replace(regex, value || `{${key}}`);
+  return template.replace(/\{([^}]+)\}/g, (match, name) => {
+    const key = name.trim();
+    return key in values ? String(values[key]) : match;
   });
-
-  return result;
 }
 
 export function sanitizeText(text) {

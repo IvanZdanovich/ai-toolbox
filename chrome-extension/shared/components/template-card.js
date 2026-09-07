@@ -2,6 +2,7 @@ import {
   formatRelativeTime,
   truncateText,
   downloadAsJson,
+  sanitizeText,
 } from '../../shared/helpers.js';
 import IconHelper from '../../shared/icon-helper.js';
 
@@ -28,13 +29,13 @@ class TemplateCard {
 
     card.innerHTML = `
       <div class="template-card-header">
-        <h3 class="template-card-title">${this.escapeHtml(this.template.name)}</h3>
+        <h3 class="template-card-title">${sanitizeText(this.template.name)}</h3>
         ${this.options.showActions ? this.renderActions() : ''}
       </div>
       ${
         this.options.showDescription && this.template.description
           ? `
-        <p class="template-card-description">${this.escapeHtml(this.template.description)}</p>
+        <p class="template-card-description">${sanitizeText(truncateText(this.template.description, 100))}</p>
       `
           : ''
       }
@@ -42,6 +43,7 @@ class TemplateCard {
     `;
 
     this.attachEventListeners(card);
+    this.element = card;
     return card;
   }
 
@@ -129,10 +131,8 @@ class TemplateCard {
 
   update(template) {
     this.template = template;
-    const existingCard = document.querySelector(
-      `[data-template-id="${template.id}"]`
-    );
-    if (existingCard) {
+    const existingCard = this.element;
+    if (existingCard && existingCard.parentNode) {
       const newCard = this.render();
       existingCard.parentNode.replaceChild(newCard, existingCard);
       return newCard;
@@ -141,12 +141,10 @@ class TemplateCard {
   }
 
   destroy() {
-    const card = document.querySelector(
-      `[data-template-id="${this.template.id}"]`
-    );
-    if (card && card.parentNode) {
-      card.parentNode.removeChild(card);
+    if (this.element && this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element);
     }
+    this.element = null;
   }
 
   exportTemplate(template) {
@@ -167,13 +165,6 @@ class TemplateCard {
     } catch (error) {
       console.error('Export failed:', error);
     }
-  }
-
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   static renderList(templates, container, options = {}) {

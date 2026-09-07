@@ -48,6 +48,14 @@ describe('Template Manager Integration', () => {
     );
     templateManager = TemplateManagerModule.default;
 
+    // vitest's mockReset strips the factory's implementations, so restore the
+    // defaults here. setTemplates must resolve true: the manager treats a
+    // falsy result as a failed write and rolls the change back.
+    storage.getTemplates.mockResolvedValue([]);
+    storage.setTemplates.mockResolvedValue(true);
+    storage.getTemplatesSeeded.mockResolvedValue(false);
+    storage.setTemplatesSeeded.mockResolvedValue(true);
+
     // Reset template manager state
     templateManager.templates = [];
     templateManager.initialized = false;

@@ -476,35 +476,6 @@ class AIService {
     };
   }
 
-  async encryptApiKey(apiKey) {
-    if (!apiKey) {
-      return '';
-    }
-
-    try {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(apiKey);
-
-      const key = await crypto.subtle.generateKey(
-        { name: 'AES-GCM', length: 256 },
-        false,
-        ['encrypt']
-      );
-
-      const iv = crypto.getRandomValues(new Uint8Array(12));
-      const encrypted = await crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        data
-      );
-
-      return btoa(String.fromCharCode(...iv, ...new Uint8Array(encrypted)));
-    } catch (error) {
-      console.error('Encryption failed:', error);
-      return apiKey;
-    }
-  }
-
   async validateApiKey(provider, apiKey) {
     if (provider === AI_PROVIDERS.MOCK) {
       return {
@@ -517,13 +488,19 @@ class AIService {
       return { valid: false, message: 'API key is required' };
     }
 
-    const tempSettings = { ...this.settings, provider, apiKey };
-    const originalSettings = this.settings;
-    this.settings = tempSettings;
+    // getApiKey() reads apiKeys[provider] before the legacy apiKey field, so
+    // the candidate key has to be set in both or the stored one wins.
+    const tempSettings = {
+      ...this.settings,
+      provider,
+      apiKey,
+      apiKeys: { ...this.settings?.apiKeys, [provider]: apiKey },
+    };
 
     try {
-      const testResult = await this.testConnection();
-      this.settings = originalSettings;
+      const testResult = await this.withSettings(tempSettings, () =>
+        this.testConnection()
+      );
 
       return {
         valid: testResult.success,
@@ -532,12 +509,30 @@ class AIService {
           : `API key validation failed: ${testResult.error}`,
       };
     } catch (error) {
-      this.settings = originalSettings;
       return {
         valid: false,
         message: `API key validation error: ${error.message}`,
       };
     }
+  }
+
+  // Runs fn with this.settings temporarily replaced, serializing overlapping
+  // swaps so one caller's restore can't stomp another's temporary settings.
+  // ponytail: a concurrent processTemplate() still reads the swapped settings;
+  // threading settings through the provider methods would remove that window.
+  async withSettings(tempSettings, fn) {
+    const run = async () => {
+      const original = this.settings;
+      this.settings = tempSettings;
+      try {
+        return await fn();
+      } finally {
+        this.settings = original;
+      }
+    };
+
+    this.settingsLock = (this.settingsLock || Promise.resolve()).then(run, run);
+    return this.settingsLock;
   }
 }
 

@@ -7,6 +7,7 @@ class HistoryManager {
     this.history = [];
     this.listeners = new Map();
     this.initialized = false;
+    this.initPromise = null;
   }
 
   async init() {
@@ -14,12 +15,22 @@ class HistoryManager {
       return;
     }
 
-    try {
-      this.history = await storage.getHistory();
-      this.initialized = true;
-    } catch (error) {
-      console.error('Failed to initialize HistoryManager:', error);
+    // Share one in-flight load so concurrent callers can't each overwrite
+    // this.history and drop entries added in between.
+    if (!this.initPromise) {
+      this.initPromise = (async () => {
+        try {
+          this.history = await storage.getHistory();
+          this.initialized = true;
+        } catch (error) {
+          console.error('Failed to initialize HistoryManager:', error);
+        } finally {
+          this.initPromise = null;
+        }
+      })();
     }
+
+    return this.initPromise;
   }
 
   async getAllHistory() {
@@ -234,9 +245,13 @@ class HistoryManager {
     return this.history
       .filter(
         (entry) =>
-          entry.templateName.toLowerCase().includes(searchTerm) ||
-          entry.result.toLowerCase().includes(searchTerm) ||
-          Object.values(entry.inputs).some((input) =>
+          String(entry.templateName || '')
+            .toLowerCase()
+            .includes(searchTerm) ||
+          String(entry.result || '')
+            .toLowerCase()
+            .includes(searchTerm) ||
+          Object.values(entry.inputs || {}).some((input) =>
             String(input).toLowerCase().includes(searchTerm)
           )
       )
@@ -256,13 +271,9 @@ class HistoryManager {
   }
 
   async getHistoryForTemplate(templateId, limit = 10) {
-    if (!this.initialized) {
-      await this.init();
-    }
+    const entries = await this.getHistoryByTemplate(templateId);
 
-    return this.history
-      .filter((entry) => entry.templateId === templateId)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    return entries
       .slice(0, limit)
       .map((entry) => ({
         id: entry.id,

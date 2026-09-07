@@ -1,3 +1,5 @@
+import { generateId, sanitizeText } from '../helpers.js';
+
 class Toast {
   constructor() {
     this.container = null;
@@ -29,7 +31,7 @@ class Toast {
       duration = defaultDurations[type] || 5000;
     }
 
-    const id = this.generateId();
+    const id = generateId();
     const toast = this.createToastElement(id, message, type);
 
     this.container.appendChild(toast);
@@ -70,7 +72,7 @@ class Toast {
     toast.innerHTML = `
       <div class="toast-content">
         <span class="toast-icon">${icon}</span>
-        <p class="toast-message">${this.escapeHtml(message)}</p>
+        <p class="toast-message">${sanitizeText(message)}</p>
       </div>
     `;
 
@@ -131,16 +133,6 @@ class Toast {
     );
 
     animation.onfinish = callback;
-  }
-
-  generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  }
-
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   clear() {

@@ -1,8 +1,10 @@
+import storage from '../shared/storage.js';
+import aiService from '../shared/ai-service.js';
+
 class AIToolboxBackground {
   constructor() {
     this.contextMenus = new Map();
-    this.activeProcessing = new Map();
-    this.contextMenusCreating = false;
+    this.badgeClearTimer = null;
     this.init();
   }
 
@@ -33,10 +35,6 @@ class AIToolboxBackground {
 
     chrome.action.onClicked.addListener((tab) => {
       this.handleActionClick(tab);
-    });
-
-    chrome.tabs.onRemoved.addListener((tabId) => {
-      this.handleTabClosed(tabId);
     });
 
     // Side panel integration
@@ -138,81 +136,77 @@ class AIToolboxBackground {
     }
   }
 
+  // Rebuilds are serialized: the boolean guard used to be checked only after
+  // removeAll() had already run, so two overlapping calls could wipe each
+  // other's menus mid-creation or throw duplicate-id errors.
   async setupContextMenus() {
+    const rebuild = () => this.rebuildContextMenus();
+    this.contextMenuQueue = (this.contextMenuQueue || Promise.resolve()).then(
+      rebuild,
+      rebuild
+    );
+    return this.contextMenuQueue;
+  }
+
+  async rebuildContextMenus() {
     try {
       // Clear existing menus and wait for completion
       await chrome.contextMenus.removeAll();
 
-      // Add a small delay to ensure cleanup is complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      chrome.contextMenus.create({
+        id: 'ai-toolbox-main',
+        title: 'AI Toolbox',
+        contexts: ['selection'],
+      });
 
-      // Check if menus are already being created
-      if (this.contextMenusCreating) {
-        console.log('Context menus already being created, skipping...');
-        return;
-      }
+      chrome.contextMenus.create({
+        id: 'ai-toolbox-separator',
+        type: 'separator',
+        parentId: 'ai-toolbox-main',
+        contexts: ['selection'],
+      });
 
-      this.contextMenusCreating = true;
+      const templates = await this.getTemplates();
 
-      try {
+      if (templates.length === 0) {
         chrome.contextMenus.create({
-          id: 'ai-toolbox-main',
-          title: 'AI Toolbox',
-          contexts: ['selection'],
-        });
-
-        chrome.contextMenus.create({
-          id: 'ai-toolbox-separator',
-          type: 'separator',
+          id: 'no-templates',
+          title: 'No templates available',
           parentId: 'ai-toolbox-main',
           contexts: ['selection'],
+          enabled: false,
+        });
+      } else {
+        templates.slice(0, 5).forEach((template) => {
+          chrome.contextMenus.create({
+            id: `template-${template.id}`,
+            title: `Process with "${template.name}"`,
+            parentId: 'ai-toolbox-main',
+            contexts: ['selection'],
+          });
         });
 
-        const templates = await this.getTemplates();
-
-        if (templates.length === 0) {
+        if (templates.length > 5) {
           chrome.contextMenus.create({
-            id: 'no-templates',
-            title: 'No templates available',
+            id: 'more-templates',
+            title: `... and ${templates.length - 5} more templates`,
             parentId: 'ai-toolbox-main',
             contexts: ['selection'],
             enabled: false,
           });
-        } else {
-          templates.slice(0, 5).forEach((template) => {
-            chrome.contextMenus.create({
-              id: `template-${template.id}`,
-              title: `Process with "${template.name}"`,
-              parentId: 'ai-toolbox-main',
-              contexts: ['selection'],
-            });
-          });
-
-          if (templates.length > 5) {
-            chrome.contextMenus.create({
-              id: 'more-templates',
-              title: `... and ${templates.length - 5} more templates`,
-              parentId: 'ai-toolbox-main',
-              contexts: ['selection'],
-              enabled: false,
-            });
-          }
         }
-
-        chrome.contextMenus.create({
-          id: 'open-popup',
-          title: 'Open AI Toolbox',
-          parentId: 'ai-toolbox-main',
-          contexts: ['selection'],
-        });
-
-        console.log('Context menus created successfully');
-      } finally {
-        this.contextMenusCreating = false;
       }
+
+      chrome.contextMenus.create({
+        id: 'open-popup',
+        title: 'Open AI Toolbox',
+        parentId: 'ai-toolbox-main',
+        contexts: ['selection'],
+      });
+
+      console.log('Context menus created successfully');
     } catch (error) {
       console.error('Failed to setup context menus:', error);
-      this.contextMenusCreating = false;
     }
   }
 
@@ -264,10 +258,7 @@ class AIToolboxBackground {
       });
 
       this.setBadge('✓', '#059669');
-
-      setTimeout(() => {
-        this.setBadge('', '');
-      }, 3000);
+      this.clearBadgeAfter(3000);
     } catch (error) {
       console.error('Failed to process template:', error);
       this.setBadge('✗', '#dc2626');
@@ -279,9 +270,7 @@ class AIToolboxBackground {
         error: error.message,
       });
 
-      setTimeout(() => {
-        this.setBadge('', '');
-      }, 5000);
+      this.clearBadgeAfter(5000);
     }
   }
 
@@ -290,36 +279,13 @@ class AIToolboxBackground {
     await this.processTemplateWithId(templateId, selectedText, tab);
   }
 
-  async processTemplateWithAI() {
-    const mockResponses = [
-      'This is a mock AI response generated by the Chrome extension. In a real implementation, this would be processed by your chosen AI provider.',
-      'Mock AI processing complete. Your selected text has been analyzed and this is the generated response for demonstration purposes.',
-      'Simulated AI result: The template has been successfully processed with your input text. This shows how the extension would work with a real AI service.',
-      'Demo response: This is what an AI-generated result would look like when processing your template with the selected text from the webpage.',
-    ];
-
-    await new Promise((resolve) =>
-      setTimeout(resolve, 1500 + Math.random() * 2000)
-    );
-
-    if (Math.random() < 0.1) {
-      throw new Error('Simulated AI service error for testing');
-    }
-
-    const response =
-      mockResponses[Math.floor(Math.random() * mockResponses.length)];
-
-    return {
-      result: response,
-      provider: 'mock',
-      duration: Math.floor(Math.random() * 3000) + 500,
-    };
+  async processTemplateWithAI(template, inputs) {
+    return aiService.processTemplate(template, inputs);
   }
 
   async getTemplates() {
     try {
-      const result = await chrome.storage.sync.get(['templates']);
-      return result.templates || [];
+      return await storage.getTemplates();
     } catch (error) {
       console.error('Failed to get templates:', error);
       return [];
@@ -336,14 +302,16 @@ class AIToolboxBackground {
 
     if (selectedText && selectedText.length > 10) {
       this.setBadge(selectedText.length.toString(), '#6b7280');
-
-      setTimeout(() => {
-        this.setBadge('', '');
-      }, 2000);
+      this.clearBadgeAfter(2000);
     }
   }
 
   setBadge(text, color) {
+    // A new badge supersedes any pending clear, so a slow earlier operation
+    // can't wipe the badge belonging to the one currently in flight.
+    clearTimeout(this.badgeClearTimer);
+    this.badgeClearTimer = null;
+
     if (chrome.action) {
       chrome.action.setBadgeText({ text });
 
@@ -352,6 +320,16 @@ class AIToolboxBackground {
         chrome.action.setBadgeBackgroundColor({ color });
       }
     }
+  }
+
+  clearBadgeAfter(ms) {
+    clearTimeout(this.badgeClearTimer);
+    this.badgeClearTimer = setTimeout(() => {
+      this.badgeClearTimer = null;
+      if (chrome.action) {
+        chrome.action.setBadgeText({ text: '' });
+      }
+    }, ms);
   }
 
   async showError(tabId, message) {
@@ -367,12 +345,6 @@ class AIToolboxBackground {
 
   handleActionClick() {
     console.log('Extension icon clicked');
-  }
-
-  handleTabClosed(tabId) {
-    if (this.activeProcessing.has(tabId)) {
-      this.activeProcessing.delete(tabId);
-    }
   }
 
   async validateStorageOnStartup() {
@@ -467,7 +439,7 @@ class AIToolboxBackground {
 
   async cleanup() {
     this.contextMenus.clear();
-    this.activeProcessing.clear();
+    clearTimeout(this.badgeClearTimer);
     this.setBadge('', '');
   }
 }

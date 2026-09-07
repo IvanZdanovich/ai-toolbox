@@ -1,6 +1,41 @@
 import storage from './storage.js';
-import { generateId, validateTemplate, extractVariables } from './helpers.js';
+import {
+  generateId,
+  validateTemplate,
+  extractVariables,
+  variableLabel,
+  variablePlaceholder,
+} from './helpers.js';
 import { LIMITS, EVENTS } from './constants.js';
+
+// Builds the input descriptors for a prompt's variables, preferring any
+// caller-supplied input metadata over the generated defaults.
+function buildInputs(prompt, customInputs) {
+  if (customInputs && Array.isArray(customInputs)) {
+    return customInputs.map((input) => ({
+      name: input.name,
+      label: input.label || variableLabel(input.name),
+      placeholder: input.placeholder || variablePlaceholder(input.name),
+      defaultValue: input.defaultValue || '',
+    }));
+  }
+
+  return extractVariables(prompt).map((variable) => ({
+    name: variable,
+    label: variableLabel(variable),
+    placeholder: variablePlaceholder(variable),
+  }));
+}
+
+// Appends a suffix, trimming the base name first so the result still fits
+// within MAX_TEMPLATE_NAME_LENGTH and passes validation.
+function suffixName(name, suffix) {
+  const max = LIMITS.MAX_TEMPLATE_NAME_LENGTH;
+  if (name.length + suffix.length <= max) {
+    return name + suffix;
+  }
+  return name.slice(0, Math.max(0, max - suffix.length)).trim() + suffix;
+}
 
 class TemplateManager {
   constructor() {
@@ -30,8 +65,10 @@ class TemplateManager {
       return;
     }
 
-    // Only seed if this is truly the first time (no templates and not seeded before)
+    // Only seed if this is truly the first time (no templates and not seeded before).
+    // Record the flag either way, so emptying the list later can't re-seed.
     if (this.templates.length > 0) {
+      await storage.setTemplatesSeeded(true);
       return;
     }
 
@@ -588,40 +625,21 @@ Provide:
       );
     }
 
-    const variables = extractVariables(templateData.prompt);
-
     const template = {
       id: generateId(),
       name: templateData.name.trim(),
       description: templateData.description?.trim() || '',
       prompt: templateData.prompt.trim(),
-      inputs: variables.map((variable) => ({
-        name: variable,
-        label: variable
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (l) => l.toUpperCase()),
-        placeholder: `Enter ${variable.replace(/_/g, ' ')}...`,
-      })),
+      inputs: buildInputs(templateData.prompt, templateData.inputs),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    if (templateData.inputs && Array.isArray(templateData.inputs)) {
-      template.inputs = templateData.inputs.map((input) => ({
-        name: input.name,
-        label:
-          input.label ||
-          input.name
-            .replace(/_/g, ' ')
-            .replace(/\b\w/g, (l) => l.toUpperCase()),
-        placeholder:
-          input.placeholder || `Enter ${input.name.replace(/_/g, ' ')}...`,
-        defaultValue: input.defaultValue || '',
-      }));
-    }
-
     this.templates.push(template);
-    await storage.setTemplates(this.templates);
+    if (!(await storage.setTemplates(this.templates))) {
+      this.templates.pop();
+      throw new Error('Failed to save template — storage quota may be full');
+    }
 
     this.emit(EVENTS.TEMPLATE_CREATED, template);
     return template;
@@ -650,32 +668,18 @@ Provide:
     }
 
     if (updatedTemplate.prompt !== this.templates[index].prompt) {
-      const variables = extractVariables(updatedTemplate.prompt);
-      updatedTemplate.inputs = variables.map((variable) => ({
-        name: variable,
-        label: variable
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (l) => l.toUpperCase()),
-        placeholder: `Enter ${variable.replace(/_/g, ' ')}...`,
-      }));
-
-      if (updates.inputs && Array.isArray(updates.inputs)) {
-        updatedTemplate.inputs = updates.inputs.map((input) => ({
-          name: input.name,
-          label:
-            input.label ||
-            input.name
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (l) => l.toUpperCase()),
-          placeholder:
-            input.placeholder || `Enter ${input.name.replace(/_/g, ' ')}...`,
-          defaultValue: input.defaultValue || '',
-        }));
-      }
+      updatedTemplate.inputs = buildInputs(
+        updatedTemplate.prompt,
+        updates.inputs
+      );
     }
 
+    const previous = this.templates[index];
     this.templates[index] = updatedTemplate;
-    await storage.setTemplates(this.templates);
+    if (!(await storage.setTemplates(this.templates))) {
+      this.templates[index] = previous;
+      throw new Error('Failed to save template — storage quota may be full');
+    }
 
     this.emit(EVENTS.TEMPLATE_UPDATED, updatedTemplate);
     return updatedTemplate;
@@ -692,7 +696,10 @@ Provide:
     }
 
     const deletedTemplate = this.templates.splice(index, 1)[0];
-    await storage.setTemplates(this.templates);
+    if (!(await storage.setTemplates(this.templates))) {
+      this.templates.splice(index, 0, deletedTemplate);
+      throw new Error('Failed to delete template — storage write failed');
+    }
 
     this.emit(EVENTS.TEMPLATE_DELETED, deletedTemplate);
     return deletedTemplate;
@@ -711,7 +718,7 @@ Provide:
     const duplicate = {
       ...original,
       id: generateId(),
-      name: `${original.name} (Copy)`,
+      name: suffixName(original.name, ' (Copy)'),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -749,7 +756,7 @@ Provide:
           (t) => t.name === templateData.name
         );
         if (existingTemplate) {
-          templateData.name = `${templateData.name} (Imported)`;
+          templateData.name = suffixName(templateData.name, ' (Imported)');
         }
 
         const template = await this.createTemplate(templateData);
