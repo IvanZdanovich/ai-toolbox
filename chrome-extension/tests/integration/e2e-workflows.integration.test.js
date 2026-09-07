@@ -360,7 +360,9 @@ describe('E2E: Error Recovery Workflow', () => {
 
       expect(failedEntry.status).toBe('failed');
 
-      // Retry with mock (should succeed)
+      // Retry with mock (should succeed). processWithMock throws on
+      // Math.random() < 0.1, so pin it to keep this assertion deterministic.
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
       const retryResult = await aiService.processTemplate(template, inputs);
       expect(retryResult.result).toBeDefined();
 
