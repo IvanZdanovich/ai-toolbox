@@ -81,10 +81,11 @@ html {
 .nav-tab.active::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
+  left: var(--spacing-sm);
+  right: var(--spacing-sm);
   bottom: -1px;
   height: 2px;
+  border-radius: 2px;
   background: var(--gradient-accent);
 }
 

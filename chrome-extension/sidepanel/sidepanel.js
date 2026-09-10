@@ -9,14 +9,9 @@ import {
   truncateText,
   debounce,
   copyToClipboard,
-  downloadAsJson,
   sanitizeText,
 } from '../shared/helpers.js';
-import {
-  EVENTS,
-  EXTENSION_VERSION,
-  WORKFLOW_STEP_TYPES,
-} from '../shared/constants.js';
+import { EVENTS, WORKFLOW_STEP_TYPES } from '../shared/constants.js';
 import Toast from '../shared/components/toast.js';
 import Modal from '../shared/components/modal.js';
 import EditorTab from '../shared/components/editor-tab.js';
@@ -367,12 +362,6 @@ class SidePanelApp {
             <button class="action-btn edit" data-action="edit" title="Edit template">
               ${IconHelper.iconHTML('edit', 'sm')}
             </button>
-            <button class="action-btn duplicate" data-action="duplicate" title="Duplicate template">
-              ${IconHelper.iconHTML('copy', 'sm')}
-            </button>
-            <button class="action-btn export" data-action="export" title="Export template">
-              ${IconHelper.iconHTML('export', 'sm')}
-            </button>
             <button class="action-btn delete" data-action="delete" title="Delete template">
               ${IconHelper.iconHTML('delete', 'sm', 'error')}
             </button>
@@ -461,12 +450,6 @@ class SidePanelApp {
           switch (action) {
             case 'edit':
               this.openEditor('template', 'edit', templateId);
-              break;
-            case 'duplicate':
-              this.duplicateTemplate(templateId);
-              break;
-            case 'export':
-              this.exportTemplate(templateId);
               break;
             case 'delete':
               this.deleteTemplate(templateId);
@@ -633,44 +616,6 @@ class SidePanelApp {
     } catch (error) {
       console.error('History search failed:', error);
       Toast.show('History search failed', 'error');
-    }
-  }
-
-  async duplicateTemplate(templateId) {
-    try {
-      await templateManager.duplicateTemplate(templateId);
-    } catch (error) {
-      console.error('Failed to duplicate template:', error);
-      Toast.show(`Failed to duplicate template: ${error.message}`, 'error');
-    }
-  }
-
-  async exportTemplate(templateId) {
-    try {
-      const template = await templateManager.getTemplate(templateId);
-      if (!template) {
-        Toast.show('Template not found', 'error');
-        return;
-      }
-
-      const exportData = {
-        templates: [template],
-        exportedAt: new Date().toISOString(),
-        version: EXTENSION_VERSION,
-      };
-
-      const sanitizedName = template.name
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .toLowerCase();
-
-      const filename = `${sanitizedName}-template.json`;
-      downloadAsJson(exportData, filename);
-
-      Toast.show('Template exported successfully', 'success');
-    } catch (error) {
-      console.error('Failed to export template:', error);
-      Toast.show('Failed to export template', 'error');
     }
   }
 

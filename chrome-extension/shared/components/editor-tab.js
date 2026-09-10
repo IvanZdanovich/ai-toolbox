@@ -15,6 +15,7 @@ import {
   variablePlaceholder,
 } from '../helpers.js';
 import {
+  EXTENSION_VERSION,
   HISTORY_STATUS,
   LIMITS,
   RUN_STATUS,
@@ -95,10 +96,10 @@ class EditorTab {
       <div class="editor-tab-header">
         <h3 class="editor-tab-title">${sanitizeText(this.title)}</h3>
         <div class="editor-tab-actions">
-          <button type="button" class="btn btn-secondary btn-small hidden" data-role="workflow-duplicate-btn" title="Duplicate workflow">
+          <button type="button" class="btn btn-secondary btn-small hidden" data-role="editor-duplicate-btn" title="Duplicate">
             <svg class="icon icon--sm"><use href="#icon-copy"></use></svg>Duplicate
           </button>
-          <button type="button" class="btn btn-secondary btn-small hidden" data-role="workflow-export-btn" title="Export workflow">
+          <button type="button" class="btn btn-secondary btn-small hidden" data-role="editor-export-btn" title="Export">
             <svg class="icon icon--sm"><use href="#icon-export"></use></svg>Export
           </button>
         </div>
@@ -278,6 +279,7 @@ class EditorTab {
     }
 
     this.setTitle(this.currentTemplate ? 'Edit Template' : 'Create Template');
+    this.updateEditHeaderActions();
 
     if (this.currentTemplate) {
       this.q('[data-role="template-name"]').value = this.currentTemplate.name;
@@ -308,6 +310,69 @@ class EditorTab {
       e.preventDefault();
       this.saveTemplate();
     });
+
+    this.q('[data-role="editor-duplicate-btn"]').addEventListener(
+      'click',
+      () => this.duplicateTemplate()
+    );
+
+    this.q('[data-role="editor-export-btn"]').addEventListener(
+      'click',
+      () => this.exportTemplate()
+    );
+  }
+
+  // Shown once the template/workflow being edited already exists — there is
+  // nothing to duplicate or export before the first save.
+  updateEditHeaderActions() {
+    const show = Boolean(this.currentTemplate || this.currentWorkflow);
+    this.q('[data-role="editor-duplicate-btn"]').classList.toggle(
+      'hidden',
+      !show
+    );
+    this.q('[data-role="editor-export-btn"]').classList.toggle(
+      'hidden',
+      !show
+    );
+  }
+
+  async duplicateTemplate() {
+    if (!this.currentTemplate) {
+      return;
+    }
+
+    try {
+      // Duplicating creates a new template under the hood, so the side
+      // panel's TEMPLATE_CREATED listener already shows a success toast.
+      await templateManager.duplicateTemplate(this.currentTemplate.id);
+    } catch (error) {
+      console.error('Failed to duplicate template:', error);
+      Toast.show(`Failed to duplicate template: ${error.message}`, 'error');
+    }
+  }
+
+  async exportTemplate() {
+    if (!this.currentTemplate) {
+      return;
+    }
+
+    try {
+      const exportData = {
+        templates: [this.currentTemplate],
+        exportedAt: new Date().toISOString(),
+        version: EXTENSION_VERSION,
+      };
+
+      const filename = `${this.currentTemplate.name
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase()}-template.json`;
+      downloadAsJson(exportData, filename);
+      Toast.show('Template exported successfully', 'success');
+    } catch (error) {
+      console.error('Failed to export template:', error);
+      Toast.show('Failed to export template', 'error');
+    }
   }
 
   extractVariables(prompt) {
@@ -566,6 +631,8 @@ Generate the prompt template now:`;
         this.id = this.currentTemplate.id;
         this.setTitle('Edit Template');
       }
+
+      this.updateEditHeaderActions();
     } catch (error) {
       console.error('Failed to save template:', error);
       Toast.show(`Failed to save template: ${error.message}`, 'error');
@@ -708,7 +775,7 @@ Generate the prompt template now:`;
     }
 
     this.setTitle(this.currentWorkflow ? 'Edit Workflow' : 'Create Workflow');
-    this.updateWorkflowHeaderActions();
+    this.updateEditHeaderActions();
 
     if (this.currentWorkflow) {
       this.q('[data-role="workflow-name"]').value = this.currentWorkflow.name;
@@ -734,26 +801,14 @@ Generate the prompt template now:`;
       this.saveWorkflow();
     });
 
-    this.q('[data-role="workflow-duplicate-btn"]').addEventListener(
+    this.q('[data-role="editor-duplicate-btn"]').addEventListener(
       'click',
       () => this.duplicateWorkflow()
     );
 
-    this.q('[data-role="workflow-export-btn"]').addEventListener(
+    this.q('[data-role="editor-export-btn"]').addEventListener(
       'click',
       () => this.exportWorkflow()
-    );
-  }
-
-  updateWorkflowHeaderActions() {
-    const show = Boolean(this.currentWorkflow);
-    this.q('[data-role="workflow-duplicate-btn"]').classList.toggle(
-      'hidden',
-      !show
-    );
-    this.q('[data-role="workflow-export-btn"]').classList.toggle(
-      'hidden',
-      !show
     );
   }
 
@@ -1011,7 +1066,7 @@ Generate the prompt template now:`;
         this.setTitle('Edit Workflow');
       }
 
-      this.updateWorkflowHeaderActions();
+      this.updateEditHeaderActions();
     } catch (error) {
       console.error('Failed to save workflow:', error);
       Toast.show(`Failed to save workflow: ${error.message}`, 'error');
