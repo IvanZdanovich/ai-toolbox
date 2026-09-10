@@ -54,13 +54,6 @@ class AIToolboxContent {
   setupMessageListeners() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       switch (request.action) {
-        case 'getSelectedText':
-          sendResponse({ text: this.getSelectedText() });
-          break;
-        case 'insertText':
-          this.insertText(request.text, request.position);
-          sendResponse({ success: true });
-          break;
         case 'showProcessingOverlay':
           this.showProcessingOverlay(request.template, request.selectedText);
           sendResponse({ success: true });
@@ -87,14 +80,6 @@ class AIToolboxContent {
             '',
             request.message
           );
-          sendResponse({ success: true });
-          break;
-        case 'hideOverlay':
-          this.hideOverlay();
-          sendResponse({ success: true });
-          break;
-        case 'processWithTemplate':
-          this.processWithTemplate(request.templateId, request.selectedText);
           sendResponse({ success: true });
           break;
         default:
@@ -125,53 +110,6 @@ class AIToolboxContent {
         pageTitle: document.title,
       });
     }
-  }
-
-  getSelectedText() {
-    const selection = window.getSelection();
-    return {
-      text: selection.toString().trim(),
-      html: this.getSelectionHTML(),
-      range: this.getSelectionRange(),
-    };
-  }
-
-  getSelectionHTML() {
-    const selection = window.getSelection();
-    if (selection.rangeCount === 0) {
-      return '';
-    }
-
-    const range = selection.getRangeAt(0);
-    const clonedSelection = range.cloneContents();
-    const div = document.createElement('div');
-    div.appendChild(clonedSelection);
-    return div.innerHTML;
-  }
-
-  getSelectionRange() {
-    const selection = window.getSelection();
-    if (selection.rangeCount === 0) {
-      return null;
-    }
-
-    const range = selection.getRangeAt(0);
-    return {
-      startContainer: this.getNodePath(range.startContainer),
-      startOffset: range.startOffset,
-      endContainer: this.getNodePath(range.endContainer),
-      endOffset: range.endOffset,
-    };
-  }
-
-  getNodePath(node) {
-    const path = [];
-    while (node && node !== document.body) {
-      const index = Array.from(node.parentNode.childNodes).indexOf(node);
-      path.unshift(index);
-      node = node.parentNode;
-    }
-    return path;
   }
 
   insertText(text, position = null) {
@@ -448,15 +386,6 @@ class AIToolboxContent {
   showInsertionToast(text) {
     const shortText = text.length > 50 ? text.substring(0, 50) + '...' : text;
     this.showToast(`Text ready to insert: "${shortText}"`, 'info');
-  }
-
-  processWithTemplate(templateId, selectedText) {
-    chrome.runtime.sendMessage({
-      action: 'processTemplate',
-      templateId,
-      selectedText,
-      pageUrl: window.location.href,
-    });
   }
 
   notifySelectionChange(selectedText) {

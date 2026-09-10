@@ -1,12 +1,8 @@
 import templateManager from '../shared/template-manager.js';
-import workflowManager, {
-  extractWorkflowVariables,
-} from '../shared/workflow-manager.js';
-import agentRuntime from '../shared/agent-runtime.js';
+import workflowManager from '../shared/workflow-manager.js';
 import historyManager from '../shared/history-manager.js';
 import aiService from '../shared/ai-service.js';
 import storage from '../shared/storage.js';
-import { AGENT_TOOLS } from '../shared/agent-tools.js';
 import IconHelper from '../shared/icon-helper.js';
 import {
   formatRelativeTime,
@@ -15,19 +11,15 @@ import {
   copyToClipboard,
   downloadAsJson,
   sanitizeText,
-  variableLabel,
-  variablePlaceholder,
 } from '../shared/helpers.js';
 import {
   EVENTS,
-  HISTORY_STATUS,
   EXTENSION_VERSION,
-  LIMITS,
-  RUN_STATUS,
   WORKFLOW_STEP_TYPES,
 } from '../shared/constants.js';
 import Toast from '../shared/components/toast.js';
 import Modal from '../shared/components/modal.js';
+import EditorTab from '../shared/components/editor-tab.js';
 
 class SidePanelApp {
   constructor() {
@@ -36,13 +28,10 @@ class SidePanelApp {
     this.workflows = [];
     this.history = [];
     this.settings = null;
-    this.currentTemplate = null;
-    this.currentWorkflow = null;
-    // Working copy of the steps being edited; the DOM is rebuilt from it
-    // whenever the shape changes (add, remove, reorder, type switch).
-    this.workflowDraftSteps = [];
-    this.runController = null;
     this.searchTimeout = null;
+
+    // Open template/workflow editor tabs, keyed by uid.
+    this.editorTabs = new Map();
 
     this.init();
   }
@@ -61,6 +50,7 @@ class SidePanelApp {
       await this.loadData();
       await this.restoreUIState();
       this.setupEventListeners();
+      this.setupExternalChangeListener();
       this.render();
 
       // Validate storage persistence
@@ -86,6 +76,26 @@ class SidePanelApp {
       console.error('Failed to load data:', error);
       throw error;
     }
+  }
+
+  // Templates/workflows are now created and edited in their own tab, so this
+  // page must pick up changes made there rather than only in its own modals.
+  setupExternalChangeListener() {
+    const reload = debounce(async () => {
+      try {
+        await Promise.all([
+          templateManager.refresh(),
+          workflowManager.refresh(),
+          historyManager.refresh(),
+        ]);
+        await this.loadData();
+        this.render();
+      } catch (error) {
+        console.error('Failed to reload after external change:', error);
+      }
+    }, 150);
+
+    storage.onChanged(reload);
   }
 
   async restoreUIState() {
@@ -123,11 +133,20 @@ class SidePanelApp {
       this.openSettingsPage();
     });
 
+    const expandBtn = document.getElementById('expandBtn');
+    if (new URLSearchParams(window.location.search).get('view') === 'fullscreen') {
+      expandBtn.classList.add('hidden');
+    } else {
+      expandBtn.addEventListener('click', () => {
+        this.openFullScreen();
+      });
+    }
+
     // Template section
     document
       .getElementById('createTemplateBtn')
       .addEventListener('click', () => {
-        this.showTemplateModal();
+        this.openEditor('template', 'edit');
       });
 
     document.getElementById('templateSearch').addEventListener(
@@ -139,7 +158,7 @@ class SidePanelApp {
     document
       .getElementById('createWorkflowBtn')
       .addEventListener('click', () => {
-        this.showWorkflowModal();
+        this.openEditor('workflow', 'edit');
       });
 
     document.getElementById('workflowSearch').addEventListener(
@@ -157,119 +176,85 @@ class SidePanelApp {
       this.clearHistory();
     });
 
-    this.setupModalEventListeners();
     this.setupManagerEventListeners();
   }
 
-  setupModalEventListeners() {
-    // Template modal
-    document
-      .getElementById('templateModalClose')
-      .addEventListener('click', () => {
-        Modal.hide('template');
-      });
-
-    document
-      .getElementById('templateModalCancel')
-      .addEventListener('click', () => {
-        Modal.hide('template');
-      });
-
-    document.getElementById('templateForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.saveTemplate();
+  // Opens a template/workflow editor or runner as its own tab in the second
+  // row below the main nav, so several — including several for the same
+  // template/workflow — can be open and switched between at once, instead of
+  // one modal blocking everything else.
+  openEditor(type, mode, id = null, prefillInputs = null) {
+    const tab = new EditorTab({
+      type,
+      mode,
+      id,
+      prefillInputs,
+      templates: this.templates,
+      onTitleChange: (t) => this.updateEditorTabLabel(t),
     });
 
-    document.getElementById('templatePrompt').addEventListener('input', (e) => {
-      this.updateTemplateVariables(e.target.value);
+    const sectionEl = tab.render();
+    document.querySelector('.sidepanel-content').appendChild(sectionEl);
+
+    const navTab = document.createElement('button');
+    navTab.className = 'nav-tab nav-tab-editor';
+    navTab.dataset.section = tab.uid;
+    navTab.innerHTML = `
+      <span class="nav-tab-order"></span>
+      <span class="nav-tab-label">${sanitizeText(tab.title)}</span>
+      <span class="nav-tab-close" title="Close">${IconHelper.iconHTML('close', 'xs')}</span>
+    `;
+    navTab.addEventListener('click', (e) => {
+      if (e.target.closest('.nav-tab-close')) {
+        e.stopPropagation();
+        this.closeEditorTab(tab.uid);
+        return;
+      }
+      this.switchSection(tab.uid);
     });
+    document.getElementById('editorTabsRow').appendChild(navTab);
 
-    // Generate buttons
-    document
-      .getElementById('generateDescriptionBtn')
-      .addEventListener('click', () => {
-        this.generateDescription();
-      });
+    this.editorTabs.set(tab.uid, { tab, navTab, sectionEl });
+    this.renumberEditorTabs();
 
-    document
-      .getElementById('generatePromptBtn')
-      .addEventListener('click', () => {
-        this.generatePrompt();
-      });
-
-    // Execute modal
-    document
-      .getElementById('executeModalClose')
-      .addEventListener('click', () => {
-        Modal.hide('execute');
-      });
-
-    document
-      .getElementById('executeModalCancel')
-      .addEventListener('click', () => {
-        Modal.hide('execute');
-      });
-
-    document.getElementById('executeForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.executeTemplate();
-    });
-
-    document.getElementById('copyResultBtn').addEventListener('click', () => {
-      this.copyResult();
-    });
-
-    this.setupWorkflowModalEventListeners();
+    this.switchSection(tab.uid);
   }
 
-  setupWorkflowModalEventListeners() {
-    document
-      .getElementById('workflowModalClose')
-      .addEventListener('click', () => {
-        Modal.hide('workflow');
-      });
+  updateEditorTabLabel(tab) {
+    const entry = this.editorTabs.get(tab.uid);
+    if (entry) {
+      entry.navTab.querySelector('.nav-tab-label').textContent = tab.title;
+    }
+  }
 
-    document
-      .getElementById('workflowModalCancel')
-      .addEventListener('click', () => {
-        Modal.hide('workflow');
-      });
+  // Keeps each open editor tab's badge showing its left-to-right position,
+  // and shows/hides the row itself depending on whether any are open.
+  renumberEditorTabs() {
+    const row = document.getElementById('editorTabsRow');
+    row.classList.toggle('hidden', this.editorTabs.size === 0);
 
-    document.getElementById('workflowForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.saveWorkflow();
+    let index = 0;
+    row.querySelectorAll('.nav-tab-editor').forEach((navTab) => {
+      index += 1;
+      navTab.querySelector('.nav-tab-order').textContent = index;
     });
+  }
 
-    document.getElementById('addStepBtn').addEventListener('click', () => {
-      this.addWorkflowStep();
-    });
+  closeEditorTab(uid) {
+    const entry = this.editorTabs.get(uid);
+    if (!entry) {
+      return;
+    }
 
-    // Run modal
-    document.getElementById('runModalClose').addEventListener('click', () => {
-      this.closeRunModal();
-    });
+    entry.tab.destroy();
+    entry.navTab.remove();
+    entry.sectionEl.remove();
+    this.editorTabs.delete(uid);
+    this.renumberEditorTabs();
 
-    document.getElementById('runModalCancel').addEventListener('click', () => {
-      this.closeRunModal();
-    });
-
-    document.getElementById('runModalStop').addEventListener('click', () => {
-      this.runController?.abort();
-    });
-
-    document.getElementById('runForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.runWorkflow();
-    });
-
-    document
-      .getElementById('copyRunResultBtn')
-      .addEventListener('click', () => {
-        const content = document.getElementById('runResultContent').textContent;
-        copyToClipboard(content)
-          .then(() => Toast.show('Result copied to clipboard', 'success'))
-          .catch(() => Toast.show('Failed to copy result', 'error'));
-      });
+    if (this.currentSection === uid) {
+      this.switchSection('templates');
+    }
   }
 
   setupManagerEventListeners() {
@@ -463,7 +448,7 @@ class SidePanelApp {
     container.querySelectorAll('.template-card').forEach((card) => {
       card.addEventListener('click', (e) => {
         if (!e.target.closest('.template-card-actions')) {
-          this.executeTemplateById(card.dataset.templateId);
+          this.openEditor('template', 'run', card.dataset.templateId);
         }
       });
 
@@ -475,7 +460,7 @@ class SidePanelApp {
 
           switch (action) {
             case 'edit':
-              this.editTemplate(templateId);
+              this.openEditor('template', 'edit', templateId);
               break;
             case 'duplicate':
               this.duplicateTemplate(templateId);
@@ -516,8 +501,6 @@ class SidePanelApp {
           <h3 class="template-card-title">${sanitizeText(workflow.name)}</h3>
           <div class="template-card-actions">
             <button class="action-btn edit" data-action="edit" title="Edit workflow">${IconHelper.iconHTML('edit', 'sm')}</button>
-            <button class="action-btn duplicate" data-action="duplicate" title="Duplicate workflow">${IconHelper.iconHTML('copy', 'sm')}</button>
-            <button class="action-btn export" data-action="export" title="Export workflow">${IconHelper.iconHTML('export', 'sm')}</button>
             <button class="action-btn delete" data-action="delete" title="Delete workflow">${IconHelper.iconHTML('delete', 'sm', 'error')}</button>
           </div>
         </div>
@@ -548,7 +531,7 @@ class SidePanelApp {
 
       card.addEventListener('click', (e) => {
         if (!e.target.closest('.template-card-actions')) {
-          this.showRunModal(workflowId);
+          this.openEditor('workflow', 'run', workflowId);
         }
       });
 
@@ -558,18 +541,8 @@ class SidePanelApp {
 
           try {
             switch (btn.dataset.action) {
-              case 'edit': {
-                const workflow = await workflowManager.getWorkflow(workflowId);
-                if (workflow) {
-                  this.showWorkflowModal(workflow);
-                }
-                break;
-              }
-              case 'duplicate':
-                await workflowManager.duplicateWorkflow(workflowId);
-                break;
-              case 'export':
-                await this.exportWorkflow(workflowId);
+              case 'edit':
+                this.openEditor('workflow', 'edit', workflowId);
                 break;
               case 'delete':
                 await this.deleteWorkflow(workflowId);
@@ -594,22 +567,6 @@ class SidePanelApp {
     }
   }
 
-  async exportWorkflow(workflowId) {
-    const data = await workflowManager.exportWorkflows([workflowId]);
-    const workflow = data.workflows[0];
-    if (!workflow) {
-      Toast.show('Workflow not found', 'error');
-      return;
-    }
-
-    const filename = `${workflow.name
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .toLowerCase()}-workflow.json`;
-    downloadAsJson(data, filename);
-    Toast.show('Workflow exported successfully', 'success');
-  }
-
   async deleteWorkflow(workflowId) {
     const confirmed = await Modal.confirm(
       'Delete Workflow',
@@ -620,438 +577,6 @@ class SidePanelApp {
     if (confirmed) {
       await workflowManager.deleteWorkflow(workflowId);
     }
-  }
-
-  // === Workflow editor ===
-
-  showWorkflowModal(workflow = null) {
-    this.currentWorkflow = workflow;
-
-    document.getElementById('workflowModalTitle').textContent = workflow
-      ? 'Edit Workflow'
-      : 'Create Workflow';
-    document.getElementById('workflowName').value = workflow?.name || '';
-    document.getElementById('workflowDescription').value =
-      workflow?.description || '';
-
-    this.workflowDraftSteps = workflow
-      ? workflow.steps.map((step) => ({
-          ...step,
-          tools: [...(step.tools || [])],
-        }))
-      : [this.blankStep(0)];
-
-    this.renderWorkflowSteps();
-    Modal.show('workflow');
-  }
-
-  blankStep(index) {
-    return {
-      name: `Step ${index + 1}`,
-      type: WORKFLOW_STEP_TYPES.PROMPT,
-      outputKey: `step_${index + 1}`,
-      prompt: '',
-      tools: [],
-      maxIterations: LIMITS.DEFAULT_AGENT_ITERATIONS,
-      templateId: '',
-    };
-  }
-
-  addWorkflowStep() {
-    this.syncWorkflowStepsFromDom();
-
-    if (this.workflowDraftSteps.length >= LIMITS.MAX_WORKFLOW_STEPS) {
-      Toast.show(
-        `A workflow can have at most ${LIMITS.MAX_WORKFLOW_STEPS} steps`,
-        'warning'
-      );
-      return;
-    }
-
-    this.workflowDraftSteps.push(
-      this.blankStep(this.workflowDraftSteps.length)
-    );
-    this.renderWorkflowSteps();
-  }
-
-  // Reads the editor fields back into the draft, so a re-render never discards
-  // what the user has typed.
-  syncWorkflowStepsFromDom() {
-    document
-      .querySelectorAll('#workflowSteps .workflow-step')
-      .forEach((element) => {
-        const step = this.workflowDraftSteps[Number(element.dataset.index)];
-        if (!step) {
-          return;
-        }
-
-        element.querySelectorAll('[data-field]').forEach((field) => {
-          step[field.dataset.field] = field.value;
-        });
-
-        const tools = element.querySelectorAll('.step-tool:checked');
-        if (element.querySelector('.step-tool')) {
-          step.tools = Array.from(tools).map((tool) => tool.dataset.tool);
-        }
-      });
-  }
-
-  renderWorkflowSteps() {
-    const container = document.getElementById('workflowSteps');
-    const templateOptions = this.templates
-      .map(
-        (template) =>
-          `<option value="${template.id}">${sanitizeText(template.name)}</option>`
-      )
-      .join('');
-
-    container.innerHTML = this.workflowDraftSteps
-      .map((step, index) => {
-        const typeOptions = [
-          [WORKFLOW_STEP_TYPES.PROMPT, 'Prompt — one model call'],
-          [WORKFLOW_STEP_TYPES.AGENT, 'Agent — tool-calling loop'],
-          [WORKFLOW_STEP_TYPES.TEMPLATE, 'Template — run a saved template'],
-        ]
-          .map(
-            ([value, label]) =>
-              `<option value="${value}"${step.type === value ? ' selected' : ''}>${label}</option>`
-          )
-          .join('');
-
-        const body =
-          step.type === WORKFLOW_STEP_TYPES.TEMPLATE
-            ? `<div class="workflow-field">
-                 <span class="input-mini-label">Template</span>
-                 <select class="form-input" data-field="templateId">
-                   <option value="">Choose a template…</option>
-                   ${templateOptions}
-                 </select>
-               </div>`
-            : `<div class="workflow-field">
-                 <span class="input-mini-label">${step.type === WORKFLOW_STEP_TYPES.AGENT ? 'Goal for the agent' : 'Prompt'}</span>
-                 <textarea class="form-textarea" data-field="prompt" rows="4"
-                   maxlength="${LIMITS.MAX_TEMPLATE_PROMPT_LENGTH}">${sanitizeText(step.prompt || '')}</textarea>
-               </div>`;
-
-        const agentOptions =
-          step.type === WORKFLOW_STEP_TYPES.AGENT
-            ? `<div class="workflow-field">
-                 <span class="input-mini-label">Tools the agent may call</span>
-                 <div class="step-tools">
-                   ${Object.values(AGENT_TOOLS)
-                     .map(
-                       (tool) => `
-                     <label class="step-tool-label" title="${sanitizeText(tool.description)}">
-                       <input type="checkbox" class="step-tool" data-tool="${tool.name}"
-                         ${(step.tools || []).includes(tool.name) ? 'checked' : ''} />
-                       ${sanitizeText(tool.label)}
-                     </label>`
-                     )
-                     .join('')}
-                 </div>
-               </div>
-               <div class="workflow-field">
-                 <span class="input-mini-label">Max tool iterations</span>
-                 <input type="number" class="form-input" data-field="maxIterations"
-                   min="1" max="${LIMITS.MAX_AGENT_ITERATIONS}"
-                   value="${step.maxIterations || LIMITS.DEFAULT_AGENT_ITERATIONS}" />
-               </div>`
-            : '';
-
-        return `
-      <div class="workflow-step" data-index="${index}">
-        <div class="workflow-step-header">
-          <span class="workflow-step-index">${index + 1}</span>
-          <input type="text" class="form-input workflow-step-name" data-field="name"
-            maxlength="50" value="${sanitizeText(step.name || '')}" placeholder="Step name" />
-          <div class="template-card-actions workflow-step-actions">
-            <button type="button" class="action-btn" data-step-action="up" title="Move up" ${index === 0 ? 'disabled' : ''}>↑</button>
-            <button type="button" class="action-btn" data-step-action="down" title="Move down" ${index === this.workflowDraftSteps.length - 1 ? 'disabled' : ''}>↓</button>
-            <button type="button" class="action-btn delete" data-step-action="remove" title="Remove step">${IconHelper.iconHTML('delete', 'sm')}</button>
-          </div>
-        </div>
-        <div class="workflow-step-fields">
-          <div class="workflow-field">
-            <span class="input-mini-label">Type</span>
-            <select class="form-input" data-field="type">${typeOptions}</select>
-          </div>
-          <div class="workflow-field">
-            <span class="input-mini-label">Output key — reference as {steps.key}</span>
-            <input type="text" class="form-input" data-field="outputKey"
-              value="${sanitizeText(step.outputKey || '')}" placeholder="e.g., findings" />
-          </div>
-          ${body}
-          ${agentOptions}
-        </div>
-      </div>`;
-      })
-      .join('');
-
-    if (
-      this.workflowDraftSteps.some(
-        (step) => step.type === WORKFLOW_STEP_TYPES.TEMPLATE
-      )
-    ) {
-      // <select> ignores a `selected` attribute set before its options exist in
-      // some render orders, so the value is applied after insertion.
-      container
-        .querySelectorAll('[data-field="templateId"]')
-        .forEach((select) => {
-          const index = Number(select.closest('.workflow-step').dataset.index);
-          select.value = this.workflowDraftSteps[index].templateId || '';
-        });
-    }
-
-    container.querySelectorAll('[data-field="type"]').forEach((select) => {
-      select.addEventListener('change', () => {
-        this.syncWorkflowStepsFromDom();
-        this.renderWorkflowSteps();
-      });
-    });
-
-    container.querySelectorAll('[data-step-action]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const index = Number(button.closest('.workflow-step').dataset.index);
-        this.syncWorkflowStepsFromDom();
-
-        const steps = this.workflowDraftSteps;
-        switch (button.dataset.stepAction) {
-          case 'up':
-            [steps[index - 1], steps[index]] = [steps[index], steps[index - 1]];
-            break;
-          case 'down':
-            [steps[index + 1], steps[index]] = [steps[index], steps[index + 1]];
-            break;
-          case 'remove':
-            if (steps.length === 1) {
-              Toast.show('A workflow needs at least one step', 'warning');
-              return;
-            }
-            steps.splice(index, 1);
-            break;
-        }
-
-        this.renderWorkflowSteps();
-      });
-    });
-  }
-
-  async saveWorkflow() {
-    this.syncWorkflowStepsFromDom();
-
-    const data = {
-      name: document.getElementById('workflowName').value.trim(),
-      description: document.getElementById('workflowDescription').value.trim(),
-      steps: this.workflowDraftSteps,
-    };
-
-    try {
-      if (this.currentWorkflow) {
-        await workflowManager.updateWorkflow(this.currentWorkflow.id, data);
-      } else {
-        await workflowManager.createWorkflow(data);
-      }
-
-      Modal.hide('workflow');
-      this.currentWorkflow = null;
-    } catch (error) {
-      console.error('Failed to save workflow:', error);
-      Toast.show(`Failed to save workflow: ${error.message}`, 'error');
-    }
-  }
-
-  // === Workflow runs ===
-
-  async showRunModal(workflowId) {
-    const workflow = await workflowManager.getWorkflow(workflowId);
-    if (!workflow) {
-      Toast.show('Workflow not found', 'error');
-      return;
-    }
-
-    this.currentWorkflow = workflow;
-    document.getElementById('runModalTitle').textContent =
-      `Run: ${workflow.name}`;
-
-    const variables = extractWorkflowVariables(workflow);
-    const inputsContainer = document.getElementById('runInputs');
-    inputsContainer.innerHTML =
-      variables.length > 0
-        ? variables
-            .map(
-              (variable) => `
-        <div class="form-group">
-          <label class="form-label" for="run_${sanitizeText(variable)}">${sanitizeText(variableLabel(variable))}</label>
-          <textarea id="run_${sanitizeText(variable)}" name="${sanitizeText(variable)}"
-            class="form-textarea" rows="2"
-            placeholder="${sanitizeText(variablePlaceholder(variable))}"></textarea>
-        </div>`
-            )
-            .join('')
-        : '<p>This workflow takes no inputs — just run it.</p>';
-
-    this.resetRunUi(workflow);
-    Modal.show('run');
-  }
-
-  resetRunUi(workflow) {
-    const timeline = document.getElementById('runTimeline');
-    timeline.classList.remove('hidden');
-    timeline.innerHTML = workflow.steps
-      .map(
-        (step) => `
-      <div class="run-step" data-step-id="${step.id}">
-        <span class="run-step-status" data-status="${RUN_STATUS.PENDING}">○</span>
-        <div class="run-step-body">
-          <span class="run-step-name">${sanitizeText(step.name)}</span>
-          <span class="run-step-detail"></span>
-        </div>
-      </div>`
-      )
-      .join('');
-
-    document.getElementById('runResult').classList.add('hidden');
-    document.getElementById('runError').classList.add('hidden');
-    document.getElementById('runModalStop').classList.add('hidden');
-
-    const startBtn = document.getElementById('runModalStart');
-    startBtn.disabled = false;
-    startBtn.textContent = 'Run Workflow';
-  }
-
-  updateRunStep(stepId, status, detail) {
-    const element = document.querySelector(
-      `#runTimeline .run-step[data-step-id="${stepId}"]`
-    );
-    if (!element) {
-      return;
-    }
-
-    const icons = {
-      [RUN_STATUS.PENDING]: '○',
-      [RUN_STATUS.RUNNING]: '◐',
-      [RUN_STATUS.COMPLETED]: '●',
-      [RUN_STATUS.FAILED]: '✕',
-    };
-
-    const statusEl = element.querySelector('.run-step-status');
-    statusEl.dataset.status = status;
-    statusEl.textContent = icons[status] || '○';
-
-    if (detail !== undefined) {
-      element.querySelector('.run-step-detail').textContent = detail;
-    }
-  }
-
-  async runWorkflow() {
-    const workflow = this.currentWorkflow;
-    if (!workflow || this.runController) {
-      return;
-    }
-
-    const inputs = Object.fromEntries(
-      new FormData(document.getElementById('runForm')).entries()
-    );
-
-    const startBtn = document.getElementById('runModalStart');
-    const stopBtn = document.getElementById('runModalStop');
-    const errorEl = document.getElementById('runError');
-    const resultEl = document.getElementById('runResult');
-
-    this.resetRunUi(workflow);
-    startBtn.disabled = true;
-    startBtn.textContent = 'Running…';
-    stopBtn.classList.remove('hidden');
-    this.runController = new AbortController();
-
-    try {
-      const run = await agentRuntime.runWorkflow(workflow, inputs, {
-        signal: this.runController.signal,
-        onEvent: (event) => this.handleRunEvent(event),
-      });
-
-      document.getElementById('runResultContent').textContent = run.output;
-      document.getElementById('runResultMeta').innerHTML = `
-        <span>Steps: ${run.steps.length}</span>
-        <span>Duration: ${Math.round(run.duration / 100) / 10}s</span>
-      `;
-      resultEl.classList.remove('hidden');
-
-      await historyManager.addHistoryEntry(
-        workflow.id,
-        `${workflow.name} (workflow)`,
-        inputs,
-        run.output,
-        HISTORY_STATUS.COMPLETED
-      );
-
-      Toast.show('Workflow completed', 'success');
-    } catch (error) {
-      console.error('Workflow run failed:', error);
-      errorEl.querySelector('.error-message').textContent = error.message;
-      errorEl.classList.remove('hidden');
-
-      await historyManager.addHistoryEntry(
-        workflow.id,
-        `${workflow.name} (workflow)`,
-        inputs,
-        '',
-        HISTORY_STATUS.FAILED
-      );
-    } finally {
-      this.runController = null;
-      stopBtn.classList.add('hidden');
-      startBtn.disabled = false;
-      startBtn.textContent = 'Run Workflow';
-    }
-  }
-
-  handleRunEvent(event) {
-    switch (event.type) {
-      case 'step-start':
-        this.updateRunStep(event.step.id, RUN_STATUS.RUNNING, 'working…');
-        break;
-      case 'step-complete':
-        this.updateRunStep(
-          event.step.id,
-          RUN_STATUS.COMPLETED,
-          `${truncateText(event.result.output.replace(/\s+/g, ' '), 60) || 'done'}`
-        );
-        break;
-      case 'step-error':
-        this.updateRunStep(
-          event.step.id,
-          RUN_STATUS.FAILED,
-          event.result.error
-        );
-        break;
-      case 'agent-iteration':
-        this.updateRunStep(
-          event.step.id,
-          RUN_STATUS.RUNNING,
-          `thinking (${event.iteration}/${event.maxIterations})…`
-        );
-        break;
-      case 'tool-call':
-        this.updateRunStep(
-          event.step.id,
-          RUN_STATUS.RUNNING,
-          `calling ${event.tool}…`
-        );
-        break;
-      case 'tool-error':
-        this.updateRunStep(
-          event.step.id,
-          RUN_STATUS.RUNNING,
-          `${event.tool} failed: ${truncateText(event.error, 40)}`
-        );
-        break;
-    }
-  }
-
-  closeRunModal() {
-    this.runController?.abort();
-    Modal.hide('run');
   }
 
   setupHistoryEventListeners(container) {
@@ -1111,304 +636,6 @@ class SidePanelApp {
     }
   }
 
-  // Template methods (copied from popup.js)
-  showTemplateModal(template = null) {
-    this.currentTemplate = template;
-    const title = document.getElementById('templateModalTitle');
-    const form = document.getElementById('templateForm');
-
-    if (template) {
-      title.textContent = 'Edit Template';
-      document.getElementById('templateName').value = template.name;
-      document.getElementById('templateDescription').value =
-        template.description || '';
-      document.getElementById('templatePrompt').value = template.prompt;
-      this.updateTemplateVariables(template.prompt);
-    } else {
-      title.textContent = 'Create Template';
-      form.reset();
-      this.updateTemplateVariables('');
-    }
-
-    Modal.show('template');
-  }
-
-  updateTemplateVariables(prompt) {
-    const container = document.getElementById('templateVariables');
-    const variables = this.extractVariables(prompt);
-
-    if (variables.length === 0) {
-      container.innerHTML = '';
-      return;
-    }
-
-    // Get existing input definitions if editing a template
-    const existingInputs = this.currentTemplate?.inputs || [];
-    const existingInputMap = new Map(
-      existingInputs.map((input) => [input.name, input])
-    );
-
-    container.innerHTML = `
-      <div class="variables-header">
-        <h4>Template Variables</h4>
-        <p class="form-help">Configure how each variable appears and behaves</p>
-      </div>
-      ${variables
-        .map((variable) => {
-          const existingInput = existingInputMap.get(variable);
-          const label = existingInput?.label || variableLabel(variable);
-          const defaultValue = existingInput?.defaultValue || '';
-          const placeholder =
-            existingInput?.placeholder || variablePlaceholder(variable);
-
-          return `
-        <div class="variable-group">
-          <label class="form-label" title="Variable: {${sanitizeText(variable)}}">{${sanitizeText(variable)}}</label>
-          <div class="variable-inputs">
-            <div class="variable-input-wrapper">
-              <span class="input-mini-label">Label</span>
-              <input type="text" class="form-input"
-                     data-variable="${sanitizeText(variable)}"
-                     data-field="label"
-                     placeholder="e.g., Topic"
-                     value="${sanitizeText(label)}"
-                     title="The label shown above the input field">
-            </div>
-            <div class="variable-input-wrapper">
-              <span class="input-mini-label">Placeholder (hint text)</span>
-              <input type="text" class="form-input"
-                     data-variable="${sanitizeText(variable)}"
-                     data-field="placeholder"
-                     placeholder="e.g., Message"
-                     value="${sanitizeText(placeholder)}"
-                     title="Hint text shown inside the empty input">
-            </div>
-            <div class="variable-input-wrapper">
-              <span class="input-mini-label">Default Value</span>
-              <input type="text" class="form-input"
-                     data-variable="${sanitizeText(variable)}"
-                     data-field="defaultValue"
-                     placeholder="e.g., Addressee"
-                     value="${sanitizeText(defaultValue)}"
-                     title="Pre-filled value that users can override">
-            </div>
-          </div>
-        </div>
-      `;
-        })
-        .join('')}
-    `;
-  }
-
-  async generateDescription() {
-    const nameInput = document.getElementById('templateName');
-    const descriptionInput = document.getElementById('templateDescription');
-    const generateBtn = document.getElementById('generateDescriptionBtn');
-
-    const templateName = nameInput.value.trim();
-    if (!templateName) {
-      Toast.show('Please enter a template name first', 'warning');
-      nameInput.focus();
-      return;
-    }
-
-    // Disable button and show loading state
-    generateBtn.disabled = true;
-    const originalText = generateBtn.innerHTML;
-    generateBtn.innerHTML = '<span class="btn-icon">⏳</span>Generating...';
-
-    try {
-      const prompt = `Generate a concise, professional description (max 50 words) for a template named "${templateName}". The description should explain what this template does and when to use it. Return only the description text without quotes or extra formatting.`;
-
-      const response = await aiService.processTemplate(
-        {
-          name: 'Generate Description',
-          prompt: prompt,
-          inputs: [],
-        },
-        {}
-      );
-
-      // AI service returns { result, duration, provider, ... }
-      const result = response?.result || response;
-
-      if (result && typeof result === 'string' && result.trim()) {
-        descriptionInput.value = result.trim();
-        Toast.show('Description generated successfully', 'success');
-      } else {
-        throw new Error('Empty response from AI service');
-      }
-    } catch (error) {
-      console.error('Failed to generate description:', error);
-      Toast.show(`Failed to generate description: ${error.message}`, 'error');
-    } finally {
-      // Re-enable button and restore text
-      generateBtn.disabled = false;
-      generateBtn.innerHTML = originalText;
-    }
-  }
-
-  async generatePrompt() {
-    const nameInput = document.getElementById('templateName');
-    const descriptionInput = document.getElementById('templateDescription');
-    const promptInput = document.getElementById('templatePrompt');
-    const generateBtn = document.getElementById('generatePromptBtn');
-
-    const templateName = nameInput.value.trim();
-    if (!templateName) {
-      Toast.show('Please enter a template name first', 'warning');
-      nameInput.focus();
-      return;
-    }
-
-    const description = descriptionInput.value.trim();
-
-    // Disable button and show loading state
-    generateBtn.disabled = true;
-    const originalText = generateBtn.innerHTML;
-    generateBtn.innerHTML = '<span class="btn-icon">⏳</span>Generating...';
-
-    try {
-      let promptTemplate = `Generate a professional AI prompt template for a template named "${templateName}".`;
-
-      if (description) {
-        promptTemplate += ` Description: ${description}.`;
-      }
-
-      promptTemplate += `
-
-Requirements:
-1. Create a clear, effective prompt that accomplishes the template's purpose
-2. Use {variable_name} syntax for any dynamic inputs (e.g., {topic}, {style}, {audience})
-3. Include 1-4 relevant variables that users would want to customize
-4. Make the prompt specific and actionable
-5. Keep it concise (max 200 words)
-6. Return ONLY the prompt template without any explanations or formatting
-
-Example format: "Write an email about {topic} for {audience}. Include key points about {details}."
-
-Generate the prompt template now:`;
-
-      const result = await aiService.processTemplate(
-        {
-          name: 'Generate Prompt',
-          prompt: promptTemplate,
-          inputs: [],
-        },
-        {}
-      );
-
-      // AI service returns { result, duration, provider, ... }
-      const generatedPrompt = result?.result || result;
-
-      if (
-        generatedPrompt &&
-        typeof generatedPrompt === 'string' &&
-        generatedPrompt.trim()
-      ) {
-        promptInput.value = generatedPrompt.trim();
-        // Trigger the input event to update variables display
-        promptInput.dispatchEvent(new Event('input', { bubbles: true }));
-        Toast.show('Prompt generated successfully', 'success');
-      } else {
-        throw new Error('Empty response from AI service');
-      }
-    } catch (error) {
-      console.error('Failed to generate prompt:', error);
-      Toast.show(`Failed to generate prompt: ${error.message}`, 'error');
-    } finally {
-      // Re-enable button and restore text
-      generateBtn.disabled = false;
-      generateBtn.innerHTML = originalText;
-    }
-  }
-
-  extractVariables(prompt) {
-    const variables = [];
-    const regex = /\{([^}]+)\}/g;
-    let match;
-
-    while ((match = regex.exec(prompt)) !== null) {
-      const variable = match[1].trim();
-      if (!variables.includes(variable)) {
-        variables.push(variable);
-      }
-    }
-
-    return variables;
-  }
-
-  async saveTemplate() {
-    const templateData = {
-      name: document.getElementById('templateName').value.trim(),
-      description: document.getElementById('templateDescription').value.trim(),
-      prompt: document.getElementById('templatePrompt').value.trim(),
-    };
-
-    // Group inputs by variable name
-    const variableGroups = document.querySelectorAll('.variable-group');
-    if (variableGroups.length > 0) {
-      const inputsMap = new Map();
-
-      variableGroups.forEach((group) => {
-        const inputs = group.querySelectorAll('[data-variable]');
-        const variable = inputs[0]?.dataset.variable;
-
-        if (variable) {
-          const inputData = {
-            name: variable,
-            label: '',
-            placeholder: '',
-            defaultValue: '',
-          };
-
-          inputs.forEach((input) => {
-            const field = input.dataset.field;
-            if (field) {
-              inputData[field] = input.value.trim();
-            }
-          });
-
-          // Set defaults if not provided
-          if (!inputData.label) {
-            inputData.label = variableLabel(variable);
-          }
-          if (!inputData.placeholder) {
-            inputData.placeholder = variablePlaceholder(variable);
-          }
-
-          inputsMap.set(variable, inputData);
-        }
-      });
-
-      templateData.inputs = Array.from(inputsMap.values());
-    }
-
-    try {
-      if (this.currentTemplate) {
-        await templateManager.updateTemplate(
-          this.currentTemplate.id,
-          templateData
-        );
-      } else {
-        await templateManager.createTemplate(templateData);
-      }
-
-      Modal.hide('template');
-      this.currentTemplate = null;
-    } catch (error) {
-      console.error('Failed to save template:', error);
-      Toast.show(`Failed to save template: ${error.message}`, 'error');
-    }
-  }
-
-  async editTemplate(templateId) {
-    const template = await templateManager.getTemplate(templateId);
-    if (template) {
-      this.showTemplateModal(template);
-    }
-  }
-
   async duplicateTemplate(templateId) {
     try {
       await templateManager.duplicateTemplate(templateId);
@@ -1464,139 +691,15 @@ Generate the prompt template now:`;
     }
   }
 
-  async executeTemplateById(templateId) {
-    const template = await templateManager.getTemplate(templateId);
-    if (template) {
-      this.showExecuteModal(template);
-    }
-  }
-
-  showExecuteModal(template) {
-    this.currentTemplate = template;
-
-    const loadingEl = document.getElementById('executeLoading');
-    const resultEl = document.getElementById('executeResult');
-    const errorEl = document.getElementById('executeError');
-    const runBtn = document.getElementById('executeModalRun');
-
-    loadingEl.classList.add('hidden');
-    resultEl.classList.add('hidden');
-    errorEl.classList.add('hidden');
-    runBtn.disabled = false;
-    runBtn.textContent = 'Run Template';
-
-    const title = document.getElementById('executeModalTitle');
-    const inputsContainer = document.getElementById('executeInputs');
-
-    title.textContent = `Execute: ${template.name}`;
-
-    if (template.inputs && template.inputs.length > 0) {
-      inputsContainer.innerHTML = template.inputs
-        .map(
-          (input) => `
-        <div class="form-group">
-          <label class="form-label" for="input_${sanitizeText(input.name)}">${sanitizeText(input.label)}</label>
-          <textarea id="input_${sanitizeText(input.name)}" name="${sanitizeText(input.name)}" class="form-textarea"
-                    placeholder="${sanitizeText(input.placeholder)}" rows="2">${sanitizeText(input.defaultValue || '')}</textarea>
-        </div>
-      `
-        )
-        .join('');
-    } else {
-      inputsContainer.innerHTML =
-        '<p>This template has no variables to fill.</p>';
-    }
-
-    Modal.show('execute');
-  }
-
-  async executeTemplate() {
-    if (!this.currentTemplate) {
-      return;
-    }
-
-    const form = document.getElementById('executeForm');
-    const formData = new FormData(form);
-    const inputs = Object.fromEntries(formData.entries());
-
-    const loadingEl = document.getElementById('executeLoading');
-    const errorEl = document.getElementById('executeError');
-    const resultEl = document.getElementById('executeResult');
-    const runBtn = document.getElementById('executeModalRun');
-
-    loadingEl.classList.remove('hidden');
-    errorEl.classList.add('hidden');
-    resultEl.classList.add('hidden');
-    runBtn.disabled = true;
-    runBtn.textContent = 'Processing...';
-
-    try {
-      const result = await aiService.processTemplate(
-        this.currentTemplate,
-        inputs
-      );
-
-      document.getElementById('resultContent').textContent = result.result;
-      document.getElementById('resultMeta').innerHTML = `
-        <span>Provider: ${result.provider}</span>
-        <span>Duration: ${result.duration}ms</span>
-      `;
-
-      await historyManager.addHistoryEntry(
-        this.currentTemplate.id,
-        this.currentTemplate.name,
-        inputs,
-        result.result,
-        HISTORY_STATUS.COMPLETED
-      );
-
-      resultEl.classList.remove('hidden');
-      Toast.show('Template executed successfully', 'success');
-    } catch (error) {
-      console.error('Template execution failed:', error);
-      errorEl.querySelector('.error-message').textContent = error.message;
-      errorEl.classList.remove('hidden');
-
-      await historyManager.addHistoryEntry(
-        this.currentTemplate.id,
-        this.currentTemplate.name,
-        inputs,
-        '',
-        HISTORY_STATUS.FAILED
-      );
-    } finally {
-      loadingEl.classList.add('hidden');
-      runBtn.disabled = false;
-      runBtn.textContent = 'Run Template';
-    }
-  }
-
-  copyResult() {
-    const resultContent = document.getElementById('resultContent').textContent;
-    if (resultContent) {
-      copyToClipboard(resultContent)
-        .then(() => {
-          Toast.show('Result copied to clipboard', 'success');
-        })
-        .catch(() => {
-          Toast.show('Failed to copy result', 'error');
-        });
-    }
-  }
-
   async rerunFromHistory(historyEntry) {
     const template = await templateManager.getTemplate(historyEntry.templateId);
     if (template) {
-      // showExecuteModal() builds the fields synchronously via innerHTML,
-      // so they are queryable as soon as it returns.
-      this.showExecuteModal(template);
-
-      Object.entries(historyEntry.inputs).forEach(([key, value]) => {
-        const input = document.getElementById(`input_${key}`);
-        if (input) {
-          input.value = value;
-        }
-      });
+      this.openEditor(
+        'template',
+        'run',
+        historyEntry.templateId,
+        historyEntry.inputs
+      );
     }
   }
 
@@ -1634,6 +737,13 @@ Generate the prompt template now:`;
     }
   }
 
+  // Opens the side panel UI as a full browser tab
+  openFullScreen() {
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('sidepanel/sidepanel.html?view=fullscreen'),
+    });
+  }
+
   // Settings methods
   async openSettingsPage() {
     try {
@@ -1659,10 +769,6 @@ Generate the prompt template now:`;
     }
   }
 
-  // Cleanup method for when the side panel is closed
-  cleanup() {
-    // Reserved for future cleanup needs
-  }
 }
 
 // Initialize the app when the sidepanel loads
@@ -1671,9 +777,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Expose app for debugging
   window.aiToolboxSidePanel = app;
-
-  // Cleanup when page unloads
-  window.addEventListener('beforeunload', () => {
-    app.cleanup();
-  });
 });

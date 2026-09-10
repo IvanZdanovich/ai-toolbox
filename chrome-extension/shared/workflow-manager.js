@@ -40,7 +40,7 @@ export function extractWorkflowVariables(workflow) {
   return variables;
 }
 
-export function validateWorkflow(workflow) {
+function validateWorkflow(workflow) {
   const errors = [];
 
   if (!workflow.name || workflow.name.trim().length === 0) {
@@ -327,6 +327,12 @@ Return only the finished piece — no commentary about what you changed.`,
     this.workflows = defaults;
     await storage.setWorkflows(this.workflows);
     await storage.setWorkflowsSeeded(true);
+  }
+
+  // Re-reads workflows from storage into memory, for when another page
+  // (e.g. the editor tab) has changed them.
+  async refresh() {
+    this.workflows = await storage.getWorkflows();
   }
 
   async getAllWorkflows() {

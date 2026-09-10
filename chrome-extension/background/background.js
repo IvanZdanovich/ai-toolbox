@@ -3,7 +3,6 @@ import aiService from '../shared/ai-service.js';
 
 class AIToolboxBackground {
   constructor() {
-    this.contextMenus = new Map();
     this.badgeClearTimer = null;
     this.init();
   }
@@ -218,7 +217,7 @@ class AIToolboxBackground {
 
   async handleContextMenuClick(info, tab) {
     if (info.menuItemId === 'open-popup') {
-      chrome.action.openPopup();
+      await this.openSidePanel(tab.id);
       return;
     }
 
@@ -438,7 +437,6 @@ class AIToolboxBackground {
   }
 
   async cleanup() {
-    this.contextMenus.clear();
     clearTimeout(this.badgeClearTimer);
     this.setBadge('', '');
   }

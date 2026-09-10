@@ -463,12 +463,7 @@ class SettingsPage {
     const urlParams = new URLSearchParams(window.location.search);
     const from = urlParams.get('from');
 
-    if (from === 'popup') {
-      // Go back to popup in new tab
-      chrome.tabs.create({
-        url: chrome.runtime.getURL('popup/popup.html'),
-      });
-    } else if (from === 'sidepanel') {
+    if (from === 'sidepanel') {
       // Reset the sidepanel path to default
       await chrome.storage.local.set({ last_active_page: 'sidepanel' });
       await chrome.runtime.sendMessage({
@@ -482,14 +477,8 @@ class SettingsPage {
       // Go back to previous extension page
       window.history.back();
     } else {
-      // Default fallback - go to sidepanel if we're in sidepanel context, otherwise popup
-      if (window.location.href.includes('chrome-extension://')) {
-        window.location.href = '../sidepanel/sidepanel.html';
-      } else {
-        chrome.tabs.create({
-          url: chrome.runtime.getURL('popup/popup.html'),
-        });
-      }
+      // Default fallback
+      window.location.href = '../sidepanel/sidepanel.html';
     }
   }
 }

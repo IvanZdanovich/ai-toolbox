@@ -1,11 +1,6 @@
 import storage from './storage.js';
-import { generateId, formatRelativeTime } from './helpers.js';
-import {
-  LIMITS,
-  EVENTS,
-  HISTORY_STATUS,
-  EXTENSION_VERSION,
-} from './constants.js';
+import { generateId } from './helpers.js';
+import { LIMITS, EVENTS, HISTORY_STATUS } from './constants.js';
 
 class HistoryManager {
   constructor() {
@@ -38,6 +33,12 @@ class HistoryManager {
     return this.initPromise;
   }
 
+  // Re-reads history from storage into memory, for when another page
+  // (e.g. the editor tab) has changed it.
+  async refresh() {
+    this.history = await storage.getHistory();
+  }
+
   async getAllHistory() {
     if (!this.initialized) {
       await this.init();
@@ -68,7 +69,8 @@ class HistoryManager {
     templateName,
     inputs,
     result,
-    status = HISTORY_STATUS.COMPLETED
+    status = HISTORY_STATUS.COMPLETED,
+    duration = 0
   ) {
     if (!this.initialized) {
       await this.init();
@@ -82,7 +84,7 @@ class HistoryManager {
       result: result || '',
       status,
       timestamp: new Date().toISOString(),
-      duration: 0,
+      duration,
     };
 
     this.history.unshift(entry);
@@ -152,90 +154,6 @@ class HistoryManager {
     return clearedCount;
   }
 
-  async clearHistoryByTemplate(templateId) {
-    if (!this.initialized) {
-      await this.init();
-    }
-
-    const originalLength = this.history.length;
-    this.history = this.history.filter(
-      (entry) => entry.templateId !== templateId
-    );
-    const clearedCount = originalLength - this.history.length;
-
-    if (clearedCount > 0) {
-      await storage.setHistory(this.history);
-      this.emit(EVENTS.HISTORY_UPDATED, {
-        type: 'template_cleared',
-        templateId,
-        count: clearedCount,
-      });
-    }
-
-    return clearedCount;
-  }
-
-  async getHistoryStats() {
-    if (!this.initialized) {
-      await this.init();
-    }
-
-    const stats = {
-      totalEntries: this.history.length,
-      completedEntries: 0,
-      failedEntries: 0,
-      processingEntries: 0,
-      templatesUsed: new Set(),
-      averageDuration: 0,
-      totalDuration: 0,
-      recentActivity: [],
-    };
-
-    let totalDuration = 0;
-    let durationsCount = 0;
-
-    this.history.forEach((entry) => {
-      switch (entry.status) {
-        case HISTORY_STATUS.COMPLETED:
-          stats.completedEntries++;
-          break;
-        case HISTORY_STATUS.FAILED:
-          stats.failedEntries++;
-          break;
-        case HISTORY_STATUS.PROCESSING:
-          stats.processingEntries++;
-          break;
-      }
-
-      stats.templatesUsed.add(entry.templateId);
-
-      if (entry.duration && entry.duration > 0) {
-        totalDuration += entry.duration;
-        durationsCount++;
-      }
-    });
-
-    stats.templatesUsed = stats.templatesUsed.size;
-    stats.totalDuration = totalDuration;
-    stats.averageDuration =
-      durationsCount > 0 ? totalDuration / durationsCount : 0;
-
-    const now = new Date();
-    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    stats.recentActivity = {
-      last24Hours: this.history.filter(
-        (entry) => new Date(entry.timestamp) > last24Hours
-      ).length,
-      lastWeek: this.history.filter(
-        (entry) => new Date(entry.timestamp) > lastWeek
-      ).length,
-    };
-
-    return stats;
-  }
-
   async searchHistory(query) {
     if (!this.initialized) {
       await this.init();
@@ -261,62 +179,6 @@ class HistoryManager {
           )
       )
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  }
-
-  async exportHistory() {
-    if (!this.initialized) {
-      await this.init();
-    }
-
-    return {
-      history: this.history,
-      exportedAt: new Date().toISOString(),
-      version: EXTENSION_VERSION,
-    };
-  }
-
-  async getHistoryForTemplate(templateId, limit = 10) {
-    const entries = await this.getHistoryByTemplate(templateId);
-
-    return entries.slice(0, limit).map((entry) => ({
-      id: entry.id,
-      inputs: entry.inputs,
-      result: entry.result,
-      status: entry.status,
-      timestamp: entry.timestamp,
-      formattedTime: formatRelativeTime(entry.timestamp),
-      duration: entry.duration,
-    }));
-  }
-
-  async getFavoriteTemplates(limit = 5) {
-    if (!this.initialized) {
-      await this.init();
-    }
-
-    const templateUsage = {};
-
-    this.history.forEach((entry) => {
-      if (entry.status === HISTORY_STATUS.COMPLETED) {
-        const key = entry.templateId;
-        if (!templateUsage[key]) {
-          templateUsage[key] = {
-            templateId: entry.templateId,
-            templateName: entry.templateName,
-            count: 0,
-            lastUsed: entry.timestamp,
-          };
-        }
-        templateUsage[key].count++;
-        if (new Date(entry.timestamp) > new Date(templateUsage[key].lastUsed)) {
-          templateUsage[key].lastUsed = entry.timestamp;
-        }
-      }
-    });
-
-    return Object.values(templateUsage)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, limit);
   }
 
   on(event, callback) {

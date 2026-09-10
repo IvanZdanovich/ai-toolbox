@@ -573,6 +573,12 @@ SPECIFICITY_CHECK: reread against a messy real instance of {task_description} â€
     await storage.setTemplatesSeeded(true);
   }
 
+  // Re-reads templates from storage into memory, for when another page
+  // (e.g. the editor tab) has changed them.
+  async refresh() {
+    this.templates = await storage.getTemplates();
+  }
+
   async getAllTemplates() {
     if (!this.initialized) {
       await this.init();

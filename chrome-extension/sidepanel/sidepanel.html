@@ -64,6 +64,12 @@
           d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12M19 4h-3.5l-1-1h-5l-1 1H5v2h14V4Z"
         />
       </symbol>
+      <symbol id="icon-expand" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M7 14H5v5h5v-2H7v-3m-2-4h2V7h3V5H5v5m12 7h-3v2h5v-5h-2v3M14 5v2h3v3h2V5h-5Z"
+        />
+      </symbol>
     </svg>
 
     <div class="sidepanel-container">
@@ -75,6 +81,9 @@
         <button class="nav-tab" data-section="workflows">Workflows</button>
         <button class="nav-tab" data-section="history">History</button>
       </nav>
+
+      <!-- Open template/workflow editor tabs, one row below the main nav -->
+      <nav class="editor-tabs-row hidden" id="editorTabsRow"></nav>
 
       <!-- Main Content -->
       <main class="sidepanel-content">
@@ -166,6 +175,13 @@
           <div class="footer-spacer"></div>
           <button
             class="footer-btn footer-btn-right"
+            id="expandBtn"
+            title="Open in full screen"
+          >
+            <svg class="icon icon--md"><use href="#icon-expand"></use></svg>
+          </button>
+          <button
+            class="footer-btn footer-btn-right"
             id="settingsBtn"
             title="Settings"
           >
@@ -175,282 +191,12 @@
       </footer>
     </div>
 
-    <!-- Template Modal -->
-    <div id="templateModal" class="modal-overlay hidden">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 class="modal-title" id="templateModalTitle">Create Template</h2>
-          <button class="modal-close" id="templateModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
-        </div>
-        <div class="modal-body">
-          <form id="templateForm">
-            <div class="form-group">
-              <label class="form-label" for="templateName">Template Name</label>
-              <input
-                type="text"
-                id="templateName"
-                class="form-input"
-                required
-                maxlength="50"
-              />
-            </div>
-
-            <div class="form-group">
-              <div class="form-label-group">
-                <label class="form-label" for="templateDescription"
-                  >Description (optional)</label
-                >
-                <button
-                  type="button"
-                  class="btn btn-small btn-secondary generate-btn"
-                  id="generateDescriptionBtn"
-                  title="Generate description from template name"
-                >
-                  <svg class="icon icon--sm"><use href="#icon-magic"></use></svg>Generate
-                </button>
-              </div>
-              <input
-                type="text"
-                id="templateDescription"
-                class="form-input"
-                maxlength="200"
-              />
-            </div>
-
-            <div class="form-group">
-              <div class="form-label-group">
-                <label class="form-label" for="templatePrompt">Prompt</label>
-                <button
-                  type="button"
-                  class="btn btn-small btn-secondary generate-btn"
-                  id="generatePromptBtn"
-                  title="Generate prompt from template name and description"
-                >
-                  <svg class="icon icon--sm"><use href="#icon-magic"></use></svg>Generate
-                </button>
-              </div>
-              <p class="form-help">Use {variable_name} for dynamic inputs</p>
-              <textarea
-                id="templatePrompt"
-                class="form-textarea"
-                required
-                maxlength="2000"
-                rows="4"
-              ></textarea>
-            </div>
-
-            <div id="templateVariables" class="template-variables">
-              <!-- Variable inputs will be generated here -->
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            id="templateModalCancel"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            id="templateModalSave"
-            form="templateForm"
-          >
-            Save Template
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Execute Template Modal -->
-    <div id="executeModal" class="modal-overlay hidden">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 class="modal-title" id="executeModalTitle">Execute Template</h2>
-          <button class="modal-close" id="executeModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
-        </div>
-        <div class="modal-body">
-          <form id="executeForm">
-            <div id="executeInputs" class="execute-inputs">
-              <!-- Template input fields will be generated here -->
-            </div>
-          </form>
-
-          <div id="executeResult" class="execute-result hidden">
-            <div class="result-header">
-              <h3>Result</h3>
-              <button class="btn btn-small btn-secondary" id="copyResultBtn">
-                Copy
-              </button>
-            </div>
-            <div id="resultContent" class="result-content"></div>
-            <div id="resultMeta" class="result-meta"></div>
-          </div>
-
-          <div id="executeLoading" class="execute-loading hidden">
-            <div class="loading"></div>
-            <p>Processing template...</p>
-          </div>
-
-          <div id="executeError" class="execute-error hidden">
-            <p class="error-message"></p>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            id="executeModalCancel"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            id="executeModalRun"
-            form="executeForm"
-          >
-            Run Template
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workflow Editor Modal -->
-    <div id="workflowModal" class="modal-overlay hidden">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 class="modal-title" id="workflowModalTitle">Create Workflow</h2>
-          <button class="modal-close" id="workflowModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
-        </div>
-        <div class="modal-body">
-          <form id="workflowForm">
-            <div class="form-group">
-              <label class="form-label" for="workflowName">Workflow Name</label>
-              <input
-                type="text"
-                id="workflowName"
-                class="form-input"
-                required
-                maxlength="50"
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="workflowDescription"
-                >Description (optional)</label
-              >
-              <input
-                type="text"
-                id="workflowDescription"
-                class="form-input"
-                maxlength="200"
-              />
-            </div>
-
-            <div class="workflow-steps-header">
-              <h4>Steps</h4>
-              <button
-                type="button"
-                class="btn btn-small btn-secondary"
-                id="addStepBtn"
-              >
-                <svg class="icon icon--sm"><use href="#icon-add"></use></svg>Add Step
-              </button>
-            </div>
-            <p class="form-help">
-              Steps run in order. Reference an earlier step with
-              <code>{steps.output_key}</code> or <code>{previous}</code>; any
-              other <code>{placeholder}</code> is filled in when you run the
-              workflow.
-            </p>
-
-            <div id="workflowSteps" class="workflow-steps">
-              <!-- Step editors will be rendered here -->
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            id="workflowModalCancel"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            id="workflowModalSave"
-            form="workflowForm"
-          >
-            Save Workflow
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workflow Run Modal -->
-    <div id="runModal" class="modal-overlay hidden">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 class="modal-title" id="runModalTitle">Run Workflow</h2>
-          <button class="modal-close" id="runModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
-        </div>
-        <div class="modal-body">
-          <form id="runForm">
-            <div id="runInputs" class="execute-inputs">
-              <!-- Workflow input fields will be generated here -->
-            </div>
-          </form>
-
-          <div id="runTimeline" class="run-timeline hidden">
-            <!-- Live step progress will be rendered here -->
-          </div>
-
-          <div id="runResult" class="execute-result hidden">
-            <div class="result-header">
-              <h3>Result</h3>
-              <button class="btn btn-small btn-secondary" id="copyRunResultBtn">
-                Copy
-              </button>
-            </div>
-            <div id="runResultContent" class="result-content"></div>
-            <div id="runResultMeta" class="result-meta"></div>
-          </div>
-
-          <div id="runError" class="execute-error hidden">
-            <p class="error-message"></p>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="runModalCancel">
-            Close
-          </button>
-          <button type="button" class="btn btn-danger hidden" id="runModalStop">
-            Stop
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            id="runModalStart"
-            form="runForm"
-          >
-            Run Workflow
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- Scripts -->
     <script type="module" src="../shared/components/toast.js"></script>
     <script type="module" src="../shared/components/modal.js"></script>
-    <script type="module" src="../shared/components/template-card.js"></script>
     <script type="module" src="sidepanel.js"></script>
   </body>
 </html>

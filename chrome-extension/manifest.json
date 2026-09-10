@@ -5,10 +5,10 @@
   "description": "AI-powered template toolbox for automating routine tasks",
   "permissions": [
     "storage",
-    "activeTab",
     "scripting",
     "contextMenus",
-    "sidePanel"
+    "sidePanel",
+    "notifications"
   ],
   "host_permissions": ["<all_urls>"],
   "action": {

@@ -26,8 +26,7 @@ body {
 /* Ensure containers adapt to width changes */
 .settings-container,
 .settings-header,
-.settings-content,
-.settings-actions {
+.settings-content {
   width: 100%;
 }
 
@@ -439,25 +438,6 @@ body {
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
-}
-
-/* ========================================
-   ACTIONS
-   ======================================== */
-
-.settings-actions {
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-sm) 0;
-  border-top: var(--border-width) solid var(--color-border);
-  display: flex;
-  justify-content: center;
-}
-
-.btn-large {
-  padding: var(--spacing-md) var(--spacing-md);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-  min-width: 200px;
 }
 
 /* ========================================
