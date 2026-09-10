@@ -43,41 +43,6 @@ html {
 }
 
 /* ========================================
-   HEADER - Brand
-   ======================================== */
-
-.app-header {
-  flex-shrink: 0;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-surface);
-  border-bottom: var(--border-width) solid var(--color-border);
-}
-
-.app-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.app-logo {
-  display: inline-flex;
-  color: transparent;
-  background: var(--gradient-accent);
-  background-clip: text;
-}
-
-.app-logo .icon {
-  color: inherit;
-}
-
-.app-name {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: -0.01em;
-  color: var(--color-text-primary);
-}
-
-/* ========================================
    NAVIGATION - Sidepanel tabs
    ======================================== */
 
@@ -491,7 +456,7 @@ html {
   background: var(--color-background);
   padding: var(--spacing-xxs) var(--spacing-xs);
   border-radius: var(--border-radius);
-  font-family: monospace;
+  font-family: var(--font-family-mono);
   font-size: 11px;
   color: var(--color-primary);
 }
@@ -525,12 +490,16 @@ html {
   border: 1px solid var(--color-border);
 }
 
-.grid-header-label {
+.grid-header-label,
+.input-mini-label {
   font-size: var(--font-size-xxs);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.grid-header-label {
   padding: var(--spacing-xs) 0;
 }
 
@@ -558,7 +527,7 @@ html {
   color: var(--color-primary);
   text-transform: none;
   letter-spacing: 0;
-  font-family: monospace;
+  font-family: var(--font-family-mono);
   background: var(--color-surface);
   padding: var(--spacing-xs);
   border-radius: var(--border-radius);
@@ -579,11 +548,6 @@ html {
 
 .input-mini-label {
   display: block;
-  font-size: 9px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   padding-left: var(--spacing-xxs);
 }
 

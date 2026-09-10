@@ -101,39 +101,47 @@
 }
 
 select.form-input {
+  appearance: none;
   cursor: pointer;
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
-  padding-right: var(--spacing-sm);
+  padding-right: calc(var(--spacing-lg) + var(--spacing-xs));
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-sm) center;
+  background-size: 16px;
+}
+
+/* Hover/focus state for better visibility */
+select.form-input:hover {
+  border-color: var(--color-primary);
+}
+
+select.form-input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* Light theme dropdown arrow (system preference) */
 @media (prefers-color-scheme: light) {
   select.form-input {
-    /* Use browser default styling */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   }
 }
 
 /* Dark theme dropdown arrow (system preference) */
 @media (prefers-color-scheme: dark) {
   select.form-input {
-    /* Use browser default styling */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239ca3af'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   }
 }
 
 /* Manual light theme override */
 :root[data-theme='light'] select.form-input {
-  /* Use browser default styling */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 }
 
 /* Manual dark theme override */
 :root[data-theme='dark'] select.form-input {
-  /* Use browser default styling */
-}
-
-/* Hover state for better visibility */
-select.form-input:hover {
-  border-color: var(--color-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239ca3af'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 }
 
 /* Option elements styling */
