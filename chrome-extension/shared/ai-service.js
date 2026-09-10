@@ -362,14 +362,16 @@ class AIService {
   }) {
     await this.ensureSettings();
 
-    if (!skipRateLimit && !this.checkRateLimit()) {
+    const provider = getProvider(providerId || this.settings.provider);
+    const model = modelOverride || this.resolveModel(provider.id);
+
+    // The throttle exists to protect paid quotas; a local server has none, and
+    // an agent loop would otherwise burn the whole window on one workflow.
+    if (!skipRateLimit && !provider.local && !this.checkRateLimit()) {
       throw new Error(
         'Rate limit exceeded. Please wait a moment before trying again.'
       );
     }
-
-    const provider = getProvider(providerId || this.settings.provider);
-    const model = modelOverride || this.resolveModel(provider.id);
 
     if (provider.kind === PROVIDER_KIND.MOCK) {
       return {
