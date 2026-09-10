@@ -6,7 +6,7 @@ import {
   variableLabel,
   variablePlaceholder,
 } from './helpers.js';
-import { LIMITS, EVENTS } from './constants.js';
+import { LIMITS, EVENTS, EXTENSION_VERSION } from './constants.js';
 
 // Builds the input descriptors for a prompt's variables, preferring any
 // caller-supplied input metadata over the generated defaults.
@@ -734,7 +734,7 @@ Provide:
     return {
       templates: this.templates,
       exportedAt: new Date().toISOString(),
-      version: '0.9.0',
+      version: EXTENSION_VERSION,
     };
   }
 

@@ -1,6 +1,11 @@
 import storage from './storage.js';
 import { generateId, formatRelativeTime } from './helpers.js';
-import { LIMITS, EVENTS, HISTORY_STATUS } from './constants.js';
+import {
+  LIMITS,
+  EVENTS,
+  HISTORY_STATUS,
+  EXTENSION_VERSION,
+} from './constants.js';
 
 class HistoryManager {
   constructor() {
@@ -266,7 +271,7 @@ class HistoryManager {
     return {
       history: this.history,
       exportedAt: new Date().toISOString(),
-      version: '0.9.0',
+      version: EXTENSION_VERSION,
     };
   }
 

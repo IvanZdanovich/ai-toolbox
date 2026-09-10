@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { EXTENSION_VERSION } from '../../shared/constants.js';
 import {
   installChromeMock,
   uninstallChromeMock,
@@ -91,13 +92,13 @@ describe('Background Service Worker Integration', () => {
       // When: Update event fires
       chromeMock.runtime.onInstalled._trigger({
         reason: 'update',
-        previousVersion: '0.9.0',
+        previousVersion: EXTENSION_VERSION,
       });
 
       // Then: Update handler should be called with version info
       expect(updateHandler).toHaveBeenCalledWith({
         reason: 'update',
-        previousVersion: '0.9.0',
+        previousVersion: EXTENSION_VERSION,
       });
     });
 

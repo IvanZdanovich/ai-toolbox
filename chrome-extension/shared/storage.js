@@ -1,4 +1,16 @@
-import { STORAGE_KEYS, DEFAULT_SETTINGS, LIMITS } from './constants.js';
+import {
+  STORAGE_KEYS,
+  DEFAULT_SETTINGS,
+  DEFAULT_PROVIDER_CONFIG,
+  EMPTY_API_KEYS,
+  LIMITS,
+  EXTENSION_VERSION,
+} from './constants.js';
+import {
+  LEGACY_PROVIDER_ALIASES,
+  PROVIDERS,
+  normalizeProviderId,
+} from './providers.js';
 
 class ChromeStorage {
   constructor() {
@@ -187,6 +199,28 @@ class ChromeStorage {
     return await this.set(STORAGE_KEYS.TEMPLATES, templates);
   }
 
+  async getWorkflows() {
+    let workflows = await this.get(STORAGE_KEYS.WORKFLOWS);
+
+    if (!workflows) {
+      workflows = await this.getChunked(STORAGE_KEYS.WORKFLOWS);
+    }
+
+    return workflows || [];
+  }
+
+  async setWorkflows(workflows) {
+    return await this.set(STORAGE_KEYS.WORKFLOWS, workflows);
+  }
+
+  async getWorkflowsSeeded() {
+    return (await this.get(STORAGE_KEYS.WORKFLOWS_SEEDED)) || false;
+  }
+
+  async setWorkflowsSeeded(seeded) {
+    return await this.set(STORAGE_KEYS.WORKFLOWS_SEEDED, seeded);
+  }
+
   async getHistory() {
     let history = await this.get(STORAGE_KEYS.HISTORY);
 
@@ -204,22 +238,62 @@ class ChromeStorage {
   async getSettings() {
     const settings = await this.get(STORAGE_KEYS.SETTINGS);
     const mergedSettings = { ...DEFAULT_SETTINGS, ...settings };
+    let migrated = false;
 
     // Migrate old apiKey field to new apiKeys structure
     if (settings && settings.apiKey && settings.provider && !settings.apiKeys) {
       // Old format: single apiKey field
       // Migrate to new format: apiKeys object
-      mergedSettings.apiKeys = { ...DEFAULT_SETTINGS.apiKeys };
+      mergedSettings.apiKeys = { ...EMPTY_API_KEYS };
       mergedSettings.apiKeys[settings.provider] = settings.apiKey;
-
-      // Save migrated settings
-      await this.setSettings(mergedSettings);
+      migrated = true;
       console.log(`Migrated API key for provider: ${settings.provider}`);
     }
 
-    // Ensure apiKeys object exists
-    if (!mergedSettings.apiKeys) {
-      mergedSettings.apiKeys = { ...DEFAULT_SETTINGS.apiKeys };
+    // Ensure every known provider has a slot, including ones added by an update.
+    mergedSettings.apiKeys = { ...EMPTY_API_KEYS, ...mergedSettings.apiKeys };
+    mergedSettings.providerConfig = {
+      ...structuredClone(DEFAULT_PROVIDER_CONFIG),
+      ...mergedSettings.providerConfig,
+    };
+
+    // Providers that were renamed or folded into another one keep working:
+    // point the selection at the replacement and carry its key across.
+    for (const [legacyId, replacementId] of Object.entries(
+      LEGACY_PROVIDER_ALIASES
+    )) {
+      const legacyKey = mergedSettings.apiKeys[legacyId];
+      if (legacyKey && !mergedSettings.apiKeys[replacementId]) {
+        mergedSettings.apiKeys[replacementId] = legacyKey;
+        migrated = true;
+      }
+      delete mergedSettings.apiKeys[legacyId];
+    }
+
+    const normalizedProvider = normalizeProviderId(mergedSettings.provider);
+    if (normalizedProvider !== mergedSettings.provider) {
+      console.log(
+        `Migrated provider "${mergedSettings.provider}" to "${normalizedProvider}"`
+      );
+      mergedSettings.provider = normalizedProvider;
+      migrated = true;
+    }
+
+    // The old single-purpose geminiModel field becomes providerConfig.gemini,
+    // but only if that model still exists — retired ids fall back to the default.
+    if (mergedSettings.geminiModel) {
+      if (PROVIDERS.gemini.models.includes(mergedSettings.geminiModel)) {
+        mergedSettings.providerConfig.gemini = {
+          ...mergedSettings.providerConfig.gemini,
+          model: mergedSettings.geminiModel,
+        };
+      }
+      delete mergedSettings.geminiModel;
+      migrated = true;
+    }
+
+    if (migrated) {
+      await this.setSettings(mergedSettings);
     }
 
     return mergedSettings;
@@ -279,18 +353,20 @@ class ChromeStorage {
     console.log('Storage: Exporting all data for backup...');
 
     try {
-      const [templates, history, settings] = await Promise.all([
+      const [templates, workflows, history, settings] = await Promise.all([
         this.getTemplates(),
+        this.getWorkflows(),
         this.getHistory(),
         this.getSettings(),
       ]);
 
       return {
         templates: templates || [],
+        workflows: workflows || [],
         history: history || [],
         settings: settings || {},
         exportedAt: new Date().toISOString(),
-        version: '0.9.0',
+        version: EXTENSION_VERSION,
       };
     } catch (error) {
       console.error('Failed to export data:', error);

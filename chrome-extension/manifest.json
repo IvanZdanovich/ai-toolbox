@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Toolbox",
-  "version": "0.9.0",
+  "version": "1.0.1",
   "description": "AI-powered template toolbox for automating routine tasks",
   "permissions": [
     "storage",

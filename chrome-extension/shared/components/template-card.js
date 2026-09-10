@@ -4,6 +4,7 @@ import {
   downloadAsJson,
   sanitizeText,
 } from '../../shared/helpers.js';
+import { EXTENSION_VERSION } from '../../shared/constants.js';
 import IconHelper from '../../shared/icon-helper.js';
 
 class TemplateCard {
@@ -152,7 +153,7 @@ class TemplateCard {
       const exportData = {
         templates: [template],
         exportedAt: new Date().toISOString(),
-        version: '0.9.0',
+        version: EXTENSION_VERSION,
       };
 
       const sanitizedName = template.name

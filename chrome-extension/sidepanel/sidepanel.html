@@ -16,6 +16,7 @@
         <button class="nav-tab active" data-section="templates">
           Templates
         </button>
+        <button class="nav-tab" data-section="workflows">Workflows</button>
         <button class="nav-tab" data-section="history">History</button>
       </nav>
 
@@ -44,6 +45,32 @@
           <div id="templatesEmpty" class="empty-state hidden">
             <h3>No templates found</h3>
             <p>Create your first template to get started</p>
+          </div>
+        </section>
+
+        <!-- Workflows Section -->
+        <section id="workflows" class="section">
+          <div class="section-header">
+            <button class="btn btn-primary btn-small" id="createWorkflowBtn">
+              <span class="btn-icon">+</span>New Workflow
+            </button>
+            <div class="search-box">
+              <input
+                type="text"
+                id="workflowSearch"
+                class="form-input"
+                placeholder="Search workflows..."
+              />
+            </div>
+          </div>
+
+          <div id="workflowsList" class="workflows-list">
+            <!-- Workflow cards will be rendered here -->
+          </div>
+
+          <div id="workflowsEmpty" class="empty-state hidden">
+            <h3>No workflows found</h3>
+            <p>Chain prompts and tool-using agents into one repeatable run</p>
           </div>
         </section>
 
@@ -227,6 +254,136 @@
             form="executeForm"
           >
             Run Template
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workflow Editor Modal -->
+    <div id="workflowModal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title" id="workflowModalTitle">Create Workflow</h2>
+          <button class="modal-close" id="workflowModalClose">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="workflowForm">
+            <div class="form-group">
+              <label class="form-label" for="workflowName">Workflow Name</label>
+              <input
+                type="text"
+                id="workflowName"
+                class="form-input"
+                required
+                maxlength="50"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="workflowDescription"
+                >Description (optional)</label
+              >
+              <input
+                type="text"
+                id="workflowDescription"
+                class="form-input"
+                maxlength="200"
+              />
+            </div>
+
+            <div class="workflow-steps-header">
+              <h4>Steps</h4>
+              <button
+                type="button"
+                class="btn btn-small btn-secondary"
+                id="addStepBtn"
+              >
+                <span class="btn-icon">+</span>Add Step
+              </button>
+            </div>
+            <p class="form-help">
+              Steps run in order. Reference an earlier step with
+              <code>{steps.output_key}</code> or <code>{previous}</code>; any
+              other <code>{placeholder}</code> is filled in when you run the
+              workflow.
+            </p>
+
+            <div id="workflowSteps" class="workflow-steps">
+              <!-- Step editors will be rendered here -->
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="workflowModalCancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="workflowModalSave"
+            form="workflowForm"
+          >
+            Save Workflow
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workflow Run Modal -->
+    <div id="runModal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title" id="runModalTitle">Run Workflow</h2>
+          <button class="modal-close" id="runModalClose">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="runForm">
+            <div id="runInputs" class="execute-inputs">
+              <!-- Workflow input fields will be generated here -->
+            </div>
+          </form>
+
+          <div id="runTimeline" class="run-timeline hidden">
+            <!-- Live step progress will be rendered here -->
+          </div>
+
+          <div id="runResult" class="execute-result hidden">
+            <div class="result-header">
+              <h3>Result</h3>
+              <button class="btn btn-small btn-secondary" id="copyRunResultBtn">
+                Copy
+              </button>
+            </div>
+            <div id="runResultContent" class="result-content"></div>
+            <div id="runResultMeta" class="result-meta"></div>
+          </div>
+
+          <div id="runError" class="execute-error hidden">
+            <p class="error-message"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="runModalCancel">
+            Close
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger hidden"
+            id="runModalStop"
+          >
+            Stop
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="runModalStart"
+            form="runForm"
+          >
+            Run Workflow
           </button>
         </div>
       </div>

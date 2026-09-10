@@ -1,3 +1,5 @@
+import { EXTENSION_VERSION } from '../../shared/constants.js';
+
 /**
  * Chrome API Mock for Testing
  * Provides a complete mock of the Chrome Extension API
@@ -116,7 +118,7 @@ export const chromeMock = {
     getManifest: () => ({
       manifest_version: 3,
       name: 'AI Toolbox',
-      version: '0.9.0',
+      version: EXTENSION_VERSION,
     }),
     sendMessage: (message, callback) => {
       if (callback) callback({ success: true });

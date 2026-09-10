@@ -50,6 +50,7 @@ describe('AI Service Integration', () => {
     storage = (await import('../../shared/storage.js')).default;
     const AIServiceModule = await import('../../shared/ai-service.js');
     aiService = AIServiceModule.default;
+    aiService.mockFailureRate = 0;
 
     // Reset service state
     aiService.settings = null;

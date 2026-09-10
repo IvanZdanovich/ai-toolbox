@@ -12,7 +12,7 @@ import {
   variableLabel,
   variablePlaceholder,
 } from '../shared/helpers.js';
-import { EVENTS, HISTORY_STATUS } from '../shared/constants.js';
+import { EVENTS, HISTORY_STATUS, EXTENSION_VERSION } from '../shared/constants.js';
 import Toast from '../shared/components/toast.js';
 import Modal from '../shared/components/modal.js';
 
@@ -753,7 +753,7 @@ Generate the prompt template now:`;
       const exportData = {
         templates: [template],
         exportedAt: new Date().toISOString(),
-        version: '0.9.0',
+        version: EXTENSION_VERSION,
       };
 
       const sanitizedName = template.name

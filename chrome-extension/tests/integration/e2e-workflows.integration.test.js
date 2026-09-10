@@ -30,6 +30,7 @@ describe('E2E: Complete Template Workflow', () => {
       .default;
     historyManager = (await import('../../shared/history-manager.js')).default;
     aiService = (await import('../../shared/ai-service.js')).default;
+    aiService.mockFailureRate = 0;
   });
 
   afterEach(() => {
@@ -211,6 +212,7 @@ describe('E2E: Settings Configuration Workflow', () => {
 
     storage = (await import('../../shared/storage.js')).default;
     aiService = (await import('../../shared/ai-service.js')).default;
+    aiService.mockFailureRate = 0;
   });
 
   afterEach(() => {
@@ -328,6 +330,7 @@ describe('E2E: Error Recovery Workflow', () => {
       .default;
     historyManager = (await import('../../shared/history-manager.js')).default;
     aiService = (await import('../../shared/ai-service.js')).default;
+    aiService.mockFailureRate = 0;
   });
 
   afterEach(() => {
@@ -360,9 +363,7 @@ describe('E2E: Error Recovery Workflow', () => {
 
       expect(failedEntry.status).toBe('failed');
 
-      // Retry with mock (should succeed). processWithMock throws on
-      // Math.random() < 0.1, so pin it to keep this assertion deterministic.
-      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      // Retry with mock (should succeed)
       const retryResult = await aiService.processTemplate(template, inputs);
       expect(retryResult.result).toBeDefined();
 
