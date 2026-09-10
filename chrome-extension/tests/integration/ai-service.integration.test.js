@@ -414,6 +414,417 @@ describe('AI Service Integration', () => {
   });
 });
 
+describe('AI Service Provider Adapters', () => {
+  let aiService;
+  let storage;
+
+  const settingsFor = (provider, overrides = {}) => ({
+    provider,
+    apiKey: '',
+    apiKeys: { [provider]: 'test-key' },
+    providerConfig: { [provider]: overrides },
+  });
+
+  const jsonResponse = (payload) => ({
+    ok: true,
+    json: () => Promise.resolve(payload),
+  });
+
+  const lastRequest = () => {
+    const [url, init] = mockFetch.mock.calls.at(-1);
+    return { url, init, body: JSON.parse(init.body) };
+  };
+
+  const tools = [
+    {
+      name: 'fetch_url',
+      description: 'Fetch a page',
+      parameters: {
+        type: 'object',
+        properties: { url: { type: 'string' } },
+        required: ['url'],
+      },
+    },
+  ];
+
+  beforeEach(async () => {
+    installChromeMock();
+    testUtils.resetStorage();
+    mockFetch.mockReset();
+    vi.resetModules();
+
+    storage = (await import('../../shared/storage.js')).default;
+    aiService = (await import('../../shared/ai-service.js')).default;
+    aiService.settings = null;
+    aiService.requestTimestamps = [];
+  });
+
+  afterEach(() => {
+    uninstallChromeMock();
+    vi.clearAllMocks();
+  });
+
+  describe('Scenario: OpenAI-compatible providers', () => {
+    it('should send the configured model and omit unsupported parameters', async () => {
+      storage.getSettings.mockResolvedValue(
+        settingsFor('openai', { model: 'gpt-6-astra' })
+      );
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ choices: [{ message: { content: 'hi' } }] })
+      );
+
+      await aiService.chat({ messages: [{ role: 'user', content: 'hi' }] });
+
+      const { body } = lastRequest();
+      expect(body.model).toBe('gpt-6-astra');
+      // GPT-5+ reject max_tokens and a non-default temperature.
+      expect(body.max_completion_tokens).toBeDefined();
+      expect(body.max_tokens).toBeUndefined();
+      expect(body.temperature).toBeUndefined();
+    });
+
+    it('should fall back to the provider default model', async () => {
+      storage.getSettings.mockResolvedValue(settingsFor('grok'));
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ choices: [{ message: { content: 'hi' } }] })
+      );
+
+      const result = await aiService.chat({
+        messages: [{ role: 'user', content: 'hi' }],
+      });
+
+      expect(result.model).toBe('grok-4.6');
+      expect(lastRequest().url).toBe('https://api.x.ai/v1/chat/completions');
+    });
+
+    it('should translate tools and parse tool calls back', async () => {
+      storage.getSettings.mockResolvedValue(settingsFor('groq'));
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({
+          choices: [
+            {
+              message: {
+                content: null,
+                tool_calls: [
+                  {
+                    id: 'call_1',
+                    function: {
+                      name: 'fetch_url',
+                      arguments: '{"url":"https://a.test"}',
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        })
+      );
+
+      const result = await aiService.chat({
+        messages: [{ role: 'user', content: 'go' }],
+        tools,
+      });
+
+      expect(lastRequest().body.tools[0]).toEqual({
+        type: 'function',
+        function: {
+          name: 'fetch_url',
+          description: 'Fetch a page',
+          parameters: tools[0].parameters,
+        },
+      });
+      expect(result.toolCalls).toEqual([
+        { id: 'call_1', name: 'fetch_url', args: { url: 'https://a.test' } },
+      ]);
+    });
+
+    it('should send assistant tool calls and tool results back in wire format', async () => {
+      storage.getSettings.mockResolvedValue(settingsFor('groq'));
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ choices: [{ message: { content: 'done' } }] })
+      );
+
+      await aiService.chat({
+        messages: [
+          { role: 'user', content: 'go' },
+          {
+            role: 'assistant',
+            content: '',
+            toolCalls: [
+              { id: 'call_1', name: 'fetch_url', args: { url: 'x' } },
+            ],
+          },
+          { role: 'tool', toolCallId: 'call_1', content: 'page text' },
+        ],
+        tools,
+      });
+
+      const { body } = lastRequest();
+      expect(body.messages[1].tool_calls[0].function.arguments).toBe(
+        '{"url":"x"}'
+      );
+      expect(body.messages[2]).toEqual({
+        role: 'tool',
+        tool_call_id: 'call_1',
+        content: 'page text',
+      });
+    });
+  });
+
+  describe('Scenario: Anthropic adapter', () => {
+    beforeEach(async () => {
+      storage.getSettings.mockResolvedValue(settingsFor('claude'));
+      await aiService.init();
+    });
+
+    it('should hoist system messages and translate tool schemas', async () => {
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ content: [{ type: 'text', text: 'ok' }] })
+      );
+
+      await aiService.chat({
+        messages: [
+          { role: 'system', content: 'Be terse' },
+          { role: 'user', content: 'go' },
+        ],
+        tools,
+      });
+
+      const { body } = lastRequest();
+      expect(body.system).toBe('Be terse');
+      expect(body.messages).toHaveLength(1);
+      expect(body.tools[0]).toEqual({
+        name: 'fetch_url',
+        description: 'Fetch a page',
+        input_schema: tools[0].parameters,
+      });
+    });
+
+    it('should parse tool_use blocks alongside text', async () => {
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({
+          content: [
+            { type: 'text', text: 'Looking it up' },
+            {
+              type: 'tool_use',
+              id: 'toolu_1',
+              name: 'fetch_url',
+              input: { url: 'https://a.test' },
+            },
+          ],
+        })
+      );
+
+      const result = await aiService.chat({
+        messages: [{ role: 'user', content: 'go' }],
+        tools,
+      });
+
+      expect(result.content).toBe('Looking it up');
+      expect(result.toolCalls).toEqual([
+        { id: 'toolu_1', name: 'fetch_url', args: { url: 'https://a.test' } },
+      ]);
+    });
+
+    it('should send tool results as a tool_result block', async () => {
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ content: [{ type: 'text', text: 'ok' }] })
+      );
+
+      await aiService.chat({
+        messages: [
+          { role: 'user', content: 'go' },
+          {
+            role: 'assistant',
+            content: '',
+            toolCalls: [{ id: 'toolu_1', name: 'fetch_url', args: {} }],
+          },
+          { role: 'tool', toolCallId: 'toolu_1', content: 'page text' },
+        ],
+        tools,
+      });
+
+      const { body } = lastRequest();
+      expect(body.messages[2]).toEqual({
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            tool_use_id: 'toolu_1',
+            content: 'page text',
+          },
+        ],
+      });
+    });
+  });
+
+  describe('Scenario: Gemini adapter', () => {
+    beforeEach(async () => {
+      storage.getSettings.mockResolvedValue(
+        settingsFor('gemini', { model: 'gemini-3.8-flash' })
+      );
+      await aiService.init();
+    });
+
+    it('should authenticate with a header rather than the query string', async () => {
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({
+          candidates: [{ content: { parts: [{ text: 'ok' }] } }],
+        })
+      );
+
+      await aiService.chat({ messages: [{ role: 'user', content: 'go' }] });
+
+      const { url, init } = lastRequest();
+      expect(url).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent'
+      );
+      expect(url).not.toContain('test-key');
+      expect(init.headers['x-goog-api-key']).toBe('test-key');
+    });
+
+    it('should translate tools to function declarations and parse function calls', async () => {
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    functionCall: {
+                      name: 'fetch_url',
+                      args: { url: 'https://a.test' },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        })
+      );
+
+      const result = await aiService.chat({
+        messages: [
+          { role: 'system', content: 'Be terse' },
+          { role: 'user', content: 'go' },
+        ],
+        tools,
+      });
+
+      const { body } = lastRequest();
+      expect(body.systemInstruction.parts[0].text).toBe('Be terse');
+      expect(body.tools[0].functionDeclarations[0].name).toBe('fetch_url');
+      expect(result.toolCalls[0]).toMatchObject({
+        name: 'fetch_url',
+        args: { url: 'https://a.test' },
+      });
+    });
+  });
+
+  describe('Scenario: Local providers', () => {
+    it('should call Ollama on localhost without requiring a key', async () => {
+      storage.getSettings.mockResolvedValue({
+        provider: 'ollama',
+        apiKey: '',
+        apiKeys: {},
+        providerConfig: { ollama: { model: 'qwen3' } },
+      });
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ choices: [{ message: { content: 'local reply' } }] })
+      );
+
+      const result = await aiService.chat({
+        messages: [{ role: 'user', content: 'go' }],
+      });
+
+      const { url, init, body } = lastRequest();
+      expect(url).toBe('http://localhost:11434/v1/chat/completions');
+      expect(init.headers.Authorization).toBeUndefined();
+      expect(body.max_tokens).toBeDefined();
+      expect(result.content).toBe('local reply');
+    });
+
+    it('should honour a custom endpoint for llama.cpp', async () => {
+      storage.getSettings.mockResolvedValue({
+        provider: 'llamacpp',
+        apiKeys: {},
+        providerConfig: {
+          llamacpp: { model: 'local', baseUrl: 'http://127.0.0.1:9090/v1/' },
+        },
+      });
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ choices: [{ message: { content: 'ok' } }] })
+      );
+
+      await aiService.chat({ messages: [{ role: 'user', content: 'go' }] });
+
+      expect(lastRequest().url).toBe(
+        'http://127.0.0.1:9090/v1/chat/completions'
+      );
+    });
+
+    it('should refuse to call a local provider with no model selected', async () => {
+      storage.getSettings.mockResolvedValue({
+        provider: 'ollama',
+        apiKeys: {},
+        providerConfig: { ollama: { model: '' } },
+      });
+      await aiService.init();
+
+      await expect(
+        aiService.chat({ messages: [{ role: 'user', content: 'go' }] })
+      ).rejects.toThrow('No model selected');
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('should list the models a local endpoint is serving', async () => {
+      storage.getSettings.mockResolvedValue({
+        provider: 'ollama',
+        apiKeys: {},
+        providerConfig: {},
+      });
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'qwen3' }, { id: 'llama3.2' }] })
+      );
+
+      const models = await aiService.listRemoteModels('ollama');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:11434/v1/models',
+        expect.anything()
+      );
+      expect(models).toEqual(['llama3.2', 'qwen3']);
+    });
+  });
+
+  describe('Scenario: Retired provider ids', () => {
+    it('should route a stored "llama" provider to Groq', async () => {
+      storage.getSettings.mockResolvedValue({
+        provider: 'llama',
+        apiKeys: { groq: 'test-key' },
+        providerConfig: {},
+      });
+      await aiService.init();
+      mockFetch.mockResolvedValueOnce(
+        jsonResponse({ choices: [{ message: { content: 'ok' } }] })
+      );
+
+      await aiService.chat({ messages: [{ role: 'user', content: 'go' }] });
+
+      expect(lastRequest().url).toBe(
+        'https://api.groq.com/openai/v1/chat/completions'
+      );
+    });
+  });
+});
+
 describe('AI Service Error Scenarios', () => {
   beforeEach(() => {
     installChromeMock();

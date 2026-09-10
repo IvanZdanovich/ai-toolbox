@@ -128,6 +128,45 @@
               </div>
             </div>
 
+            <div class="form-group hidden" id="baseUrlGroup">
+              <label class="form-label" for="baseUrl">Endpoint URL</label>
+              <input
+                type="text"
+                id="baseUrl"
+                class="form-input"
+                placeholder="http://localhost:11434/v1"
+              />
+              <p class="form-help">
+                OpenAI-compatible base URL. Leave blank to use the provider's
+                default.
+              </p>
+            </div>
+
+            <div class="form-group" id="modelGroup">
+              <label class="form-label" for="model">Model</label>
+              <div class="api-key-input-group">
+                <input
+                  type="text"
+                  id="model"
+                  class="form-input"
+                  list="modelOptions"
+                  placeholder="Model id"
+                  autocomplete="off"
+                />
+                <datalist id="modelOptions"></datalist>
+                <button
+                  type="button"
+                  class="btn btn-small btn-secondary hidden"
+                  id="refreshModelsBtn"
+                >
+                  <span class="btn-text">Refresh</span>
+                </button>
+              </div>
+              <p class="form-help" id="modelHelp">
+                Pick a suggested model or type any id the provider supports.
+              </p>
+            </div>
+
             <div id="connectionStatus" class="connection-status hidden">
               <!-- Connection test results will appear here -->
             </div>
@@ -243,7 +282,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- Scripts -->
-    <script type="module" src="../popup/components/toast.js"></script>
+    <script type="module" src="../shared/components/toast.js"></script>
     <script type="module" src="settings.js"></script>
   </body>
 </html>

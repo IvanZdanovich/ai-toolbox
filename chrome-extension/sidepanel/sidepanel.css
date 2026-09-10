@@ -555,3 +555,192 @@ html {
 
 /* All scrollable elements use consistent theme-aware scrollbars */
 
+/* ========================================
+   WORKFLOWS
+   ======================================== */
+
+.workflows-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.workflow-card-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  margin: var(--spacing-xs) 0;
+}
+
+.step-chip {
+  max-width: 100%;
+  padding: 1px var(--spacing-xs);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xxs);
+  font-weight: var(--font-weight-medium);
+  background: var(--color-background-hover);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-chip-agent {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+
+.step-arrow {
+  font-size: var(--font-size-xxs);
+  color: var(--color-text-secondary);
+}
+
+/* Step editor */
+
+.workflow-steps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-md);
+}
+
+.workflow-steps-header h4 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.workflow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.workflow-step {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-sm);
+  background: var(--color-background);
+}
+
+.workflow-step-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.workflow-step-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-xxs);
+  font-weight: var(--font-weight-bold);
+}
+
+.workflow-step-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Always visible: these act on the step being edited, not on hover targets */
+.workflow-step-actions {
+  opacity: 1;
+}
+
+.workflow-step-actions .action-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.workflow-step-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.workflow-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.step-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.step-tool-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+/* Run timeline */
+
+.run-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background);
+}
+
+.run-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+}
+
+.run-step-status {
+  flex: 0 0 auto;
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.run-step-status[data-status='running'] {
+  color: var(--color-primary);
+}
+
+.run-step-status[data-status='completed'] {
+  color: var(--color-success);
+}
+
+.run-step-status[data-status='failed'] {
+  color: var(--color-error);
+}
+
+.run-step-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.run-step-name {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.run-step-detail {
+  font-size: var(--font-size-xxs);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -142,7 +142,7 @@ export const AGENT_TOOLS = {
     name: 'run_template',
     label: 'Run a saved template',
     description:
-      'Run one of the user\'s saved prompt templates and return its output. Use this to reuse an existing, well-tuned prompt instead of rewriting it.',
+      "Run one of the user's saved prompt templates and return its output. Use this to reuse an existing, well-tuned prompt instead of rewriting it.",
     parameters: {
       type: 'object',
       properties: {

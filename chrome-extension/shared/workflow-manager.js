@@ -64,7 +64,9 @@ export function validateWorkflow(workflow) {
   if (steps.length === 0) {
     errors.push('A workflow needs at least one step');
   } else if (steps.length > LIMITS.MAX_WORKFLOW_STEPS) {
-    errors.push(`A workflow can have at most ${LIMITS.MAX_WORKFLOW_STEPS} steps`);
+    errors.push(
+      `A workflow can have at most ${LIMITS.MAX_WORKFLOW_STEPS} steps`
+    );
   }
 
   const seenKeys = new Set();

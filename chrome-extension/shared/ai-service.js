@@ -50,7 +50,15 @@ function extractErrorMessage(body, fallback) {
 }
 
 const openAiAdapter = {
-  buildRequest({ provider, baseUrl, apiKey, model, messages, tools, maxTokens }) {
+  buildRequest({
+    provider,
+    baseUrl,
+    apiKey,
+    model,
+    messages,
+    tools,
+    maxTokens,
+  }) {
     const body = {
       model,
       messages: messages.map((message) => {
@@ -119,7 +127,15 @@ const openAiAdapter = {
 };
 
 const anthropicAdapter = {
-  buildRequest({ provider, baseUrl, apiKey, model, messages, tools, maxTokens }) {
+  buildRequest({
+    provider,
+    baseUrl,
+    apiKey,
+    model,
+    messages,
+    tools,
+    maxTokens,
+  }) {
     const system = messages
       .filter((message) => message.role === 'system')
       .map((message) => message.content)

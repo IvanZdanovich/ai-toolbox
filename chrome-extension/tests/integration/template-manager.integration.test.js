@@ -43,9 +43,8 @@ describe('Template Manager Integration', () => {
 
     // Import fresh instances
     storage = (await import('../../shared/storage.js')).default;
-    const TemplateManagerModule = await import(
-      '../../shared/template-manager.js'
-    );
+    const TemplateManagerModule =
+      await import('../../shared/template-manager.js');
     templateManager = TemplateManagerModule.default;
 
     // vitest's mockReset strips the factory's implementations, so restore the
@@ -354,9 +353,8 @@ describe('Template Manager Error Handling', () => {
     const storage = (await import('../../shared/storage.js')).default;
     storage.getTemplates.mockRejectedValue(new Error('Storage unavailable'));
 
-    const TemplateManagerModule = await import(
-      '../../shared/template-manager.js'
-    );
+    const TemplateManagerModule =
+      await import('../../shared/template-manager.js');
     const templateManager = TemplateManagerModule.default;
 
     // Suppress expected console.error

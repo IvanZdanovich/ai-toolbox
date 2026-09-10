@@ -202,7 +202,8 @@ export const PROVIDERS = {
   [AI_PROVIDERS.OLLAMA]: {
     id: AI_PROVIDERS.OLLAMA,
     name: 'Ollama (local)',
-    description: 'Models running locally via Ollama — nothing leaves your machine',
+    description:
+      'Models running locally via Ollama — nothing leaves your machine',
     kind: PROVIDER_KIND.OPENAI,
     baseUrl: 'http://localhost:11434/v1',
     local: true,
@@ -226,7 +227,8 @@ export const PROVIDERS = {
     configurableBaseUrl: true,
     supportsTools: true,
     supportsModelListing: true,
-    setupUrl: 'https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md',
+    setupUrl:
+      'https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md',
     models: [],
     defaultModel: '',
   },

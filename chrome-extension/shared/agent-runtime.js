@@ -84,7 +84,9 @@ export class AgentRuntime {
 
         // A later step is written against the earlier one's output, so there is
         // nothing sensible to continue with.
-        const failure = new Error(`Step "${step.name}" failed: ${error.message}`);
+        const failure = new Error(
+          `Step "${step.name}" failed: ${error.message}`
+        );
         failure.steps = stepResults;
         throw failure;
       }

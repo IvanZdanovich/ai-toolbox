@@ -39,9 +39,8 @@ describe('History Manager Integration', () => {
     vi.resetModules();
 
     storage = (await import('../../shared/storage.js')).default;
-    const HistoryManagerModule = await import(
-      '../../shared/history-manager.js'
-    );
+    const HistoryManagerModule =
+      await import('../../shared/history-manager.js');
     historyManager = HistoryManagerModule.default;
 
     // Reset state
@@ -398,9 +397,8 @@ describe('History Manager Error Handling', () => {
     const storage = (await import('../../shared/storage.js')).default;
     storage.getHistory.mockRejectedValue(new Error('Storage unavailable'));
 
-    const HistoryManagerModule = await import(
-      '../../shared/history-manager.js'
-    );
+    const HistoryManagerModule =
+      await import('../../shared/history-manager.js');
     const historyManager = HistoryManagerModule.default;
 
     // Suppress expected console.error
@@ -421,9 +419,8 @@ describe('History Manager Error Handling', () => {
     const storage = (await import('../../shared/storage.js')).default;
     storage.getHistory.mockResolvedValue([]);
 
-    const HistoryManagerModule = await import(
-      '../../shared/history-manager.js'
-    );
+    const HistoryManagerModule =
+      await import('../../shared/history-manager.js');
     const historyManager = HistoryManagerModule.default;
     await historyManager.init();
 

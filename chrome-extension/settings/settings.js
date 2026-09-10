@@ -1,7 +1,8 @@
 import aiService from '../shared/ai-service.js';
 import storage from '../shared/storage.js';
 import { downloadAsJson, parseJsonFile } from '../shared/helpers.js';
-import { EXTENSION_VERSION } from '../shared/constants.js';
+import { EXTENSION_VERSION, EMPTY_API_KEYS } from '../shared/constants.js';
+import { AI_PROVIDERS, normalizeProviderId } from '../shared/providers.js';
 import Toast from '../shared/components/toast.js';
 
 class SettingsPage {
@@ -82,15 +83,14 @@ class SettingsPage {
     const providerSelect = document.getElementById('aiProvider');
     if (providerSelect) {
       providerSelect.addEventListener('change', (e) => {
-        const newProvider = e.target.value;
-        this.updateApiKeyVisibility(newProvider);
+        this.selectProvider(e.target.value);
+      });
+    }
 
-        // Load the API key for the newly selected provider
-        const apiKeyInput = document.getElementById('apiKey');
-        if (apiKeyInput) {
-          const providerApiKey = this.getApiKeyForProvider(newProvider);
-          apiKeyInput.value = providerApiKey || '';
-        }
+    const refreshModelsBtn = document.getElementById('refreshModelsBtn');
+    if (refreshModelsBtn) {
+      refreshModelsBtn.addEventListener('click', () => {
+        this.refreshModels();
       });
     }
 
@@ -144,9 +144,8 @@ class SettingsPage {
 
   populateForm() {
     const providerSelect = document.getElementById('aiProvider');
-    const apiKeyInput = document.getElementById('apiKey');
     const providers = aiService.getAvailableProviders();
-    const currentProvider = this.settings.provider || 'gemini';
+    const currentProvider = normalizeProviderId(this.settings.provider);
 
     // Build simple HTML string with selected attribute
     const optionsHTML = providers
@@ -162,12 +161,78 @@ class SettingsPage {
     providerSelect.style.color = 'inherit';
     providerSelect.style.webkitTextFillColor = 'inherit';
 
-    // Load API key for current provider
-    const currentApiKey = this.getApiKeyForProvider(currentProvider);
-    apiKeyInput.value = currentApiKey || '';
-
-    this.updateApiKeyVisibility(currentProvider);
+    this.selectProvider(currentProvider);
     this.updateStorageInfo();
+  }
+
+  // Loads every provider-scoped field — key, endpoint, model — for one provider.
+  selectProvider(providerId) {
+    const provider = aiService
+      .getAvailableProviders()
+      .find((candidate) => candidate.id === providerId);
+    if (!provider) {
+      return;
+    }
+
+    const config = this.settings.providerConfig?.[providerId] || {};
+
+    document.getElementById('apiKey').value =
+      this.getApiKeyForProvider(providerId) || '';
+    document.getElementById('baseUrl').value = config.baseUrl || '';
+    document.getElementById('baseUrl').placeholder =
+      provider.defaultBaseUrl || 'https://api.example.com/v1';
+    document.getElementById('model').value =
+      config.model || provider.defaultModel || '';
+
+    this.renderModelOptions(provider.models);
+    this.updateProviderVisibility(provider);
+  }
+
+  renderModelOptions(models) {
+    document.getElementById('modelOptions').innerHTML = models
+      .map((model) => `<option value="${model}"></option>`)
+      .join('');
+  }
+
+  async refreshModels() {
+    const providerId = document.getElementById('aiProvider').value;
+    const button = document.getElementById('refreshModelsBtn');
+
+    button.disabled = true;
+    try {
+      // Read the endpoint and key currently in the form rather than the saved
+      // ones, so listing works before the user hits Save.
+      const models = await aiService.withSettings(
+        {
+          ...this.settings,
+          apiKeys: {
+            ...this.settings.apiKeys,
+            [providerId]: document.getElementById('apiKey').value,
+          },
+          providerConfig: {
+            ...this.settings.providerConfig,
+            [providerId]: {
+              ...this.settings.providerConfig?.[providerId],
+              baseUrl: document.getElementById('baseUrl').value,
+            },
+          },
+        },
+        () => aiService.listRemoteModels(providerId)
+      );
+
+      this.renderModelOptions(models);
+      Toast.show(
+        models.length > 0
+          ? `Found ${models.length} model${models.length === 1 ? '' : 's'}`
+          : 'The endpoint reported no models',
+        models.length > 0 ? 'success' : 'warning'
+      );
+    } catch (error) {
+      console.error('Failed to list models:', error);
+      Toast.show(`Could not list models: ${error.message}`, 'error');
+    } finally {
+      button.disabled = false;
+    }
   }
 
   getApiKeyForProvider(provider) {
@@ -184,33 +249,42 @@ class SettingsPage {
     return '';
   }
 
-  updateApiKeyVisibility(provider) {
+  updateProviderVisibility(provider) {
     const apiKeyGroup = document.getElementById('apiKeyGroup');
     const apiKeyHelp = document.getElementById('apiKeyHelp');
     const providerDescription = document.getElementById('providerDescription');
-    const providers = aiService.getAvailableProviders();
-    const currentProvider = providers.find((p) => p.id === provider);
 
-    // Update provider description
-    if (currentProvider && currentProvider.description) {
-      providerDescription.textContent = currentProvider.description;
-      providerDescription.style.display = 'block';
+    providerDescription.textContent = provider.description || '';
+    providerDescription.style.display = provider.description ? 'block' : 'none';
+
+    // Local endpoints take an optional key (some proxies want one), so the
+    // field stays available whenever a key could plausibly be used.
+    const showApiKey = provider.requiresApiKey || provider.configurableBaseUrl;
+    apiKeyGroup.style.display = showApiKey ? 'block' : 'none';
+    apiKeyGroup.querySelector('#apiKey').placeholder = provider.requiresApiKey
+      ? 'Enter your API key...'
+      : 'Optional for this endpoint';
+
+    if (showApiKey && provider.apiKeyUrl) {
+      apiKeyHelp.href = provider.apiKeyUrl;
+      apiKeyHelp.textContent = provider.local ? 'Setup guide' : 'Get API Key';
+      apiKeyHelp.style.display = 'inline';
     } else {
-      providerDescription.style.display = 'none';
+      apiKeyHelp.style.display = 'none';
     }
 
-    // Update API key visibility
-    if (currentProvider && currentProvider.requiresApiKey) {
-      apiKeyGroup.style.display = 'block';
-      if (currentProvider.apiKeyUrl) {
-        apiKeyHelp.href = currentProvider.apiKeyUrl;
-        apiKeyHelp.style.display = 'inline';
-      } else {
-        apiKeyHelp.style.display = 'none';
-      }
-    } else {
-      apiKeyGroup.style.display = 'none';
-    }
+    document
+      .getElementById('baseUrlGroup')
+      .classList.toggle('hidden', !provider.configurableBaseUrl);
+
+    const isMock = provider.id === AI_PROVIDERS.MOCK;
+    document.getElementById('modelGroup').classList.toggle('hidden', isMock);
+    document
+      .getElementById('refreshModelsBtn')
+      .classList.toggle('hidden', !provider.supportsModelListing);
+    document.getElementById('modelHelp').textContent = provider.local
+      ? 'Type a model you have pulled locally, or press Refresh to list them.'
+      : 'Pick a suggested model or type any id the provider supports.';
   }
 
   async updateStorageInfo() {
@@ -254,7 +328,10 @@ class SettingsPage {
     try {
       // Validates against a temporary copy of the settings — testing must not
       // persist an unsaved provider/key the user never confirmed with Save.
-      const result = await aiService.validateApiKey(provider, apiKey);
+      const result = await aiService.validateApiKey(provider, apiKey, {
+        model: document.getElementById('model').value.trim(),
+        baseUrl: document.getElementById('baseUrl').value.trim(),
+      });
 
       statusEl.className = `connection-status ${result.valid ? 'success' : 'error'}`;
       statusEl.textContent = result.valid
@@ -276,25 +353,24 @@ class SettingsPage {
     const apiKey = document.getElementById('apiKey').value;
 
     try {
-      // Initialize apiKeys object if it doesn't exist
-      if (!this.settings.apiKeys) {
-        this.settings.apiKeys = {
-          openai: '',
-          claude: '',
-          gemini: '',
-          llama: '',
-          grok: '',
-        };
-      }
+      const apiKeys = { ...EMPTY_API_KEYS, ...this.settings.apiKeys };
+      apiKeys[provider] = apiKey;
 
-      // Save the API key for the selected provider
-      this.settings.apiKeys[provider] = apiKey;
+      const providerConfig = {
+        ...this.settings.providerConfig,
+        [provider]: {
+          ...this.settings.providerConfig?.[provider],
+          model: document.getElementById('model').value.trim(),
+          baseUrl: document.getElementById('baseUrl').value.trim(),
+        },
+      };
 
-      // Update settings with new provider and per-provider API keys
+      // Update settings with new provider, per-provider keys and model/endpoint
       await aiService.updateSettings({
         provider,
         apiKey, // Keep for backward compatibility
-        apiKeys: this.settings.apiKeys,
+        apiKeys,
+        providerConfig,
       });
 
       this.settings = await storage.getSettings();
@@ -307,17 +383,20 @@ class SettingsPage {
 
   async exportData() {
     try {
-      const templateManagerModule = await import(
-        '../shared/template-manager.js'
-      );
-      const templateManager = templateManagerModule.default;
+      const [{ default: templateManager }, { default: workflowManager }] =
+        await Promise.all([
+          import('../shared/template-manager.js'),
+          import('../shared/workflow-manager.js'),
+        ]);
 
-      await templateManager.init();
+      await Promise.all([templateManager.init(), workflowManager.init()]);
 
       const templates = await templateManager.exportTemplates();
+      const workflows = await workflowManager.exportWorkflows();
 
       const exportData = {
         templates: templates.templates,
+        workflows: workflows.workflows,
         exportedAt: new Date().toISOString(),
         version: EXTENSION_VERSION,
       };
@@ -340,24 +419,35 @@ class SettingsPage {
     try {
       const data = await parseJsonFile(file);
 
+      const imported = [];
+      const errors = [];
+
       if (data.templates) {
-        const templateManagerModule = await import(
-          '../shared/template-manager.js'
-        );
-        const templateManager = templateManagerModule.default;
+        const { default: templateManager } =
+          await import('../shared/template-manager.js');
         await templateManager.init();
 
         const result = await templateManager.importTemplates(data);
-        if (result.imported.length > 0) {
-          Toast.show(`Imported ${result.imported.length} templates`, 'success');
-        }
-        if (result.errors.length > 0) {
-          console.warn('Import errors:', result.errors);
-          Toast.show(
-            `${result.errors.length} templates failed to import`,
-            'warning'
-          );
-        }
+        imported.push(`${result.imported.length} templates`);
+        errors.push(...result.errors);
+      }
+
+      if (data.workflows) {
+        const { default: workflowManager } =
+          await import('../shared/workflow-manager.js');
+        await workflowManager.init();
+
+        const result = await workflowManager.importWorkflows(data);
+        imported.push(`${result.imported.length} workflows`);
+        errors.push(...result.errors);
+      }
+
+      if (imported.length > 0) {
+        Toast.show(`Imported ${imported.join(' and ')}`, 'success');
+      }
+      if (errors.length > 0) {
+        console.warn('Import errors:', errors);
+        Toast.show(`${errors.length} items failed to import`, 'warning');
       }
     } catch (error) {
       console.error('Import failed:', error);

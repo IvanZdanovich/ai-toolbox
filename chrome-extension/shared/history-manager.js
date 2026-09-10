@@ -278,17 +278,15 @@ class HistoryManager {
   async getHistoryForTemplate(templateId, limit = 10) {
     const entries = await this.getHistoryByTemplate(templateId);
 
-    return entries
-      .slice(0, limit)
-      .map((entry) => ({
-        id: entry.id,
-        inputs: entry.inputs,
-        result: entry.result,
-        status: entry.status,
-        timestamp: entry.timestamp,
-        formattedTime: formatRelativeTime(entry.timestamp),
-        duration: entry.duration,
-      }));
+    return entries.slice(0, limit).map((entry) => ({
+      id: entry.id,
+      inputs: entry.inputs,
+      result: entry.result,
+      status: entry.status,
+      timestamp: entry.timestamp,
+      formattedTime: formatRelativeTime(entry.timestamp),
+      duration: entry.duration,
+    }));
   }
 
   async getFavoriteTemplates(limit = 5) {

@@ -1,7 +1,12 @@
 import templateManager from '../shared/template-manager.js';
+import workflowManager, {
+  extractWorkflowVariables,
+} from '../shared/workflow-manager.js';
+import agentRuntime from '../shared/agent-runtime.js';
 import historyManager from '../shared/history-manager.js';
 import aiService from '../shared/ai-service.js';
 import storage from '../shared/storage.js';
+import { AGENT_TOOLS } from '../shared/agent-tools.js';
 import {
   formatRelativeTime,
   truncateText,
@@ -12,7 +17,14 @@ import {
   variableLabel,
   variablePlaceholder,
 } from '../shared/helpers.js';
-import { EVENTS, HISTORY_STATUS, EXTENSION_VERSION } from '../shared/constants.js';
+import {
+  EVENTS,
+  HISTORY_STATUS,
+  EXTENSION_VERSION,
+  LIMITS,
+  RUN_STATUS,
+  WORKFLOW_STEP_TYPES,
+} from '../shared/constants.js';
 import Toast from '../shared/components/toast.js';
 import Modal from '../shared/components/modal.js';
 
@@ -20,9 +32,15 @@ class SidePanelApp {
   constructor() {
     this.currentSection = 'templates';
     this.templates = [];
+    this.workflows = [];
     this.history = [];
     this.settings = null;
     this.currentTemplate = null;
+    this.currentWorkflow = null;
+    // Working copy of the steps being edited; the DOM is rebuilt from it
+    // whenever the shape changes (add, remove, reorder, type switch).
+    this.workflowDraftSteps = [];
+    this.runController = null;
     this.searchTimeout = null;
 
     this.init();
@@ -34,6 +52,7 @@ class SidePanelApp {
 
       await Promise.all([
         templateManager.init(),
+        workflowManager.init(),
         historyManager.init(),
         aiService.init(),
       ]);
@@ -59,6 +78,7 @@ class SidePanelApp {
   async loadData() {
     try {
       this.templates = await templateManager.getAllTemplates();
+      this.workflows = await workflowManager.getAllWorkflows();
       this.history = await historyManager.getAllHistory();
       this.settings = await storage.getSettings();
     } catch (error) {
@@ -75,7 +95,7 @@ class SidePanelApp {
       const lastSection = result.last_active_section;
       if (
         lastSection &&
-        (lastSection === 'templates' || lastSection === 'history')
+        ['templates', 'workflows', 'history'].includes(lastSection)
       ) {
         this.currentSection = lastSection;
         console.log('SidePanelApp: Restored last active section:', lastSection);
@@ -112,6 +132,18 @@ class SidePanelApp {
     document.getElementById('templateSearch').addEventListener(
       'input',
       debounce((e) => this.searchTemplates(e.target.value), 300)
+    );
+
+    // Workflows section
+    document
+      .getElementById('createWorkflowBtn')
+      .addEventListener('click', () => {
+        this.showWorkflowModal();
+      });
+
+    document.getElementById('workflowSearch').addEventListener(
+      'input',
+      debounce((e) => this.searchWorkflows(e.target.value), 300)
     );
 
     // History section
@@ -185,6 +217,58 @@ class SidePanelApp {
     document.getElementById('copyResultBtn').addEventListener('click', () => {
       this.copyResult();
     });
+
+    this.setupWorkflowModalEventListeners();
+  }
+
+  setupWorkflowModalEventListeners() {
+    document
+      .getElementById('workflowModalClose')
+      .addEventListener('click', () => {
+        Modal.hide('workflow');
+      });
+
+    document
+      .getElementById('workflowModalCancel')
+      .addEventListener('click', () => {
+        Modal.hide('workflow');
+      });
+
+    document.getElementById('workflowForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.saveWorkflow();
+    });
+
+    document.getElementById('addStepBtn').addEventListener('click', () => {
+      this.addWorkflowStep();
+    });
+
+    // Run modal
+    document.getElementById('runModalClose').addEventListener('click', () => {
+      this.closeRunModal();
+    });
+
+    document.getElementById('runModalCancel').addEventListener('click', () => {
+      this.closeRunModal();
+    });
+
+    document.getElementById('runModalStop').addEventListener('click', () => {
+      this.runController?.abort();
+    });
+
+    document.getElementById('runForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.runWorkflow();
+    });
+
+    document
+      .getElementById('copyRunResultBtn')
+      .addEventListener('click', () => {
+        const content = document.getElementById('runResultContent').textContent;
+        copyToClipboard(content)
+          .then(() => Toast.show('Result copied to clipboard', 'success'))
+          .catch(() => Toast.show('Failed to copy result', 'error'));
+      });
   }
 
   setupManagerEventListeners() {
@@ -208,6 +292,28 @@ class SidePanelApp {
       this.templates = this.templates.filter((t) => t.id !== template.id);
       this.renderTemplates();
       Toast.show('Template deleted successfully', 'success');
+    });
+
+    // Workflow manager events
+    workflowManager.on(EVENTS.WORKFLOW_CREATED, (workflow) => {
+      this.workflows.push(workflow);
+      this.renderWorkflows();
+      Toast.show('Workflow created successfully', 'success');
+    });
+
+    workflowManager.on(EVENTS.WORKFLOW_UPDATED, (workflow) => {
+      const index = this.workflows.findIndex((w) => w.id === workflow.id);
+      if (index !== -1) {
+        this.workflows[index] = workflow;
+        this.renderWorkflows();
+      }
+      Toast.show('Workflow updated successfully', 'success');
+    });
+
+    workflowManager.on(EVENTS.WORKFLOW_DELETED, (workflow) => {
+      this.workflows = this.workflows.filter((w) => w.id !== workflow.id);
+      this.renderWorkflows();
+      Toast.show('Workflow deleted successfully', 'success');
     });
 
     // History manager events
@@ -240,6 +346,8 @@ class SidePanelApp {
 
     if (section === 'templates') {
       this.renderTemplates();
+    } else if (section === 'workflows') {
+      this.renderWorkflows();
     } else if (section === 'history') {
       this.renderHistory();
     }
@@ -247,6 +355,7 @@ class SidePanelApp {
 
   render() {
     this.renderTemplates();
+    this.renderWorkflows();
     this.renderHistory();
   }
 
@@ -380,6 +489,568 @@ class SidePanelApp {
         });
       });
     });
+  }
+
+  renderWorkflows() {
+    const container = document.getElementById('workflowsList');
+    const emptyState = document.getElementById('workflowsEmpty');
+
+    if (this.workflows.length === 0) {
+      container.innerHTML = '';
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    container.innerHTML = this.workflows
+      .map((workflow) => {
+        const agentSteps = workflow.steps.filter(
+          (step) => step.type === WORKFLOW_STEP_TYPES.AGENT
+        ).length;
+
+        return `
+      <div class="template-card workflow-card" data-workflow-id="${workflow.id}">
+        <div class="template-card-header">
+          <h3 class="template-card-title">${sanitizeText(workflow.name)}</h3>
+          <div class="template-card-actions">
+            <button class="action-btn edit" data-action="edit" title="Edit workflow">✏️</button>
+            <button class="action-btn duplicate" data-action="duplicate" title="Duplicate workflow">📋</button>
+            <button class="action-btn export" data-action="export" title="Export workflow">📤</button>
+            <button class="action-btn delete" data-action="delete" title="Delete workflow">🗑️</button>
+          </div>
+        </div>
+        ${workflow.description ? `<p class="template-card-description">${sanitizeText(workflow.description)}</p>` : ''}
+        <div class="workflow-card-steps">
+          ${workflow.steps
+            .map(
+              (step) =>
+                `<span class="step-chip step-chip-${step.type}" title="${sanitizeText(step.name)}">${sanitizeText(step.name)}</span>`
+            )
+            .join('<span class="step-arrow">→</span>')}
+        </div>
+        <p class="template-card-meta">
+          ${workflow.steps.length} step${workflow.steps.length === 1 ? '' : 's'}${agentSteps > 0 ? ` • ${agentSteps} agent` : ''} •
+          Created: ${formatRelativeTime(workflow.createdAt)}
+        </p>
+      </div>
+    `;
+      })
+      .join('');
+
+    this.setupWorkflowCardEventListeners(container);
+  }
+
+  setupWorkflowCardEventListeners(container) {
+    container.querySelectorAll('.workflow-card').forEach((card) => {
+      const workflowId = card.dataset.workflowId;
+
+      card.addEventListener('click', (e) => {
+        if (!e.target.closest('.template-card-actions')) {
+          this.showRunModal(workflowId);
+        }
+      });
+
+      card.querySelectorAll('.action-btn').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+
+          try {
+            switch (btn.dataset.action) {
+              case 'edit': {
+                const workflow = await workflowManager.getWorkflow(workflowId);
+                if (workflow) {
+                  this.showWorkflowModal(workflow);
+                }
+                break;
+              }
+              case 'duplicate':
+                await workflowManager.duplicateWorkflow(workflowId);
+                break;
+              case 'export':
+                await this.exportWorkflow(workflowId);
+                break;
+              case 'delete':
+                await this.deleteWorkflow(workflowId);
+                break;
+            }
+          } catch (error) {
+            console.error('Workflow action failed:', error);
+            Toast.show(error.message, 'error');
+          }
+        });
+      });
+    });
+  }
+
+  async searchWorkflows(query) {
+    try {
+      this.workflows = await workflowManager.searchWorkflows(query);
+      this.renderWorkflows();
+    } catch (error) {
+      console.error('Workflow search failed:', error);
+      Toast.show('Workflow search failed', 'error');
+    }
+  }
+
+  async exportWorkflow(workflowId) {
+    const data = await workflowManager.exportWorkflows([workflowId]);
+    const workflow = data.workflows[0];
+    if (!workflow) {
+      Toast.show('Workflow not found', 'error');
+      return;
+    }
+
+    const filename = `${workflow.name
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase()}-workflow.json`;
+    downloadAsJson(data, filename);
+    Toast.show('Workflow exported successfully', 'success');
+  }
+
+  async deleteWorkflow(workflowId) {
+    const confirmed = await Modal.confirm(
+      'Delete Workflow',
+      'Are you sure you want to delete this workflow? This action cannot be undone.',
+      { confirmText: 'Delete', confirmClass: 'btn-danger' }
+    );
+
+    if (confirmed) {
+      await workflowManager.deleteWorkflow(workflowId);
+    }
+  }
+
+  // === Workflow editor ===
+
+  showWorkflowModal(workflow = null) {
+    this.currentWorkflow = workflow;
+
+    document.getElementById('workflowModalTitle').textContent = workflow
+      ? 'Edit Workflow'
+      : 'Create Workflow';
+    document.getElementById('workflowName').value = workflow?.name || '';
+    document.getElementById('workflowDescription').value =
+      workflow?.description || '';
+
+    this.workflowDraftSteps = workflow
+      ? workflow.steps.map((step) => ({
+          ...step,
+          tools: [...(step.tools || [])],
+        }))
+      : [this.blankStep(0)];
+
+    this.renderWorkflowSteps();
+    Modal.show('workflow');
+  }
+
+  blankStep(index) {
+    return {
+      name: `Step ${index + 1}`,
+      type: WORKFLOW_STEP_TYPES.PROMPT,
+      outputKey: `step_${index + 1}`,
+      prompt: '',
+      tools: [],
+      maxIterations: LIMITS.DEFAULT_AGENT_ITERATIONS,
+      templateId: '',
+    };
+  }
+
+  addWorkflowStep() {
+    this.syncWorkflowStepsFromDom();
+
+    if (this.workflowDraftSteps.length >= LIMITS.MAX_WORKFLOW_STEPS) {
+      Toast.show(
+        `A workflow can have at most ${LIMITS.MAX_WORKFLOW_STEPS} steps`,
+        'warning'
+      );
+      return;
+    }
+
+    this.workflowDraftSteps.push(
+      this.blankStep(this.workflowDraftSteps.length)
+    );
+    this.renderWorkflowSteps();
+  }
+
+  // Reads the editor fields back into the draft, so a re-render never discards
+  // what the user has typed.
+  syncWorkflowStepsFromDom() {
+    document
+      .querySelectorAll('#workflowSteps .workflow-step')
+      .forEach((element) => {
+        const step = this.workflowDraftSteps[Number(element.dataset.index)];
+        if (!step) {
+          return;
+        }
+
+        element.querySelectorAll('[data-field]').forEach((field) => {
+          step[field.dataset.field] = field.value;
+        });
+
+        const tools = element.querySelectorAll('.step-tool:checked');
+        if (element.querySelector('.step-tool')) {
+          step.tools = Array.from(tools).map((tool) => tool.dataset.tool);
+        }
+      });
+  }
+
+  renderWorkflowSteps() {
+    const container = document.getElementById('workflowSteps');
+    const templateOptions = this.templates
+      .map(
+        (template) =>
+          `<option value="${template.id}">${sanitizeText(template.name)}</option>`
+      )
+      .join('');
+
+    container.innerHTML = this.workflowDraftSteps
+      .map((step, index) => {
+        const typeOptions = [
+          [WORKFLOW_STEP_TYPES.PROMPT, 'Prompt — one model call'],
+          [WORKFLOW_STEP_TYPES.AGENT, 'Agent — tool-calling loop'],
+          [WORKFLOW_STEP_TYPES.TEMPLATE, 'Template — run a saved template'],
+        ]
+          .map(
+            ([value, label]) =>
+              `<option value="${value}"${step.type === value ? ' selected' : ''}>${label}</option>`
+          )
+          .join('');
+
+        const body =
+          step.type === WORKFLOW_STEP_TYPES.TEMPLATE
+            ? `<div class="workflow-field">
+                 <span class="input-mini-label">Template</span>
+                 <select class="form-input" data-field="templateId">
+                   <option value="">Choose a template…</option>
+                   ${templateOptions}
+                 </select>
+               </div>`
+            : `<div class="workflow-field">
+                 <span class="input-mini-label">${step.type === WORKFLOW_STEP_TYPES.AGENT ? 'Goal for the agent' : 'Prompt'}</span>
+                 <textarea class="form-textarea" data-field="prompt" rows="4"
+                   maxlength="${LIMITS.MAX_TEMPLATE_PROMPT_LENGTH}">${sanitizeText(step.prompt || '')}</textarea>
+               </div>`;
+
+        const agentOptions =
+          step.type === WORKFLOW_STEP_TYPES.AGENT
+            ? `<div class="workflow-field">
+                 <span class="input-mini-label">Tools the agent may call</span>
+                 <div class="step-tools">
+                   ${Object.values(AGENT_TOOLS)
+                     .map(
+                       (tool) => `
+                     <label class="step-tool-label" title="${sanitizeText(tool.description)}">
+                       <input type="checkbox" class="step-tool" data-tool="${tool.name}"
+                         ${(step.tools || []).includes(tool.name) ? 'checked' : ''} />
+                       ${sanitizeText(tool.label)}
+                     </label>`
+                     )
+                     .join('')}
+                 </div>
+               </div>
+               <div class="workflow-field">
+                 <span class="input-mini-label">Max tool iterations</span>
+                 <input type="number" class="form-input" data-field="maxIterations"
+                   min="1" max="${LIMITS.MAX_AGENT_ITERATIONS}"
+                   value="${step.maxIterations || LIMITS.DEFAULT_AGENT_ITERATIONS}" />
+               </div>`
+            : '';
+
+        return `
+      <div class="workflow-step" data-index="${index}">
+        <div class="workflow-step-header">
+          <span class="workflow-step-index">${index + 1}</span>
+          <input type="text" class="form-input workflow-step-name" data-field="name"
+            maxlength="50" value="${sanitizeText(step.name || '')}" placeholder="Step name" />
+          <div class="template-card-actions workflow-step-actions">
+            <button type="button" class="action-btn" data-step-action="up" title="Move up" ${index === 0 ? 'disabled' : ''}>↑</button>
+            <button type="button" class="action-btn" data-step-action="down" title="Move down" ${index === this.workflowDraftSteps.length - 1 ? 'disabled' : ''}>↓</button>
+            <button type="button" class="action-btn delete" data-step-action="remove" title="Remove step">🗑️</button>
+          </div>
+        </div>
+        <div class="workflow-step-fields">
+          <div class="workflow-field">
+            <span class="input-mini-label">Type</span>
+            <select class="form-input" data-field="type">${typeOptions}</select>
+          </div>
+          <div class="workflow-field">
+            <span class="input-mini-label">Output key — reference as {steps.key}</span>
+            <input type="text" class="form-input" data-field="outputKey"
+              value="${sanitizeText(step.outputKey || '')}" placeholder="e.g., findings" />
+          </div>
+          ${body}
+          ${agentOptions}
+        </div>
+      </div>`;
+      })
+      .join('');
+
+    if (
+      this.workflowDraftSteps.some(
+        (step) => step.type === WORKFLOW_STEP_TYPES.TEMPLATE
+      )
+    ) {
+      // <select> ignores a `selected` attribute set before its options exist in
+      // some render orders, so the value is applied after insertion.
+      container
+        .querySelectorAll('[data-field="templateId"]')
+        .forEach((select) => {
+          const index = Number(select.closest('.workflow-step').dataset.index);
+          select.value = this.workflowDraftSteps[index].templateId || '';
+        });
+    }
+
+    container.querySelectorAll('[data-field="type"]').forEach((select) => {
+      select.addEventListener('change', () => {
+        this.syncWorkflowStepsFromDom();
+        this.renderWorkflowSteps();
+      });
+    });
+
+    container.querySelectorAll('[data-step-action]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const index = Number(button.closest('.workflow-step').dataset.index);
+        this.syncWorkflowStepsFromDom();
+
+        const steps = this.workflowDraftSteps;
+        switch (button.dataset.stepAction) {
+          case 'up':
+            [steps[index - 1], steps[index]] = [steps[index], steps[index - 1]];
+            break;
+          case 'down':
+            [steps[index + 1], steps[index]] = [steps[index], steps[index + 1]];
+            break;
+          case 'remove':
+            if (steps.length === 1) {
+              Toast.show('A workflow needs at least one step', 'warning');
+              return;
+            }
+            steps.splice(index, 1);
+            break;
+        }
+
+        this.renderWorkflowSteps();
+      });
+    });
+  }
+
+  async saveWorkflow() {
+    this.syncWorkflowStepsFromDom();
+
+    const data = {
+      name: document.getElementById('workflowName').value.trim(),
+      description: document.getElementById('workflowDescription').value.trim(),
+      steps: this.workflowDraftSteps,
+    };
+
+    try {
+      if (this.currentWorkflow) {
+        await workflowManager.updateWorkflow(this.currentWorkflow.id, data);
+      } else {
+        await workflowManager.createWorkflow(data);
+      }
+
+      Modal.hide('workflow');
+      this.currentWorkflow = null;
+    } catch (error) {
+      console.error('Failed to save workflow:', error);
+      Toast.show(`Failed to save workflow: ${error.message}`, 'error');
+    }
+  }
+
+  // === Workflow runs ===
+
+  async showRunModal(workflowId) {
+    const workflow = await workflowManager.getWorkflow(workflowId);
+    if (!workflow) {
+      Toast.show('Workflow not found', 'error');
+      return;
+    }
+
+    this.currentWorkflow = workflow;
+    document.getElementById('runModalTitle').textContent =
+      `Run: ${workflow.name}`;
+
+    const variables = extractWorkflowVariables(workflow);
+    const inputsContainer = document.getElementById('runInputs');
+    inputsContainer.innerHTML =
+      variables.length > 0
+        ? variables
+            .map(
+              (variable) => `
+        <div class="form-group">
+          <label class="form-label" for="run_${sanitizeText(variable)}">${sanitizeText(variableLabel(variable))}</label>
+          <textarea id="run_${sanitizeText(variable)}" name="${sanitizeText(variable)}"
+            class="form-textarea" rows="2"
+            placeholder="${sanitizeText(variablePlaceholder(variable))}"></textarea>
+        </div>`
+            )
+            .join('')
+        : '<p>This workflow takes no inputs — just run it.</p>';
+
+    this.resetRunUi(workflow);
+    Modal.show('run');
+  }
+
+  resetRunUi(workflow) {
+    const timeline = document.getElementById('runTimeline');
+    timeline.classList.remove('hidden');
+    timeline.innerHTML = workflow.steps
+      .map(
+        (step) => `
+      <div class="run-step" data-step-id="${step.id}">
+        <span class="run-step-status" data-status="${RUN_STATUS.PENDING}">○</span>
+        <div class="run-step-body">
+          <span class="run-step-name">${sanitizeText(step.name)}</span>
+          <span class="run-step-detail"></span>
+        </div>
+      </div>`
+      )
+      .join('');
+
+    document.getElementById('runResult').classList.add('hidden');
+    document.getElementById('runError').classList.add('hidden');
+    document.getElementById('runModalStop').classList.add('hidden');
+
+    const startBtn = document.getElementById('runModalStart');
+    startBtn.disabled = false;
+    startBtn.textContent = 'Run Workflow';
+  }
+
+  updateRunStep(stepId, status, detail) {
+    const element = document.querySelector(
+      `#runTimeline .run-step[data-step-id="${stepId}"]`
+    );
+    if (!element) {
+      return;
+    }
+
+    const icons = {
+      [RUN_STATUS.PENDING]: '○',
+      [RUN_STATUS.RUNNING]: '◐',
+      [RUN_STATUS.COMPLETED]: '●',
+      [RUN_STATUS.FAILED]: '✕',
+    };
+
+    const statusEl = element.querySelector('.run-step-status');
+    statusEl.dataset.status = status;
+    statusEl.textContent = icons[status] || '○';
+
+    if (detail !== undefined) {
+      element.querySelector('.run-step-detail').textContent = detail;
+    }
+  }
+
+  async runWorkflow() {
+    const workflow = this.currentWorkflow;
+    if (!workflow || this.runController) {
+      return;
+    }
+
+    const inputs = Object.fromEntries(
+      new FormData(document.getElementById('runForm')).entries()
+    );
+
+    const startBtn = document.getElementById('runModalStart');
+    const stopBtn = document.getElementById('runModalStop');
+    const errorEl = document.getElementById('runError');
+    const resultEl = document.getElementById('runResult');
+
+    this.resetRunUi(workflow);
+    startBtn.disabled = true;
+    startBtn.textContent = 'Running…';
+    stopBtn.classList.remove('hidden');
+    this.runController = new AbortController();
+
+    try {
+      const run = await agentRuntime.runWorkflow(workflow, inputs, {
+        signal: this.runController.signal,
+        onEvent: (event) => this.handleRunEvent(event),
+      });
+
+      document.getElementById('runResultContent').textContent = run.output;
+      document.getElementById('runResultMeta').innerHTML = `
+        <span>Steps: ${run.steps.length}</span>
+        <span>Duration: ${Math.round(run.duration / 100) / 10}s</span>
+      `;
+      resultEl.classList.remove('hidden');
+
+      await historyManager.addHistoryEntry(
+        workflow.id,
+        `${workflow.name} (workflow)`,
+        inputs,
+        run.output,
+        HISTORY_STATUS.COMPLETED
+      );
+
+      Toast.show('Workflow completed', 'success');
+    } catch (error) {
+      console.error('Workflow run failed:', error);
+      errorEl.querySelector('.error-message').textContent = error.message;
+      errorEl.classList.remove('hidden');
+
+      await historyManager.addHistoryEntry(
+        workflow.id,
+        `${workflow.name} (workflow)`,
+        inputs,
+        '',
+        HISTORY_STATUS.FAILED
+      );
+    } finally {
+      this.runController = null;
+      stopBtn.classList.add('hidden');
+      startBtn.disabled = false;
+      startBtn.textContent = 'Run Workflow';
+    }
+  }
+
+  handleRunEvent(event) {
+    switch (event.type) {
+      case 'step-start':
+        this.updateRunStep(event.step.id, RUN_STATUS.RUNNING, 'working…');
+        break;
+      case 'step-complete':
+        this.updateRunStep(
+          event.step.id,
+          RUN_STATUS.COMPLETED,
+          `${truncateText(event.result.output.replace(/\s+/g, ' '), 60) || 'done'}`
+        );
+        break;
+      case 'step-error':
+        this.updateRunStep(
+          event.step.id,
+          RUN_STATUS.FAILED,
+          event.result.error
+        );
+        break;
+      case 'agent-iteration':
+        this.updateRunStep(
+          event.step.id,
+          RUN_STATUS.RUNNING,
+          `thinking (${event.iteration}/${event.maxIterations})…`
+        );
+        break;
+      case 'tool-call':
+        this.updateRunStep(
+          event.step.id,
+          RUN_STATUS.RUNNING,
+          `calling ${event.tool}…`
+        );
+        break;
+      case 'tool-error':
+        this.updateRunStep(
+          event.step.id,
+          RUN_STATUS.RUNNING,
+          `${event.tool} failed: ${truncateText(event.error, 40)}`
+        );
+        break;
+    }
+  }
+
+  closeRunModal() {
+    this.runController?.abort();
+    Modal.hide('run');
   }
 
   setupHistoryEventListeners(container) {
@@ -548,11 +1219,14 @@ class SidePanelApp {
     try {
       const prompt = `Generate a concise, professional description (max 50 words) for a template named "${templateName}". The description should explain what this template does and when to use it. Return only the description text without quotes or extra formatting.`;
 
-      const response = await aiService.processTemplate({
-        name: 'Generate Description',
-        prompt: prompt,
-        inputs: [],
-      }, {});
+      const response = await aiService.processTemplate(
+        {
+          name: 'Generate Description',
+          prompt: prompt,
+          inputs: [],
+        },
+        {}
+      );
 
       // AI service returns { result, duration, provider, ... }
       const result = response?.result || response;
@@ -565,10 +1239,7 @@ class SidePanelApp {
       }
     } catch (error) {
       console.error('Failed to generate description:', error);
-      Toast.show(
-        `Failed to generate description: ${error.message}`,
-        'error'
-      );
+      Toast.show(`Failed to generate description: ${error.message}`, 'error');
     } finally {
       // Re-enable button and restore text
       generateBtn.disabled = false;
@@ -617,16 +1288,23 @@ Example format: "Write an email about {topic} for {audience}. Include key points
 
 Generate the prompt template now:`;
 
-      const result = await aiService.processTemplate({
-        name: 'Generate Prompt',
-        prompt: promptTemplate,
-        inputs: [],
-      }, {});
+      const result = await aiService.processTemplate(
+        {
+          name: 'Generate Prompt',
+          prompt: promptTemplate,
+          inputs: [],
+        },
+        {}
+      );
 
       // AI service returns { result, duration, provider, ... }
       const generatedPrompt = result?.result || result;
 
-      if (generatedPrompt && typeof generatedPrompt === 'string' && generatedPrompt.trim()) {
+      if (
+        generatedPrompt &&
+        typeof generatedPrompt === 'string' &&
+        generatedPrompt.trim()
+      ) {
         promptInput.value = generatedPrompt.trim();
         // Trigger the input event to update variables display
         promptInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -636,10 +1314,7 @@ Generate the prompt template now:`;
       }
     } catch (error) {
       console.error('Failed to generate prompt:', error);
-      Toast.show(
-        `Failed to generate prompt: ${error.message}`,
-        'error'
-      );
+      Toast.show(`Failed to generate prompt: ${error.message}`, 'error');
     } finally {
       // Re-enable button and restore text
       generateBtn.disabled = false;
