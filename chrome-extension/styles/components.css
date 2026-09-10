@@ -21,12 +21,17 @@
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
+  background: var(--gradient-accent);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-glow);
+  filter: brightness(1.06);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn-secondary {
@@ -180,7 +185,7 @@ select.form-input option:checked {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-lg);
   background-color: var(--color-background);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .template-card-header {
@@ -231,6 +236,20 @@ select.form-input option:checked {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: overlay-in var(--transition-normal) ease;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
 }
 
 .modal {
@@ -243,6 +262,10 @@ select.form-input option:checked {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.modal-overlay .modal {
+  animation: modal-in var(--transition-normal) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-large {

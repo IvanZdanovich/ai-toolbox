@@ -7,6 +7,7 @@ import historyManager from '../shared/history-manager.js';
 import aiService from '../shared/ai-service.js';
 import storage from '../shared/storage.js';
 import { AGENT_TOOLS } from '../shared/agent-tools.js';
+import IconHelper from '../shared/icon-helper.js';
 import {
   formatRelativeTime,
   truncateText,
@@ -379,16 +380,16 @@ class SidePanelApp {
           <h3 class="template-card-title">${sanitizeText(template.name)}</h3>
           <div class="template-card-actions">
             <button class="action-btn edit" data-action="edit" title="Edit template">
-              ✏️
+              ${IconHelper.iconHTML('edit', 'sm')}
             </button>
             <button class="action-btn duplicate" data-action="duplicate" title="Duplicate template">
-              📋
+              ${IconHelper.iconHTML('copy', 'sm')}
             </button>
             <button class="action-btn export" data-action="export" title="Export template">
-              📤
+              ${IconHelper.iconHTML('export', 'sm')}
             </button>
             <button class="action-btn delete" data-action="delete" title="Delete template">
-              🗑️
+              ${IconHelper.iconHTML('delete', 'sm', 'error')}
             </button>
           </div>
         </div>
@@ -448,7 +449,7 @@ class SidePanelApp {
         <div class="history-entry-actions">
           <button class="btn btn-small btn-secondary" data-action="copy">Copy Result</button>
           <button class="btn btn-small btn-secondary" data-action="rerun">Rerun</button>
-          <button class="btn btn-small btn-secondary" data-action="delete">🗑️</button>
+          <button class="btn btn-small btn-secondary" data-action="delete">${IconHelper.iconHTML('delete', 'sm')}</button>
         </div>
       </div>
     `
@@ -514,10 +515,10 @@ class SidePanelApp {
         <div class="template-card-header">
           <h3 class="template-card-title">${sanitizeText(workflow.name)}</h3>
           <div class="template-card-actions">
-            <button class="action-btn edit" data-action="edit" title="Edit workflow">✏️</button>
-            <button class="action-btn duplicate" data-action="duplicate" title="Duplicate workflow">📋</button>
-            <button class="action-btn export" data-action="export" title="Export workflow">📤</button>
-            <button class="action-btn delete" data-action="delete" title="Delete workflow">🗑️</button>
+            <button class="action-btn edit" data-action="edit" title="Edit workflow">${IconHelper.iconHTML('edit', 'sm')}</button>
+            <button class="action-btn duplicate" data-action="duplicate" title="Duplicate workflow">${IconHelper.iconHTML('copy', 'sm')}</button>
+            <button class="action-btn export" data-action="export" title="Export workflow">${IconHelper.iconHTML('export', 'sm')}</button>
+            <button class="action-btn delete" data-action="delete" title="Delete workflow">${IconHelper.iconHTML('delete', 'sm', 'error')}</button>
           </div>
         </div>
         ${workflow.description ? `<p class="template-card-description">${sanitizeText(workflow.description)}</p>` : ''}
@@ -766,7 +767,7 @@ class SidePanelApp {
           <div class="template-card-actions workflow-step-actions">
             <button type="button" class="action-btn" data-step-action="up" title="Move up" ${index === 0 ? 'disabled' : ''}>↑</button>
             <button type="button" class="action-btn" data-step-action="down" title="Move down" ${index === this.workflowDraftSteps.length - 1 ? 'disabled' : ''}>↓</button>
-            <button type="button" class="action-btn delete" data-step-action="remove" title="Remove step">🗑️</button>
+            <button type="button" class="action-btn delete" data-step-action="remove" title="Remove step">${IconHelper.iconHTML('delete', 'sm')}</button>
           </div>
         </div>
         <div class="workflow-step-fields">

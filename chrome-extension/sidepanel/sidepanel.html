@@ -7,10 +7,81 @@
     <link rel="stylesheet" href="../styles/variables.css" />
     <link rel="stylesheet" href="../styles/base.css" />
     <link rel="stylesheet" href="../styles/components.css" />
+    <link rel="stylesheet" href="../styles/icons.css" />
     <link rel="stylesheet" href="sidepanel.css" />
   </head>
   <body>
+    <!-- SVG Icon Sprite -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+      <symbol id="icon-settings" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"
+        />
+      </symbol>
+      <symbol id="icon-magic" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9m-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5M19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15Z"
+        />
+      </symbol>
+      <symbol id="icon-add" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+      </symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
+        />
+      </symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5L20.49 19l-5-5m-6 0A4.5 4.5 0 1 1 14 9.5A4.5 4.5 0 0 1 9.5 14Z"
+        />
+      </symbol>
+      <symbol id="icon-edit" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"
+        />
+      </symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1m3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m0 16H8V7h11v14Z"
+        />
+      </symbol>
+      <symbol id="icon-export" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+        />
+      </symbol>
+      <symbol id="icon-delete" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12M19 4h-3.5l-1-1h-5l-1 1H5v2h14V4Z"
+        />
+      </symbol>
+    </svg>
+
     <div class="sidepanel-container">
+      <!-- Brand Header -->
+      <header class="app-header">
+        <div class="app-brand">
+          <span class="app-logo" aria-hidden="true">
+            <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none">
+              <path
+                fill="currentColor"
+                d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9m-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5M19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15Z"
+              />
+            </svg>
+          </span>
+          <span class="app-name">AI Toolbox</span>
+        </div>
+      </header>
+
       <!-- Navigation -->
       <nav class="nav-tabs">
         <button class="nav-tab active" data-section="templates">
@@ -26,9 +97,10 @@
         <section id="templates" class="section active">
           <div class="section-header">
             <button class="btn btn-primary btn-small" id="createTemplateBtn">
-              <span class="btn-icon">+</span>New Template
+              <svg class="icon icon--sm"><use href="#icon-add"></use></svg>New Template
             </button>
             <div class="search-box">
+              <svg class="icon icon--sm search-box-icon"><use href="#icon-search"></use></svg>
               <input
                 type="text"
                 id="templateSearch"
@@ -52,9 +124,10 @@
         <section id="workflows" class="section">
           <div class="section-header">
             <button class="btn btn-primary btn-small" id="createWorkflowBtn">
-              <span class="btn-icon">+</span>New Workflow
+              <svg class="icon icon--sm"><use href="#icon-add"></use></svg>New Workflow
             </button>
             <div class="search-box">
+              <svg class="icon icon--sm search-box-icon"><use href="#icon-search"></use></svg>
               <input
                 type="text"
                 id="workflowSearch"
@@ -81,6 +154,7 @@
               Clear All
             </button>
             <div class="search-box">
+              <svg class="icon icon--sm search-box-icon"><use href="#icon-search"></use></svg>
               <input
                 type="text"
                 id="historySearch"
@@ -110,7 +184,7 @@
             id="settingsBtn"
             title="Settings"
           >
-            ⚙️
+            <svg class="icon icon--md icon-settings"><use href="#icon-settings"></use></svg>
           </button>
         </div>
       </footer>
@@ -121,7 +195,7 @@
       <div class="modal">
         <div class="modal-header">
           <h2 class="modal-title" id="templateModalTitle">Create Template</h2>
-          <button class="modal-close" id="templateModalClose">×</button>
+          <button class="modal-close" id="templateModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
         </div>
         <div class="modal-body">
           <form id="templateForm">
@@ -147,7 +221,7 @@
                   id="generateDescriptionBtn"
                   title="Generate description from template name"
                 >
-                  <span class="btn-icon">✨</span>Generate
+                  <svg class="icon icon--sm"><use href="#icon-magic"></use></svg>Generate
                 </button>
               </div>
               <input
@@ -167,7 +241,7 @@
                   id="generatePromptBtn"
                   title="Generate prompt from template name and description"
                 >
-                  <span class="btn-icon">✨</span>Generate
+                  <svg class="icon icon--sm"><use href="#icon-magic"></use></svg>Generate
                 </button>
               </div>
               <p class="form-help">Use {variable_name} for dynamic inputs</p>
@@ -210,7 +284,7 @@
       <div class="modal">
         <div class="modal-header">
           <h2 class="modal-title" id="executeModalTitle">Execute Template</h2>
-          <button class="modal-close" id="executeModalClose">×</button>
+          <button class="modal-close" id="executeModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
         </div>
         <div class="modal-body">
           <form id="executeForm">
@@ -264,7 +338,7 @@
       <div class="modal">
         <div class="modal-header">
           <h2 class="modal-title" id="workflowModalTitle">Create Workflow</h2>
-          <button class="modal-close" id="workflowModalClose">×</button>
+          <button class="modal-close" id="workflowModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
         </div>
         <div class="modal-body">
           <form id="workflowForm">
@@ -298,7 +372,7 @@
                 class="btn btn-small btn-secondary"
                 id="addStepBtn"
               >
-                <span class="btn-icon">+</span>Add Step
+                <svg class="icon icon--sm"><use href="#icon-add"></use></svg>Add Step
               </button>
             </div>
             <p class="form-help">
@@ -338,7 +412,7 @@
       <div class="modal">
         <div class="modal-header">
           <h2 class="modal-title" id="runModalTitle">Run Workflow</h2>
-          <button class="modal-close" id="runModalClose">×</button>
+          <button class="modal-close" id="runModalClose"><svg class="icon icon--sm"><use href="#icon-close"></use></svg></button>
         </div>
         <div class="modal-body">
           <form id="runForm">

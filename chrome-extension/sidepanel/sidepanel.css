@@ -43,6 +43,41 @@ html {
 }
 
 /* ========================================
+   HEADER - Brand
+   ======================================== */
+
+.app-header {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.app-logo {
+  display: inline-flex;
+  color: transparent;
+  background: var(--gradient-accent);
+  background-clip: text;
+}
+
+.app-logo .icon {
+  color: inherit;
+}
+
+.app-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+/* ========================================
    NAVIGATION - Sidepanel tabs
    ======================================== */
 
@@ -64,6 +99,7 @@ html {
   cursor: pointer;
   transition: all var(--transition-fast);
   border-bottom: 2px solid transparent;
+  position: relative;
 }
 
 .nav-tab:hover {
@@ -73,8 +109,17 @@ html {
 
 .nav-tab.active {
   color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
   background: var(--color-background);
+}
+
+.nav-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--gradient-accent);
 }
 
 /* ========================================
@@ -164,13 +209,24 @@ html {
    ======================================== */
 
 .search-box {
+  position: relative;
   flex: 1;
   max-width: 300px;
   min-width: 150px;
 }
 
+.search-box-icon {
+  position: absolute;
+  left: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
 .search-box .form-input {
   height: var(--button-height);
+  padding-left: calc(var(--spacing-sm) * 2 + 1em);
   font-size: var(--font-size-xs);
 }
 
@@ -271,11 +327,22 @@ html {
 }
 
 .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
   padding: var(--spacing-xxs) var(--spacing-xs);
   border-radius: var(--border-radius);
   font-size: var(--font-size-xxs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
+}
+
+.status-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
 }
 
 .status-badge.completed {
@@ -318,6 +385,17 @@ html {
   text-align: center;
   padding: var(--spacing-xxl) var(--spacing-md);
   color: var(--color-text-secondary);
+}
+
+.empty-state::before {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--spacing-md);
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  opacity: 0.12;
 }
 
 .empty-state h3 {

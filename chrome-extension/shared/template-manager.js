@@ -78,22 +78,18 @@ class TemplateManager {
         id: generateId(),
         name: 'Social Media Post',
         description: 'Create engaging social media posts for any platform',
-        prompt: `Create a social media post based on:
+        prompt: `Write a {platform} post about: {topic}
 
-**Topic/Message:** {topic}
+Tone: {tone}
 
-**Platform:** {platform}
+Open with a hook in the first line — a claim, question, or number, not a
+generic greeting. Follow platform conventions for {platform} specifically:
+character/length limit, whether hashtags belong inline or at the end, and
+how many (if any) fit the platform's norms. Include a call-to-action only if
+one makes sense for this topic — do not force one in.
 
-**Tone:** {tone}
-
-Create an engaging post that:
-- Captures attention with a strong hook
-- Delivers the message clearly and concisely
-- Includes a call-to-action if appropriate
-- Uses platform best practices (hashtags for Instagram/Twitter, professional tone for LinkedIn)
-- Stays within platform character limits
-
-Format the post ready to publish (no meta-commentary).`,
+Write only the finished post, ready to paste and publish. No title, no
+"Option 1/2", no explanation of the choices you made.`,
         inputs: [
           {
             name: 'topic',
@@ -123,22 +119,24 @@ Format the post ready to publish (no meta-commentary).`,
         id: generateId(),
         name: 'Excel Formula Helper',
         description: 'Generate Excel/Google Sheets formulas from plain English',
-        prompt: `Generate an Excel/Google Sheets formula for this task:
+        prompt: `Write a {sheet_type} formula for this task: {goal}
 
-**What I Need:** {goal}
+Data layout: {data_structure}
 
-**Data Structure:** {data_structure}
+Give:
+1. **Formula** — the exact, copy-paste-ready formula referencing the actual
+   columns/ranges described above (not generic placeholders like "range").
+2. **How it works** — walk through each function call in the formula, in
+   the order it evaluates, in one sentence each.
+3. **Worked example** — 3-4 rows of sample data matching the described
+   layout, plus the value the formula returns on that data.
+4. **Gotchas** — only things that actually apply here: e.g. this formula
+   breaks if the sheet_type is the other one, requires a non-default array
+   setting, or is sensitive to blank cells in the range. Skip this section
+   if nothing applies.
 
-**Sheet Type:** {sheet_type}
-
-Provide:
-1. **Formula:** The exact formula to use
-2. **Explanation:** Step-by-step breakdown of how it works
-3. **Example:** A concrete example with sample data
-4. **Notes:** Any important considerations or limitations
-5. **Alternatives:** Other approaches if applicable
-
-Make the formula copy-paste ready.`,
+Do not suggest an alternate approach unless the direct formula is genuinely
+impractical.`,
         inputs: [
           {
             name: 'goal',
@@ -169,25 +167,26 @@ Make the formula copy-paste ready.`,
         id: generateId(),
         name: 'Email Triage & Enhancement',
         description: 'Analyze, prioritize, and improve draft emails',
-        prompt: `Analyze and enhance this email:
+        prompt: `Triage and rewrite this draft email:
 
-**Draft Email:**
 {draft_email}
 
-**Context:** {context}
+Context: {context}
 
-Provide:
-1. **Priority Assessment:** [Urgent/High/Medium/Low] with reasoning
-2. **Key Action Items:** What needs to be done
-3. **Enhanced Version:** Improved draft that is:
-   - Clear and concise
-   - Properly structured
-   - Professional and polished
-   - Action-oriented where appropriate
-4. **Suggested Subject Line:** If not provided
-5. **Recommendations:** Any additional improvements
+Give:
+1. **Priority** — Urgent / High / Medium / Low, with one sentence citing
+   what in the email or context drives that (a deadline, a blocker, who's
+   waiting on it). If nothing signals urgency, say Medium and say why.
+2. **What this email is actually asking the reader to do** — one line. If
+   the draft doesn't make that clear yet, note it here so the rewrite fixes
+   it.
+3. **Rewrite** — same intent, tightened: cut hedging and filler, put the
+   ask in the first two sentences, fix tone mismatches for {context}. Keep
+   every fact and commitment from the original; don't add ones that aren't
+   there.
+4. **Subject line** — only if the original had none or a weak one.
 
-Format the enhanced email ready to send.`,
+Skip sections that don't apply rather than padding them.`,
         inputs: [
           {
             name: 'draft_email',
@@ -210,24 +209,22 @@ Format the enhanced email ready to send.`,
         id: generateId(),
         name: 'Email/Message Response',
         description: 'Generate complete responses to emails or messages',
-        prompt: `Write a complete response based on:
+        prompt: `Write a reply to this message:
 
-**Original Message:**
 {original_message}
 
-**Your Key Points:**
-{key_points}
+Points I need to make: {key_points}
 
-**Tone:** {tone}
+Tone: {tone}
 
-Create a polished response that:
-- Addresses all points from the original message
-- Incorporates your key points naturally
-- Maintains the specified tone
-- Is clear, professional, and well-structured
-- Includes appropriate greeting and closing
+Address every question or request in the original message — don't skip one
+because it's inconvenient. Work in each of my key points where it's
+relevant to what they asked; don't tack them on as an unrelated list.
+Match the greeting/closing style already used in the original message if
+one is visible there, otherwise pick one appropriate for {tone}.
 
-Format the response ready to send (no meta-commentary).`,
+Output only the reply text, ready to send. No subject line, no brackets,
+no notes about what you did.`,
         inputs: [
           {
             name: 'original_message',
@@ -257,50 +254,35 @@ Format the response ready to send (no meta-commentary).`,
         id: generateId(),
         name: 'Bug Ticket from Title',
         description: 'Create detailed bug tickets from brief title drafts',
-        prompt: `Create a detailed bug ticket from this title: "{title_draft}"
+        prompt: `Turn this rough bug title into a ticket a developer can pick up
+without asking clarifying questions: "{title_draft}"
 
-**Environment:** {environment}
+Environment: {environment}
 
-Format as:
-**Title:** [Clear, specific bug title]
+**Title:** a specific, searchable rewrite of the draft — name the
+component/screen and the failure, not just the symptom (e.g. "Login button
+unresponsive on iOS Safari after password autofill", not "login broken").
 
-**Type:** Bug
+**Priority:** Critical/High/Medium/Low, with the one-sentence reason (data
+loss and no workaround → Critical; cosmetic and rare → Low).
 
-**Priority:** [Critical/High/Medium/Low]
+**Steps to reproduce:** write the concrete sequence implied by the title
+and environment. Where the title doesn't specify a detail (which button,
+which page state), write your best specific guess and mark it
+"(assumed)" rather than leaving a vague step — a wrong assumption is easier
+to correct than a placeholder.
 
-**Description:**
-[2-3 sentences describing the bug and its impact]
+**Expected vs. actual:** one line each, contrasting directly.
 
-**Environment:**
-- {environment}
-- [Additional relevant environment details]
+**Likely cause:** only include this if the title/environment make one
+plausible (e.g. "autofill event probably fires after the handler binds");
+omit the section entirely if you'd be guessing blind.
 
-**Steps to Reproduce:**
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-4. [Observe the issue]
+**Labels:** bug, {environment}, plus one label for the affected area if
+it's identifiable from the title.
 
-**Expected Behavior:**
-[What should happen]
-
-**Actual Behavior:**
-[What actually happens]
-
-**Impact:**
-[How this affects users/system]
-
-**Possible Cause:**
-[Technical hypothesis if obvious from the title]
-
-**Acceptance Criteria:**
-- [ ] Bug is reproducible
-- [ ] Root cause identified
-- [ ] Fix implemented
-- [ ] Tests added
-- [ ] No regression in related features
-
-**Labels:** bug, {environment}`,
+Do not include an acceptance-criteria checklist — that belongs to
+whoever picks up the fix, not the ticket author.`,
         inputs: [
           {
             name: 'title_draft',
@@ -322,47 +304,29 @@ Format as:
         id: generateId(),
         name: 'Story Ticket from Title',
         description: 'Create user story tickets from brief title drafts',
-        prompt: `Create a user story ticket from this title: "{title_draft}"
+        prompt: `Turn this rough feature title into a user story a developer can
+estimate and start on: "{title_draft}"
 
-**Project Context:** {project_context}
+Project: {project_context}
 
-Format as:
-**Title:** [Clear, user-focused story title]
+**User story:**
+As a [the actual user role for this feature, not "user"]
+I want to [the specific action, matching the title]
+So that [the concrete benefit — infer it from the title; if genuinely
+unclear, name the most plausible benefit and flag it as an assumption]
 
-**Type:** Story
+**Acceptance criteria:** 3-6 criteria, each testable by someone who didn't
+write it. Cover the happy path, the one or two edge cases that actually
+apply to a {project_context} of this kind (empty state, permission
+denied, offline — whichever are relevant), and any UI states implied by
+the title. Do not pad the list with generic boilerplate items.
 
-**User Story:**
-As a [user type]
-I want to [action/feature]
-So that [benefit/value]
+**Open questions:** anything the title leaves ambiguous that would change
+the implementation (e.g. scope, which roles can access it). Omit this
+section if there's nothing to ask.
 
-**Description:**
-[2-3 sentences providing context and background]
-
-**Acceptance Criteria:**
-- [ ] [Specific, testable criterion 1]
-- [ ] [Specific, testable criterion 2]
-- [ ] [Specific, testable criterion 3]
-- [ ] [UI/UX criterion if applicable]
-- [ ] [Edge case handling]
-
-**Technical Notes:**
-- [Implementation approach suggestions]
-- [Dependencies or prerequisites]
-- [Potential challenges]
-
-**Design Notes:**
-[UI/UX considerations if applicable]
-
-**Definition of Done:**
-- [ ] Code implemented and reviewed
-- [ ] Unit tests written
-- [ ] Integration tested
-- [ ] Documentation updated
-- [ ] Stakeholder approved
-
-**Priority:** [High/Medium/Low]
-**Story Points:** [1/2/3/5/8/13]
+**Estimate:** a single story-point guess (1/2/3/5/8/13) with the one factor
+driving it (new UI, backend change, third-party integration, etc.).
 
 **Labels:** feature, {project_context}`,
         inputs: [
@@ -389,51 +353,32 @@ So that [benefit/value]
         name: 'Goal Breakdown',
         description:
           'Break down big goals into actionable milestones and tasks',
-        prompt: `Break down this goal into actionable steps:
+        prompt: `Break this goal down into a plan someone could start executing
+today:
 
-**Main Goal:** {goal}
+Goal: {goal}
+Timeline: {timeline}
+Starting point: {current_state}
 
-**Timeline:** {timeline}
+## Milestones
+As many milestones as the goal actually needs to reach {timeline} from
+{current_state} — don't force a fixed count. For each: a dated target
+(work backward from {timeline}), what "done" looks like concretely, and
+how you'd verify it's done (a number, a shipped thing, a passed test —
+not "progress made").
 
-**Current State:** {current_state}
+## Next two weeks
+3-5 tasks that move the first milestone forward, each phrased as a single
+action a person could do this week, not a restatement of the milestone.
 
-Provide:
-## Goal Overview
-[1-2 sentence summary of the goal]
+## Biggest risk
+The one or two things most likely to blow up this timeline given
+{current_state} specifically — not generic risks like "lack of time."
+For each, the concrete step that reduces it.
 
-## Key Milestones
-1. **Milestone 1** ([timeframe])
-   - [What will be achieved]
-
-2. **Milestone 2** ([timeframe])
-   - [What will be achieved]
-
-3. **Milestone 3** ([timeframe])
-   - [What will be achieved]
-
-## Immediate Next Steps (Week 1-2)
-- [ ] [Specific actionable task 1]
-- [ ] [Specific actionable task 2]
-- [ ] [Specific actionable task 3]
-
-## Success Metrics
-- [How to measure milestone 1]
-- [How to measure milestone 2]
-- [How to measure final goal]
-
-## Potential Obstacles
-- [Challenge 1] → [Mitigation strategy]
-- [Challenge 2] → [Mitigation strategy]
-
-## Resources Needed
-- [Resource/tool/skill 1]
-- [Resource/tool/skill 2]
-
-## Timeline Summary
-- **Start:** [Date based on current state]
-- **Milestone 1:** [Date]
-- **Milestone 2:** [Date]
-- **Target Completion:** {timeline}`,
+Skip a "resources needed" section unless the goal clearly requires
+something the person doesn't already have (budget, a specific skill,
+outside access) — don't invent generic resource lists.`,
         inputs: [
           {
             name: 'goal',
@@ -465,34 +410,24 @@ Provide:
         name: 'Context-Aware Translation',
         description:
           'Translate text with cultural and contextual understanding',
-        prompt: `Translate this text with cultural context:
+        prompt: `Translate this from {from_language} to {to_language}:
 
-**Text to Translate:**
 {text}
 
-**From:** {from_language}
-**To:** {to_language}
-**Context:** {context}
+Context it will be used in: {context}
 
-Provide:
-1. **Direct Translation:**
-[Accurate translation maintaining original meaning]
+Give:
+1. **Literal translation** — accurate, unpolished, so meaning can be
+   checked against the source.
+2. **Natural translation** — how a native {to_language} speaker would
+   actually write this for {context}. If it's identical to the literal
+   version, say so instead of repeating the text.
+3. **What changed and why** — only the adaptations that matter (register,
+   an idiom that doesn't carry over, a term with no direct equivalent).
+   Skip this section if the literal and natural versions matched.
 
-2. **Culturally Adapted Version:**
-[Translation adjusted for target culture and context]
-
-3. **Key Differences:**
-- [Notable adaptation 1 and why]
-- [Notable adaptation 2 and why]
-
-4. **Tone & Formality:**
-[How formality level was preserved or adjusted]
-
-5. **Alternative Phrasings:**
-- [Option 1]: [When to use this]
-- [Option 2]: [When to use this]
-
-**Recommended Version:** [Which translation to use based on context]`,
+Use the natural translation as the version to use unless the differences
+section says otherwise.`,
         inputs: [
           {
             name: 'text',
@@ -527,36 +462,24 @@ Provide:
         id: generateId(),
         name: 'Idiom Localization',
         description: 'Replace idioms with culturally equivalent expressions',
-        prompt: `Localize idioms in this text:
+        prompt: `Find the idioms and culture-specific expressions in this text and
+replace them for a {target_culture} audience:
 
-**Original Text:**
 {text}
 
-**Source Culture:** {source_culture}
-**Target Culture:** {target_culture}
-**Context:** {context}
+Source culture: {source_culture}
+Context: {context}
 
-Provide:
-1. **Identified Idioms:**
-[List idioms found in the text]
+For each idiom found, give one table row: the original phrase, its literal
+meaning, and the {target_culture} equivalent (an actual idiom there, not a
+literal translation) — or "no equivalent, translate literally" if none
+exists and forcing one would sound stranger than plain language.
 
-2. **Localized Version:**
-[Full text with idioms replaced by culturally equivalent expressions]
+If the text has no idioms or culture-bound expressions to localize, say so
+plainly instead of inventing table rows.
 
-3. **Idiom Mappings:**
-| Original Idiom | Meaning | Target Equivalent | Why This Works |
-|----------------|---------|-------------------|----------------|
-| [idiom 1] | [meaning] | [replacement] | [cultural reasoning] |
-| [idiom 2] | [meaning] | [replacement] | [cultural reasoning] |
-
-4. **Alternative Approaches:**
-- [If direct idiom replacement isn't ideal, suggest alternatives]
-
-5. **Cultural Notes:**
-[Any important cultural considerations for the target audience]
-
-**Recommended Final Text:**
-[The best localized version for the target culture and context]`,
+Then give the full text with only those replacements made — everything
+else stays as close to the original as possible.`,
         inputs: [
           {
             name: 'text',
@@ -583,6 +506,61 @@ Provide:
             label: 'Context',
             placeholder: 'e.g., marketing, business, literature, casual',
             defaultValue: 'business',
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+
+      // === META: TEMPLATE AUTHORING ===
+      {
+        id: generateId(),
+        name: 'Template Builder',
+        description:
+          'Design a new toolbox template (prompt + variables) for a specific task, following this app\'s template rules',
+        prompt: `Design a new template for this toolbox: {task_description}
+
+Ground it in this scenario: {example_scenario}
+
+Placeholder syntax is shown above: lower_snake_case in one pair of curly
+braces, substituted verbatim at run time.
+
+# Reasoning Principles
+VARIABLE_MINIMALISM: only placeholders the output changes based on — otherwise a field goes unused
+VARIABLE_NAMING: lower_snake_case, 1-3 words, names the value held — otherwise the auto-label reads oddly
+NO_BRACKET_FILL: no square brackets in the prompt body, describe output in prose — otherwise the model echoes brackets literally
+ADAPTIVE_STRUCTURE: list counts scale to the actual input, never a fixed number — otherwise output pads with filler
+SKIP_CLAUSE: optional sections state the exact condition for omitting them — otherwise they get padded in anyway
+GROUNDED_INFERENCE: missing details get a specific flagged guess, never a vague placeholder — otherwise output stalls
+NO_METACOMMENTARY: artifact prompts (post, message, ticket) end with "output only the artifact" — otherwise preamble leaks in
+CONCRETE_OVER_GENERIC: swap generic adjectives for the specific test this case must pass — otherwise output is boilerplate
+
+# Output Shape
+FIELD_NAME: noun phrase, under 50 chars, no "Template" suffix
+FIELD_DESCRIPTION: one sentence, under 200 chars, naming what it produces
+FIELD_PROMPT: markdown, under 2000 chars, placeholder-wraps each user value, follows every principle
+FIELD_INPUTS: one entry per placeholder, no more/fewer — label is human-readable, placeholder is an example value not an instruction, defaultValue empty unless useful
+DELIVERY: one fenced json block, keys name/description/prompt/inputs only
+
+# Validation
+VARIABLE_PARITY_CHECK: every placeholder has exactly one inputs entry and vice versa
+LENGTH_CHECK: name/description/prompt each under their limits above
+BRACKET_CHECK: prompt has no square-bracket placeholders
+SPECIFICITY_CHECK: reread against a messy real instance of {task_description} — nothing is left to invent`,
+        inputs: [
+          {
+            name: 'task_description',
+            label: 'What should this template do?',
+            placeholder:
+              'e.g., turn a customer complaint into a support response',
+            defaultValue: '',
+          },
+          {
+            name: 'example_scenario',
+            label: 'A concrete example to design around',
+            placeholder:
+              'e.g., a customer says their order arrived damaged and wants a refund',
+            defaultValue: '',
           },
         ],
         createdAt: new Date().toISOString(),
