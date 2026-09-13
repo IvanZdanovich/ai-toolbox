@@ -16,7 +16,8 @@ tests/
 │   │   ├── icon-helper.integration.test.js
 │   │   └── components/
 │   │       ├── modal.integration.test.js
-│   │       └── toast.integration.test.js
+│   │       ├── toast.integration.test.js
+│   │       └── editor-tab.integration.test.js   # wiring smoke test; see note below
 │   ├── background/
 │   │   └── background.integration.test.js
 │   ├── sidepanel/
@@ -29,7 +30,9 @@ tests/
 └── setup.js
 ```
 
-Not yet covered: `shared/components/editor-tab.js` (1200+ lines — pending a split before it gets a suite), `settings/settings.js`, `content/content.js`.
+`shared/components/editor-tab/` is one class (constructor, DOM helpers, dispatch by type/mode) split across `index.js`, `template-edit.js`, `template-run.js`, `workflow-edit.js`, and `workflow-run.js`, mixed onto one prototype via `Object.assign` in `index.js`. `editor-tab.integration.test.js` only checks that each of the four type/mode combinations renders and initializes without throwing — it is not a full behavioral suite per mode (form validation, AI-generation flows, step reordering, etc. are still uncovered).
+
+Not yet covered: `settings/settings.js`, `content/content.js`.
 
 ## Running Tests
 
