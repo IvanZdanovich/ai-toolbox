@@ -14,9 +14,10 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../mocks/chrome-api.mock.js';
+} from '../../mocks/chrome-api.mock.js';
+import { LIMITS } from '../../../shared/constants.js';
 
-vi.mock('../../shared/storage.js', () => ({
+vi.mock('../../../shared/storage.js', () => ({
   default: {
     getWorkflows: vi.fn().mockResolvedValue([]),
     setWorkflows: vi.fn().mockResolvedValue(true),
@@ -43,14 +44,14 @@ describe('Workflow Manager Integration', () => {
     testUtils.resetStorage();
     vi.resetModules();
 
-    storage = (await import('../../shared/storage.js')).default;
+    storage = (await import('../../../shared/storage.js')).default;
     storage.getWorkflows.mockResolvedValue([]);
     storage.setWorkflows.mockResolvedValue(true);
     // Seeding is off by default so tests start from an empty, predictable list.
     storage.getWorkflowsSeeded.mockResolvedValue(true);
     storage.setWorkflowsSeeded.mockResolvedValue(true);
 
-    const module = await import('../../shared/workflow-manager.js');
+    const module = await import('../../../shared/workflow-manager.js');
     workflowManager = module.default;
     extractWorkflowVariables = module.extractWorkflowVariables;
 
@@ -199,11 +200,22 @@ describe('Workflow Manager Integration', () => {
               outputKey: 'out',
               prompt: 'Go',
               tools: ['read_page'],
-              maxIterations: 99,
+              maxIterations: LIMITS.MAX_AGENT_ITERATIONS + 1,
             },
           ],
         })
       ).rejects.toThrow('max iterations');
+    });
+
+    it('should reject a workflow with more than the allowed number of steps', async () => {
+      await expect(
+        workflowManager.createWorkflow({
+          name: 'Flow',
+          steps: Array.from({ length: LIMITS.MAX_WORKFLOW_STEPS + 1 }, (_, i) =>
+            promptStep({ name: `Step ${i}`, outputKey: `out${i}` })
+          ),
+        })
+      ).rejects.toThrow(`at most ${LIMITS.MAX_WORKFLOW_STEPS} steps`);
     });
   });
 

@@ -14,8 +14,9 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../fixtures/test-data.js';
+} from '../../mocks/chrome-api.mock.js';
+import { fixtures, factories } from '../../fixtures/test-data.js';
+import { LIMITS } from '../../../shared/constants.js';
 
 describe('Storage Service Integration', () => {
   let storage;
@@ -26,7 +27,7 @@ describe('Storage Service Integration', () => {
 
     vi.resetModules();
 
-    const StorageModule = await import('../../shared/storage.js');
+    const StorageModule = await import('../../../shared/storage.js');
     storage = StorageModule.default;
 
     // Clear cache
@@ -260,9 +261,9 @@ describe('Storage Service Integration', () => {
 
   describe('Scenario: Chunked storage for large data', () => {
     it('should handle data larger than item limit', async () => {
-      // Given: Data larger than 8KB limit
+      // Given: Data larger than the chunking threshold
       const largeData = {
-        content: 'x'.repeat(10000), // ~10KB
+        content: 'x'.repeat(LIMITS.STORAGE_CHUNK_SIZE + 1000),
         metadata: { size: 'large' },
       };
 
@@ -271,7 +272,7 @@ describe('Storage Service Integration', () => {
       const retrieved = await storage.get('large-data');
 
       // Then: Data should be intact
-      expect(retrieved.content.length).toBe(10000);
+      expect(retrieved.content.length).toBe(LIMITS.STORAGE_CHUNK_SIZE + 1000);
       expect(retrieved.metadata.size).toBe('large');
     });
 
@@ -366,7 +367,7 @@ describe('Storage Error Handling', () => {
     });
 
     vi.resetModules();
-    const StorageModule = await import('../../shared/storage.js');
+    const StorageModule = await import('../../../shared/storage.js');
     const storage = StorageModule.default;
 
     // When: Getting templates

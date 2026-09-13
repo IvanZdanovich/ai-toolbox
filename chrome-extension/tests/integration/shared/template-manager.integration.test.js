@@ -14,12 +14,13 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../fixtures/test-data.js';
+} from '../../mocks/chrome-api.mock.js';
+import { fixtures, factories } from '../../fixtures/test-data.js';
+import { LIMITS } from '../../../shared/constants.js';
 
 // Mock the modules before importing
-vi.mock('../../shared/storage.js', async () => {
-  const { chromeMock } = await import('../mocks/chrome-api.mock.js');
+vi.mock('../../../shared/storage.js', async () => {
+  const { chromeMock } = await import('../../mocks/chrome-api.mock.js');
   return {
     default: {
       getTemplates: vi.fn().mockResolvedValue([]),
@@ -42,9 +43,9 @@ describe('Template Manager Integration', () => {
     vi.resetModules();
 
     // Import fresh instances
-    storage = (await import('../../shared/storage.js')).default;
+    storage = (await import('../../../shared/storage.js')).default;
     const TemplateManagerModule =
-      await import('../../shared/template-manager.js');
+      await import('../../../shared/template-manager.js');
     templateManager = TemplateManagerModule.default;
 
     // vitest's mockReset strips the factory's implementations, so restore the
@@ -273,7 +274,7 @@ describe('Template Manager Integration', () => {
   describe('Scenario: Template limit enforcement', () => {
     it('should enforce maximum template limit', async () => {
       // Given: Templates at the limit
-      const maxTemplates = 50; // From LIMITS.MAX_TEMPLATES
+      const maxTemplates = LIMITS.MAX_TEMPLATES;
       const templates = factories.createTemplates(maxTemplates);
       storage.getTemplates.mockResolvedValue(templates);
       await templateManager.init();
@@ -350,11 +351,11 @@ describe('Template Manager Error Handling', () => {
   it('should handle storage errors gracefully', async () => {
     // Given: Storage that throws errors
     vi.resetModules();
-    const storage = (await import('../../shared/storage.js')).default;
+    const storage = (await import('../../../shared/storage.js')).default;
     storage.getTemplates.mockRejectedValue(new Error('Storage unavailable'));
 
     const TemplateManagerModule =
-      await import('../../shared/template-manager.js');
+      await import('../../../shared/template-manager.js');
     const templateManager = TemplateManagerModule.default;
 
     // Suppress expected console.error

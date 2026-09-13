@@ -14,12 +14,12 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../mocks/chrome-api.mock.js';
-import { AGENT_TOOLS } from '../../shared/agent-tools.js';
+} from '../../mocks/chrome-api.mock.js';
+import { AGENT_TOOLS } from '../../../shared/agent-tools.js';
 
 // The runtime pulls in ai-service, which touches chrome.storage at import time;
 // the runtime under test is driven through injected doubles anyway.
-vi.mock('../../shared/storage.js', () => ({
+vi.mock('../../../shared/storage.js', () => ({
   default: {
     getSettings: vi.fn().mockResolvedValue({ provider: 'mock' }),
     setSettings: vi.fn().mockResolvedValue(true),
@@ -30,7 +30,7 @@ vi.mock('../../shared/storage.js', () => ({
   },
 }));
 
-const { AgentRuntime } = await import('../../shared/agent-runtime.js');
+const { AgentRuntime } = await import('../../../shared/agent-runtime.js');
 
 const step = (overrides = {}) => ({
   id: overrides.id || `step-${Math.random().toString(36).slice(2)}`,

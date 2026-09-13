@@ -15,8 +15,8 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../fixtures/test-data.js';
+} from '../../mocks/chrome-api.mock.js';
+import { fixtures, factories } from '../../fixtures/test-data.js';
 
 // Mock DOM environment
 function createMockDOM() {
@@ -122,15 +122,15 @@ const mockAiService = {
   processTemplate: vi.fn(),
 };
 
-vi.mock('../../shared/template-manager.js', () => ({
+vi.mock('../../../shared/template-manager.js', () => ({
   default: mockTemplateManager,
 }));
 
-vi.mock('../../shared/history-manager.js', () => ({
+vi.mock('../../../shared/history-manager.js', () => ({
   default: mockHistoryManager,
 }));
 
-vi.mock('../../shared/ai-service.js', () => ({
+vi.mock('../../../shared/ai-service.js', () => ({
   default: mockAiService,
 }));
 

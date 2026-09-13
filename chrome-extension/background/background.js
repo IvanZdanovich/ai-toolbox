@@ -1,5 +1,4 @@
-import storage from '../shared/storage.js';
-import aiService from '../shared/ai-service.js';
+import { storage, aiService } from '../shared/index.js';
 
 class AIToolboxBackground {
   constructor() {

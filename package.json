@@ -2,7 +2,6 @@
   "name": "ai-toolbox",
   "version": "1.1.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "vitest run --config chrome-extension/vitest.config.js",
     "test:watch": "vitest --config chrome-extension/vitest.config.js",

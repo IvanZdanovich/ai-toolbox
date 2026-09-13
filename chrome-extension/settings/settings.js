@@ -1,9 +1,14 @@
-import aiService from '../shared/ai-service.js';
-import storage from '../shared/storage.js';
-import { downloadAsJson, parseJsonFile } from '../shared/helpers.js';
-import { EXTENSION_VERSION, EMPTY_API_KEYS } from '../shared/constants.js';
-import { AI_PROVIDERS, normalizeProviderId } from '../shared/providers.js';
-import Toast from '../shared/components/toast.js';
+import {
+  aiService,
+  storage,
+  downloadAsJson,
+  parseJsonFile,
+  EXTENSION_VERSION,
+  EMPTY_API_KEYS,
+  AI_PROVIDERS,
+  normalizeProviderId,
+} from '../shared/index.js';
+import { Toast } from '../shared/components/index.js';
 
 class SettingsPage {
   constructor() {

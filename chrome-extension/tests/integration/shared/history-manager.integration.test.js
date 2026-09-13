@@ -15,11 +15,12 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../fixtures/test-data.js';
+} from '../../mocks/chrome-api.mock.js';
+import { fixtures, factories } from '../../fixtures/test-data.js';
+import { LIMITS } from '../../../shared/constants.js';
 
 // Mock storage module
-vi.mock('../../shared/storage.js', async () => {
+vi.mock('../../../shared/storage.js', async () => {
   return {
     default: {
       getHistory: vi.fn().mockResolvedValue([]),
@@ -38,9 +39,9 @@ describe('History Manager Integration', () => {
 
     vi.resetModules();
 
-    storage = (await import('../../shared/storage.js')).default;
+    storage = (await import('../../../shared/storage.js')).default;
     const HistoryManagerModule =
-      await import('../../shared/history-manager.js');
+      await import('../../../shared/history-manager.js');
     historyManager = HistoryManagerModule.default;
 
     // Reset state
@@ -266,7 +267,7 @@ describe('History Manager Integration', () => {
   describe('Scenario: History limit enforcement', () => {
     it('should enforce maximum history entries', async () => {
       // Given: History at the limit
-      const maxEntries = 100; // From LIMITS.MAX_HISTORY_ENTRIES
+      const maxEntries = LIMITS.MAX_HISTORY_ENTRIES;
       const history = factories.createHistoryEntries(maxEntries);
       storage.getHistory.mockResolvedValue(history);
       await historyManager.init();
@@ -287,7 +288,7 @@ describe('History Manager Integration', () => {
 
     it('should remove oldest entries when limit exceeded', async () => {
       // Given: History at the limit with known oldest entry
-      const maxEntries = 100;
+      const maxEntries = LIMITS.MAX_HISTORY_ENTRIES;
       const oldestTimestamp = '2020-01-01T00:00:00.000Z';
       const history = [
         ...factories.createHistoryEntries(maxEntries - 1),
@@ -394,11 +395,11 @@ describe('History Manager Error Handling', () => {
   it('should handle storage errors gracefully', async () => {
     // Given: Storage that throws errors
     vi.resetModules();
-    const storage = (await import('../../shared/storage.js')).default;
+    const storage = (await import('../../../shared/storage.js')).default;
     storage.getHistory.mockRejectedValue(new Error('Storage unavailable'));
 
     const HistoryManagerModule =
-      await import('../../shared/history-manager.js');
+      await import('../../../shared/history-manager.js');
     const historyManager = HistoryManagerModule.default;
 
     // Suppress expected console.error
@@ -416,11 +417,11 @@ describe('History Manager Error Handling', () => {
   it('should handle update errors for non-existent entries', async () => {
     // Given: Initialized history manager
     vi.resetModules();
-    const storage = (await import('../../shared/storage.js')).default;
+    const storage = (await import('../../../shared/storage.js')).default;
     storage.getHistory.mockResolvedValue([]);
 
     const HistoryManagerModule =
-      await import('../../shared/history-manager.js');
+      await import('../../../shared/history-manager.js');
     const historyManager = HistoryManagerModule.default;
     await historyManager.init();
 

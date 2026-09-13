@@ -62,4 +62,30 @@ export default [
       },
     },
   },
+  {
+    files: [
+      'chrome-extension/background/**/*.js',
+      'chrome-extension/sidepanel/**/*.js',
+      'chrome-extension/settings/**/*.js',
+      'chrome-extension/content/**/*.js',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../shared/*.js', '!../shared/index.js'],
+              message: "Import from 'shared/index.js' instead of reaching into shared/ internals.",
+            },
+            {
+              group: ['../shared/components/*.js', '!../shared/components/index.js'],
+              message:
+                "Import from 'shared/components/index.js' instead of reaching into shared/components/ internals.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];

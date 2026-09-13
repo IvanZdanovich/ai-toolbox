@@ -1,20 +1,19 @@
-import templateManager from '../shared/template-manager.js';
-import workflowManager from '../shared/workflow-manager.js';
-import historyManager from '../shared/history-manager.js';
-import aiService from '../shared/ai-service.js';
-import storage from '../shared/storage.js';
-import IconHelper from '../shared/icon-helper.js';
 import {
+  templateManager,
+  workflowManager,
+  historyManager,
+  aiService,
+  storage,
+  IconHelper,
   formatRelativeTime,
   truncateText,
   debounce,
   copyToClipboard,
   sanitizeText,
-} from '../shared/helpers.js';
-import { EVENTS, WORKFLOW_STEP_TYPES } from '../shared/constants.js';
-import Toast from '../shared/components/toast.js';
-import Modal from '../shared/components/modal.js';
-import EditorTab from '../shared/components/editor-tab.js';
+  EVENTS,
+  WORKFLOW_STEP_TYPES,
+} from '../shared/index.js';
+import { Toast, Modal, EditorTab } from '../shared/components/index.js';
 
 class SidePanelApp {
   constructor() {

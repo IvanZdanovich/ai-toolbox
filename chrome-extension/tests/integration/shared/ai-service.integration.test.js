@@ -14,11 +14,11 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../fixtures/test-data.js';
+} from '../../mocks/chrome-api.mock.js';
+import { fixtures, factories } from '../../fixtures/test-data.js';
 
 // Mock storage module
-vi.mock('../../shared/storage.js', async () => {
+vi.mock('../../../shared/storage.js', async () => {
   return {
     default: {
       getSettings: vi.fn().mockResolvedValue({
@@ -47,8 +47,8 @@ describe('AI Service Integration', () => {
 
     vi.resetModules();
 
-    storage = (await import('../../shared/storage.js')).default;
-    const AIServiceModule = await import('../../shared/ai-service.js');
+    storage = (await import('../../../shared/storage.js')).default;
+    const AIServiceModule = await import('../../../shared/ai-service.js');
     aiService = AIServiceModule.default;
     aiService.mockFailureRate = 0;
 
@@ -453,8 +453,8 @@ describe('AI Service Provider Adapters', () => {
     mockFetch.mockReset();
     vi.resetModules();
 
-    storage = (await import('../../shared/storage.js')).default;
-    aiService = (await import('../../shared/ai-service.js')).default;
+    storage = (await import('../../../shared/storage.js')).default;
+    aiService = (await import('../../../shared/ai-service.js')).default;
     aiService.settings = null;
     aiService.requestTimestamps = [];
   });
@@ -840,10 +840,10 @@ describe('AI Service Error Scenarios', () => {
   it('should handle malformed API responses', async () => {
     // Given: OpenAI provider
     vi.resetModules();
-    const storage = (await import('../../shared/storage.js')).default;
+    const storage = (await import('../../../shared/storage.js')).default;
     storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
 
-    const AIServiceModule = await import('../../shared/ai-service.js');
+    const AIServiceModule = await import('../../../shared/ai-service.js');
     const aiService = AIServiceModule.default;
     await aiService.init();
 
@@ -870,10 +870,10 @@ describe('AI Service Error Scenarios', () => {
   it('should handle timeout errors', async () => {
     // Given: OpenAI provider
     vi.resetModules();
-    const storage = (await import('../../shared/storage.js')).default;
+    const storage = (await import('../../../shared/storage.js')).default;
     storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
 
-    const AIServiceModule = await import('../../shared/ai-service.js');
+    const AIServiceModule = await import('../../../shared/ai-service.js');
     const aiService = AIServiceModule.default;
     await aiService.init();
 
@@ -892,10 +892,10 @@ describe('AI Service Error Scenarios', () => {
   it('should handle JSON parse errors', async () => {
     // Given: OpenAI provider
     vi.resetModules();
-    const storage = (await import('../../shared/storage.js')).default;
+    const storage = (await import('../../../shared/storage.js')).default;
     storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
 
-    const AIServiceModule = await import('../../shared/ai-service.js');
+    const AIServiceModule = await import('../../../shared/ai-service.js');
     const aiService = AIServiceModule.default;
     await aiService.init();
 

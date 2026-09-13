@@ -10,14 +10,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { EXTENSION_VERSION } from '../../shared/constants.js';
+import { EXTENSION_VERSION } from '../../../shared/constants.js';
 import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
   chromeMock,
-} from '../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../fixtures/test-data.js';
+} from '../../mocks/chrome-api.mock.js';
+import { fixtures, factories } from '../../fixtures/test-data.js';
 
 describe('Background Service Worker Integration', () => {
   beforeEach(() => {

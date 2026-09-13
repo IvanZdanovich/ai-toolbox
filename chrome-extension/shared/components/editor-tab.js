@@ -9,6 +9,7 @@ import { AGENT_TOOLS } from '../agent-tools.js';
 import {
   copyToClipboard,
   downloadAsJson,
+  extractVariables,
   sanitizeText,
   truncateText,
   variableLabel,
@@ -375,24 +376,9 @@ class EditorTab {
     }
   }
 
-  extractVariables(prompt) {
-    const variables = [];
-    const regex = /\{([^}]+)\}/g;
-    let match;
-
-    while ((match = regex.exec(prompt)) !== null) {
-      const variable = match[1].trim();
-      if (!variables.includes(variable)) {
-        variables.push(variable);
-      }
-    }
-
-    return variables;
-  }
-
   updateTemplateVariables(prompt) {
     const container = this.q('[data-role="template-variables"]');
-    const variables = this.extractVariables(prompt);
+    const variables = extractVariables(prompt);
 
     if (variables.length === 0) {
       container.innerHTML = '';
