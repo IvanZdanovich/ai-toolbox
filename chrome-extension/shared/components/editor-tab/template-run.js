@@ -99,6 +99,7 @@ export const templateRunMethods = {
     loadingEl.classList.remove('hidden');
     errorEl.classList.add('hidden');
     resultEl.classList.add('hidden');
+    this.q('[data-role="chat-section"]').classList.add('hidden');
     runBtn.disabled = true;
     runBtn.textContent = 'Processing...';
 
@@ -125,6 +126,17 @@ export const templateRunMethods = {
 
       resultEl.classList.remove('hidden');
       Toast.show('Template executed successfully', 'success');
+
+      const seedMessages = [];
+      if (this.currentTemplate.systemPrompt) {
+        seedMessages.push({
+          role: 'system',
+          content: this.currentTemplate.systemPrompt,
+        });
+      }
+      seedMessages.push({ role: 'user', content: result.processedPrompt });
+      seedMessages.push({ role: 'assistant', content: result.result });
+      this.initChatThread(seedMessages);
     } catch (error) {
       console.error('Template execution failed:', error);
       errorEl.querySelector('.error-message').textContent = error.message;

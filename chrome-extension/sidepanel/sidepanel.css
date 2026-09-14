@@ -165,13 +165,13 @@ html {
   transition: opacity var(--transition-fast);
 }
 
+.nav-tab-close:hover {
+  background: var(--color-background-hover);
+}
+
 .nav-tab-editor:hover .nav-tab-close,
 .nav-tab-editor:focus-within .nav-tab-close {
   opacity: 1;
-}
-
-.nav-tab-close:hover {
-  background: var(--color-background-hover);
 }
 
 /* ========================================
@@ -321,6 +321,57 @@ html {
 
 .search-box .form-input::placeholder {
   font-size: var(--font-size-xs);
+}
+
+/* Live results dropdown under a search box: typing lists matching
+   templates/workflows/history entries to jump straight to; pressing Enter
+   with no item picked instead sends the typed text to the AI as a new
+   chat — so the two actions stay distinct even though they share one input. */
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + var(--spacing-xs));
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.search-dropdown.hidden {
+  display: none;
+}
+
+.search-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: none;
+  border: none;
+  border-bottom: var(--border-width) solid var(--color-border);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.search-dropdown-item:hover,
+.search-dropdown-item:focus {
+  background: var(--color-background-hover);
+}
+
+.search-dropdown-item-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xxs, 0.7rem);
 }
 
 /* ========================================
@@ -909,4 +960,71 @@ html {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Follow-up chat thread under a completed template/workflow run */
+
+.chat-section {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.chat-section-title {
+  margin: 0 0 var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 320px;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background);
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-message-role {
+  font-size: var(--font-size-xxs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.chat-message-content {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-message--user .chat-message-content {
+  color: var(--color-text-primary);
+}
+
+.chat-message--assistant .chat-message-role {
+  color: var(--color-primary);
+}
+
+.chat-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  align-items: flex-end;
+}
+
+.chat-input {
+  flex: 1;
+  resize: vertical;
 }

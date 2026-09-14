@@ -74,21 +74,60 @@
 
     <div class="sidepanel-container">
       <!-- Navigation -->
-      <nav class="nav-tabs">
-        <button class="nav-tab active" data-section="templates">
+      <nav class="nav-tabs" role="tablist" aria-label="Sections">
+        <button
+          class="nav-tab active"
+          role="tab"
+          id="tab-templates"
+          data-section="templates"
+          aria-selected="true"
+          aria-controls="templates"
+          tabindex="0"
+        >
           Templates
         </button>
-        <button class="nav-tab" data-section="workflows">Workflows</button>
-        <button class="nav-tab" data-section="history">History</button>
+        <button
+          class="nav-tab"
+          role="tab"
+          id="tab-workflows"
+          data-section="workflows"
+          aria-selected="false"
+          aria-controls="workflows"
+          tabindex="-1"
+        >
+          Workflows
+        </button>
+        <button
+          class="nav-tab"
+          role="tab"
+          id="tab-history"
+          data-section="history"
+          aria-selected="false"
+          aria-controls="history"
+          tabindex="-1"
+        >
+          History
+        </button>
       </nav>
 
       <!-- Open template/workflow editor tabs, one row below the main nav -->
-      <nav class="editor-tabs-row hidden" id="editorTabsRow"></nav>
+      <nav
+        class="editor-tabs-row hidden"
+        id="editorTabsRow"
+        role="tablist"
+        aria-label="Open editors"
+      ></nav>
 
       <!-- Main Content -->
       <main class="sidepanel-content">
         <!-- Templates Section -->
-        <section id="templates" class="section active">
+        <section
+          id="templates"
+          class="section active"
+          role="tabpanel"
+          aria-labelledby="tab-templates"
+          tabindex="0"
+        >
           <div class="section-header">
             <button class="btn btn-primary btn-small" id="createTemplateBtn">
               <svg class="icon icon--sm"><use href="#icon-add"></use></svg>New Template
@@ -99,8 +138,17 @@
                 type="text"
                 id="templateSearch"
                 class="form-input"
-                placeholder="Search templates..."
+                placeholder="Ask or search templates…"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="templateSearchDropdown"
+                autocomplete="off"
               />
+              <div
+                class="search-dropdown hidden"
+                id="templateSearchDropdown"
+                role="listbox"
+              ></div>
             </div>
           </div>
 
@@ -115,7 +163,13 @@
         </section>
 
         <!-- Workflows Section -->
-        <section id="workflows" class="section">
+        <section
+          id="workflows"
+          class="section"
+          role="tabpanel"
+          aria-labelledby="tab-workflows"
+          tabindex="0"
+        >
           <div class="section-header">
             <button class="btn btn-primary btn-small" id="createWorkflowBtn">
               <svg class="icon icon--sm"><use href="#icon-add"></use></svg>New Workflow
@@ -126,8 +180,17 @@
                 type="text"
                 id="workflowSearch"
                 class="form-input"
-                placeholder="Search workflows..."
+                placeholder="Ask or search workflows…"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="workflowSearchDropdown"
+                autocomplete="off"
               />
+              <div
+                class="search-dropdown hidden"
+                id="workflowSearchDropdown"
+                role="listbox"
+              ></div>
             </div>
           </div>
 
@@ -142,7 +205,13 @@
         </section>
 
         <!-- History Section -->
-        <section id="history" class="section">
+        <section
+          id="history"
+          class="section"
+          role="tabpanel"
+          aria-labelledby="tab-history"
+          tabindex="0"
+        >
           <div class="section-header">
             <button class="btn btn-secondary btn-small" id="clearHistoryBtn">
               Clear All
@@ -153,8 +222,17 @@
                 type="text"
                 id="historySearch"
                 class="form-input"
-                placeholder="Search history..."
+                placeholder="Ask or search history…"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="historySearchDropdown"
+                autocomplete="off"
               />
+              <div
+                class="search-dropdown hidden"
+                id="historySearchDropdown"
+                role="listbox"
+              ></div>
             </div>
           </div>
 

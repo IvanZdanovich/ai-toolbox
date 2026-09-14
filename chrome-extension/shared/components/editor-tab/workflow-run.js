@@ -113,6 +113,7 @@ export const workflowRunMethods = {
     this.q('[data-role="run-result"]').classList.add('hidden');
     this.q('[data-role="run-error"]').classList.add('hidden');
     this.q('[data-role="run-stop-btn"]').classList.add('hidden');
+    this.q('[data-role="chat-section"]').classList.add('hidden');
 
     const startBtn = this.q('[data-role="run-start-btn"]');
     startBtn.disabled = false;
@@ -187,6 +188,19 @@ export const workflowRunMethods = {
       );
 
       Toast.show('Workflow completed', 'success');
+
+      const inputEntries = Object.entries(inputs);
+      const inputsSummary = inputEntries.length
+        ? inputEntries.map(([name, value]) => `${name}: ${value}`).join('\n')
+        : '(no inputs)';
+      this.initChatThread([
+        {
+          role: 'system',
+          content: `You just ran the workflow "${workflow.name}". Answer follow-up questions about its result below.`,
+        },
+        { role: 'user', content: `Workflow inputs:\n${inputsSummary}` },
+        { role: 'assistant', content: run.output },
+      ]);
     } catch (error) {
       console.error('Workflow run failed:', error);
       errorEl.querySelector('.error-message').textContent = error.message;

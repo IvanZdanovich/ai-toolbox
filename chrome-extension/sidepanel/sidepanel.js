@@ -13,7 +13,12 @@ import {
   EVENTS,
   WORKFLOW_STEP_TYPES,
 } from '../shared/index.js';
-import { Toast, Modal, EditorTab } from '../shared/components/index.js';
+import {
+  Toast,
+  Modal,
+  EditorTab,
+  createSearchBox,
+} from '../shared/components/index.js';
 
 class SidePanelApp {
   constructor() {
@@ -128,7 +133,9 @@ class SidePanelApp {
     });
 
     const expandBtn = document.getElementById('expandBtn');
-    if (new URLSearchParams(window.location.search).get('view') === 'fullscreen') {
+    if (
+      new URLSearchParams(window.location.search).get('view') === 'fullscreen'
+    ) {
       expandBtn.classList.add('hidden');
     } else {
       expandBtn.addEventListener('click', () => {
@@ -143,10 +150,17 @@ class SidePanelApp {
         this.openEditor('template', 'edit');
       });
 
-    document.getElementById('templateSearch').addEventListener(
-      'input',
-      debounce((e) => this.searchTemplates(e.target.value), 300)
-    );
+    this.setupSearchBox('templateSearch', 'templateSearchDropdown', {
+      onSearch: async (query) => {
+        await this.searchTemplates(query);
+        return this.templates.map((template) => ({
+          id: template.id,
+          title: template.name,
+          meta: template.description || '',
+        }));
+      },
+      onSelect: (id) => this.openEditor('template', 'run', id),
+    });
 
     // Workflows section
     document
@@ -155,22 +169,86 @@ class SidePanelApp {
         this.openEditor('workflow', 'edit');
       });
 
-    document.getElementById('workflowSearch').addEventListener(
-      'input',
-      debounce((e) => this.searchWorkflows(e.target.value), 300)
-    );
+    this.setupSearchBox('workflowSearch', 'workflowSearchDropdown', {
+      onSearch: async (query) => {
+        await this.searchWorkflows(query);
+        return this.workflows.map((workflow) => ({
+          id: workflow.id,
+          title: workflow.name,
+          meta: workflow.description || '',
+        }));
+      },
+      onSelect: (id) => this.openEditor('workflow', 'run', id),
+    });
 
     // History section
-    document.getElementById('historySearch').addEventListener(
-      'input',
-      debounce((e) => this.searchHistory(e.target.value), 300)
-    );
+    this.setupSearchBox('historySearch', 'historySearchDropdown', {
+      onSearch: async (query) => {
+        await this.searchHistory(query);
+        return this.history.map((entry) => ({
+          id: entry.id,
+          title: entry.templateName,
+          meta: formatRelativeTime(entry.timestamp),
+        }));
+      },
+      onSelect: (id) => {
+        const entry = this.history.find((h) => h.id === id);
+        if (entry) {
+          this.rerunFromHistory(entry);
+        }
+      },
+    });
 
     document.getElementById('clearHistoryBtn').addEventListener('click', () => {
       this.clearHistory();
     });
 
     this.setupManagerEventListeners();
+
+    this.setupTabListKeyboardNav(document.querySelector('.nav-tabs'));
+    this.setupTabListKeyboardNav(document.getElementById('editorTabsRow'));
+  }
+
+  // Standard ARIA tabs roving-focus behavior: arrow keys move focus between
+  // tabs in a tablist and activate the newly focused one; Home/End jump to
+  // the first/last tab. Delegated on the container so it keeps working as
+  // editor tabs are added and removed.
+  setupTabListKeyboardNav(container) {
+    container.addEventListener('keydown', (e) => {
+      const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
+      const currentIndex = tabs.indexOf(document.activeElement);
+      if (currentIndex === -1) {
+        return;
+      }
+
+      let newIndex;
+      if (e.key === 'ArrowRight') {
+        newIndex = (currentIndex + 1) % tabs.length;
+      } else if (e.key === 'ArrowLeft') {
+        newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      } else if (e.key === 'Home') {
+        newIndex = 0;
+      } else if (e.key === 'End') {
+        newIndex = tabs.length - 1;
+      } else {
+        return;
+      }
+
+      e.preventDefault();
+      const nextTab = tabs[newIndex];
+      nextTab.focus();
+      nextTab.click();
+    });
+  }
+
+  setupSearchBox(inputId, dropdownId, { onSearch, onSelect }) {
+    createSearchBox({
+      input: document.getElementById(inputId),
+      dropdown: document.getElementById(dropdownId),
+      onSearch,
+      onSelect,
+      onAsk: (text) => this.openEditor('chat', null, null, text),
+    });
   }
 
   // Opens a template/workflow editor or runner as its own tab in the second
@@ -192,7 +270,12 @@ class SidePanelApp {
 
     const navTab = document.createElement('button');
     navTab.className = 'nav-tab nav-tab-editor';
+    navTab.id = `tab-${tab.uid}`;
     navTab.dataset.section = tab.uid;
+    navTab.setAttribute('role', 'tab');
+    navTab.setAttribute('aria-selected', 'false');
+    navTab.setAttribute('aria-controls', tab.uid);
+    navTab.tabIndex = -1;
     navTab.innerHTML = `
       <span class="nav-tab-order"></span>
       <span class="nav-tab-label">${sanitizeText(tab.title)}</span>
@@ -312,7 +395,10 @@ class SidePanelApp {
     }
 
     document.querySelectorAll('.nav-tab').forEach((tab) => {
-      tab.classList.toggle('active', tab.dataset.section === section);
+      const isActive = tab.dataset.section === section;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-selected', String(isActive));
+      tab.tabIndex = isActive ? 0 : -1;
     });
 
     document.querySelectorAll('.section').forEach((sec) => {
@@ -553,7 +639,10 @@ class SidePanelApp {
     const confirmed = await Modal.confirm(
       'Delete Workflow',
       'Are you sure you want to delete this workflow? This action cannot be undone.',
-      { confirmText: 'Delete', confirmClass: 'btn-danger' }
+      {
+        confirmText: 'Delete',
+        confirmClass: 'btn-danger',
+      }
     );
 
     if (confirmed) {
@@ -622,7 +711,10 @@ class SidePanelApp {
     const confirmed = await Modal.confirm(
       'Delete Template',
       'Are you sure you want to delete this template? This action cannot be undone.',
-      { confirmText: 'Delete', confirmClass: 'btn-danger' }
+      {
+        confirmText: 'Delete',
+        confirmClass: 'btn-danger',
+      }
     );
 
     if (confirmed) {
@@ -667,7 +759,10 @@ class SidePanelApp {
     const confirmed = await Modal.confirm(
       'Clear All History',
       'Are you sure you want to clear all history? This cannot be undone.',
-      { confirmText: 'Clear All', confirmClass: 'btn-danger' }
+      {
+        confirmText: 'Clear All',
+        confirmClass: 'btn-danger',
+      }
     );
 
     if (confirmed) {
@@ -712,7 +807,6 @@ class SidePanelApp {
       );
     }
   }
-
 }
 
 // Initialize the app when the sidepanel loads

@@ -4,18 +4,20 @@ import { templateEditHTML, templateEditMethods } from './template-edit.js';
 import { templateRunHTML, templateRunMethods } from './template-run.js';
 import { workflowEditHTML, workflowEditMethods } from './workflow-edit.js';
 import { workflowRunHTML, workflowRunMethods } from './workflow-run.js';
+import { chatSectionHTML, chatMethods } from './chat.js';
 
 let uidCounter = 0;
 
-// A template/workflow editor or runner, rendered as one <section> that the
-// side panel mounts alongside a nav tab — so several of these can be open
-// and switched between at once, instead of one modal blocking everything.
+// A template/workflow editor or runner, or an ad-hoc chat, rendered as one
+// <section> that the side panel mounts alongside a nav tab — so several of
+// these can be open and switched between at once, instead of one modal
+// blocking everything.
 //
-// Each of the four type/mode combinations (template/workflow x edit/run) is
-// implemented in its own file (./template-edit.js, ./template-run.js,
-// ./workflow-edit.js, ./workflow-run.js) and mixed onto this prototype below,
-// so this file only holds what's shared across all four: lifecycle, DOM
-// helpers, and dispatch by type/mode.
+// Each of the four template/workflow x edit/run combinations is implemented
+// in its own file (./template-edit.js, ./template-run.js, ./workflow-edit.js,
+// ./workflow-run.js) and mixed onto this prototype below, alongside chat.js
+// for the plain chat type, so this file only holds what's shared across all
+// of them: lifecycle, DOM helpers, and dispatch by type/mode.
 class EditorTab {
   constructor({
     type,
@@ -25,9 +27,11 @@ class EditorTab {
     templates = [],
     onTitleChange = null,
   }) {
-    this.type = type; // 'template' | 'workflow'
-    this.mode = mode; // 'edit' | 'run'
+    this.type = type; // 'template' | 'workflow' | 'chat'
+    this.mode = mode; // 'edit' | 'run', unused for 'chat'
     this.id = id;
+    // For type 'chat', prefillInputs is the seed message text (if any)
+    // rather than an inputs object.
     this.prefillInputs = prefillInputs;
     this.templates = templates;
     this.onTitleChange = onTitleChange;
@@ -40,6 +44,11 @@ class EditorTab {
     this.workflowDraftSteps = [];
     this.runController = null;
     this.root = null;
+
+    // Follow-up chat thread shown once a template/workflow run completes.
+    this.conversation = [];
+    this.chatPending = false;
+    this.chatFormBound = false;
   }
 
   setTitle(text) {
@@ -51,9 +60,11 @@ class EditorTab {
     this.onTitleChange?.(this);
   }
 
-  // Called when the tab is closed, so an in-flight workflow run is aborted.
+  // Called when the tab is closed, so an in-flight workflow run is aborted
+  // and any pending chat follow-up knows not to touch the removed DOM.
   destroy() {
     this.runController?.abort();
+    this.root = null;
   }
 
   q(selector) {
@@ -68,6 +79,9 @@ class EditorTab {
     const section = document.createElement('section');
     section.className = 'section editor-tab-section';
     section.id = this.uid;
+    section.setAttribute('role', 'tabpanel');
+    section.setAttribute('aria-labelledby', `tab-${this.uid}`);
+    section.tabIndex = 0;
     section.innerHTML = this.skeletonHTML();
     this.root = section;
 
@@ -98,13 +112,16 @@ class EditorTab {
       return header + templateEditHTML();
     }
     if (this.type === 'template' && this.mode === 'run') {
-      return header + templateRunHTML();
+      return header + templateRunHTML() + chatSectionHTML();
     }
     if (this.type === 'workflow' && this.mode === 'edit') {
       return header + workflowEditHTML();
     }
     if (this.type === 'workflow' && this.mode === 'run') {
-      return header + workflowRunHTML();
+      return header + workflowRunHTML() + chatSectionHTML();
+    }
+    if (this.type === 'chat') {
+      return header + chatSectionHTML(null);
     }
     return header + '<p>Unknown editor request.</p>';
   }
@@ -118,6 +135,8 @@ class EditorTab {
       await this.initWorkflowEdit();
     } else if (this.type === 'workflow' && this.mode === 'run') {
       await this.initWorkflowRun();
+    } else if (this.type === 'chat') {
+      await this.initChatTab(this.prefillInputs);
     } else {
       this.setTitle('Unknown editor request');
     }
@@ -144,7 +163,8 @@ Object.assign(
   templateEditMethods,
   templateRunMethods,
   workflowEditMethods,
-  workflowRunMethods
+  workflowRunMethods,
+  chatMethods
 );
 
 export default EditorTab;
