@@ -3,6 +3,17 @@
     "webstorm": {
       "url": "http://127.0.0.1:64542/stream",
       "type": "http"
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--categoryExtensions",
+        "--executablePath",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+      ],
+      "type": "stdio"
     }
   }
 }
