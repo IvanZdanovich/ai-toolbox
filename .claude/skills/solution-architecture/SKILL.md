@@ -44,12 +44,15 @@ reqs/
 
 `constraints/` sits at the repo root because the app imports from it as well as the specs, rules, and ADR entries do; `reqs/` holds everything that verifies or justifies the app — specs, examples, cross-functional checks, static-analysis rules, decisions, and plans.
 
+NESTED_APP_ROOT: where the app root is a subdirectory that is packaged or deployed as a unit (a browser extension, a published package, a container build context), `constraints/` goes inside that directory — the app must be able to import it at run time — while `reqs/` stays at the repo root, since nothing in it ships; record the placement as an ADR entry so the next reader does not "correct" it back — otherwise the constraints tree resolves in the test runner and is missing from the artifact the user actually runs
+
 # Principles
 
 MODULE_BOUNDARY: every component/module is self-contained behind one public entry point — otherwise internal details leak and callers couple to implementation instead of contract
 MINIMAL_SURFACE: the public entry re-exports only what external callers need, explicitly, never a wildcard — otherwise the public API grows unintentionally and can't shrink without breaking callers
 STRUCTURE_ON_DEMAND: add an optional file (styles, constants, utils, sub-module) only once the module actually needs it — otherwise scaffolding by convention produces empty or near-empty files nobody maintains
 SELF_DESCRIBING: never add an index, catalogue, or table-of-contents file; the folder path, file name, and entry id must identify the content on their own, and a name too vague to find by is renamed rather than indexed — otherwise a second source of truth is maintained by hand, falls behind the files it lists, and hides what it omits
+NO_PLACEHOLDER: leave a scope with nothing to record as no directory at all — never a stub, a README, or an "empty by design" note explaining the absence — otherwise the placeholder outlives the rule that justified it and reads as a record of something
 SCOPE_NAMED_BY_SUBJECT: name an ADR/WIP folder, constraints file, or cross-functional spec after its actual subject — the module, the domain/feature, or the non-functional concern (`checkout`, `latency`, `accessibility`) — never a catch-all like `system` or `misc` — otherwise one dumping-ground file accumulates unrelated decisions and stops being findable by subject
 SPEC_WITH_MODULE: every module ships unit coverage under `reqs/unit`, and cross-module behavior under `reqs/integration` — otherwise structure changes silently drop coverage
 SPECS_MIRROR_APP: `reqs/unit/<path>` and `reqs/integration/<path>` mirror the app tree at `app/<path>` — same relative folder path, one spec file per source item, named with a suffix on that item's own name (e.g. `foo.ts` → `foo.test.ts`); `reqs/e2e` stays flat because an e2e case exercises a flow, not one module — otherwise a renamed or moved source file leaves its spec orphaned and undiscoverable
@@ -58,6 +61,8 @@ ADR_MIRRORS_SUBJECT: `reqs/adr/<scope>/` holds the decisions for exactly one sub
 CONSTRAINTS_ARE_SHARED: every boundary value lives in `constraints/`, imported by the app, the examples, the specs, and the static-analysis rules, and cited by name in ADR and WIP entries — otherwise the same boundary is restated per consumer and the copies drift
 CROSS_FUNCTIONAL_ONCE: declare a requirement that applies to many modules exactly once — one constraint variable and one check that resolves its own targets — never copied into each module's specs — otherwise the copies diverge, and a module added later silently escapes the requirement entirely
 APPROACH_IS_EXECUTABLE: express the project's code-writing approach (naming, file size, complexity, allowed idioms, import direction) as static-analysis rules under `reqs/rules`, not as prose guidance — otherwise the approach holds only while someone remembers it, and context pressure erodes agent compliance over a long session
+RULE_LIVENESS: prove a rule, cross-functional check, or threshold fails before recording it as enforced — introduce the violation it targets, confirm a non-zero exit, revert — and never trust a green run as evidence a check ran — otherwise a wrong config key, a glob the shell expands differently, or a construct the rule cannot see leaves a check that is configured, passing, and inspecting nothing
+RULES_IN_CI: run every rule, spec, and threshold on an automated gate for each push — a rule that runs only when a person remembers to run it is prose with extra steps
 DOC_IS_WHY_NOT_WHAT: a module's doc records why it exists, its contract, and its gotchas; it never restates a signature or logic the code already expresses — otherwise the doc duplicates the code and rots the first time either changes
 ADR_IS_WHY_NOT_WHAT: an ADR entry captures the problem, the choice, and the basis/motivation for it — not an implementation walkthrough, which belongs in the code and its PR
 ADR_SCOPE: a decision is architectural only if it changes system boundaries, module responsibilities, cross-module contracts, or a cross-functional target (module creation/deletion/merge/split, interface definitions, technology selection, cross-cutting concerns, performance/scalability/determinism constraints, workflow orchestration, domain invariants with architectural impact); a decision affecting only internal implementation detail is never an ADR entry — otherwise the log fills with technical trivia that drowns the decisions that actually matter
@@ -72,6 +77,7 @@ DERIVABLE_EXCLUSION: exclude anything a future reader could recover by reading t
 ATOMIC_UNIT: split a compound ask into one requirement per independently testable rule — otherwise a bundled spec can be half-satisfied and no one notices
 SINGLE_OWNER: check `constraints/` for an existing variable stating the same boundary before adding a new one, and import it instead of redeclaring it — otherwise two variables drift apart and no reader knows which is canonical
 BOUNDARY_ENFORCEMENT_MECHANICAL: back every module/architectural boundary with an automated lint or dependency-graph rule under `reqs/rules` (e.g. dependency-cruiser, ArchUnitTS), not prose alone, added or updated in the same change that records the decision — otherwise the boundary quietly regresses to whatever the code happens to do
+ENFORCE_EVERY_FORM: a rule must cover every syntactic form of the thing it blocks — static and dynamic import, require and import(), re-export and direct export, decorator and call — and the form it cannot see is named in the decision as a known gap — otherwise callers migrate to the uncovered form and the rule reports clean
 REVERSE_BOUNDARY: pair a module's public-entry allow-list with a reverse deny-rule blocking external files from importing anything but that entry point — otherwise an external consumer reaches past the public API unnoticed
 BOUNDARY_ROLLOUT: land a new enforcement rule scoped to one directory or module at a time, expanding to siblings only after the first is green — otherwise a codebase-wide enforcement change stalls in merge conflicts across every team touching the tree
 BOUNDARY_PERMANENCE: block any change that deletes or weakens an existing rule file under `reqs/rules` unless it links a superseding ADR entry — otherwise deadline pressure quietly strips guardrails to get code merged
@@ -88,7 +94,9 @@ DISCOVER: inspect neighbouring modules for the project's existing folder shape, 
 ENTRY_POINT: give the module one public entry point that re-exports its public surface explicitly; keep every other file reachable only through relative/internal paths
 COLOCATE_OPTIONAL: add a styles/constants/utils/sub-module file next to the entry point only once the module needs it, matching the shape of neighbouring modules
 NEST_RECURSIVELY: a sub-module gets the same folder-plus-entry-point shape as its parent; keep it private unless the parent's entry point re-exports it
+SPEC_IMPORTS_SUBJECT: a spec must import the module it is named after and assert against that module's behavior — never against a local re-implementation, an inline copy of the logic, or a mock standing in for the subject itself (mocking the subject's _collaborators_ is fine) — otherwise the suite passes forever while the module it names is never loaded, and coverage reports it at zero
 SPEC_SCENARIOS: cover happy path, every conditional branch, edge cases (empty/null/zero/undefined), error/rejection paths, and boundary values — a single passing example is not a spec suite
+SPEC_ASSERTS: every case ends in at least one assertion about the subject; a case whose body only arranges state, or whose comment concedes the outcome "may vary depending on implementation", is deleted rather than left green
 MIRROR_PLACEMENT: place a unit spec at `reqs/unit/<app-relative-path>` and an integration spec at `reqs/integration/<app-relative-path-of-primary-module>`, each named `<sourceBaseName><projectTestSuffix>`; place an e2e case flat under `reqs/e2e` — never in an ad hoc folder
 DOC_SCALE: give every top-level module a short doc (why it exists, its contract, its consumers, its gotchas); fold a trivial private sub-module's doc into its parent instead of duplicating a near-empty file
 
@@ -130,6 +138,7 @@ ADR_ENTRY_STRUCTURE: write every entry to this shape — every field present, no
 - **links:** parent/child entry ids · superseded ids · upstream/downstream dependencies, each fully qualified (`latency.adr-3.1`)
 ```
 
+ADR_DRAFT_SHAPE: a `proposed` entry may carry only `status`, `date`, `context`, `decision`, `consequences` and `links`; the remaining fields are required before it reaches `accepted` — otherwise the full ten-field shape becomes the reason no entry is ever written and the log stays empty while real pivots ship unrecorded
 ADR_IMMUTABLE: an entry is immutable once `status: accepted` — a later change is a new entry that marks the old one `superseded` and links it, never an edit in place; only a non-accepted entry may be revised
 ADR_DAG: entries form a directed acyclic graph across all `.adr.md` files — an entry may depend on or supersede earlier entries but must never create a cycle, and must declare both upstream dependencies and downstream consequences in `links`
 ADR_WORKFLOW: (1) detect a trigger from ADR_TRIGGER; (2) pick the scope file by SCOPE_MATCH and allocate the next id by ADR_ID; (3) draft the entry against ADR_ENTRY_STRUCTURE; (4) validate it against every `ADR_*_CHECK` in Validation below; (5) a human or governance agent accepts or rejects it; (6) apply the `constraints`, `rules`, `spec_changes`, and code; (7) reference the entry id from the commit(s) that apply it
@@ -160,6 +169,9 @@ STAY_LEAN: fold a requirement that no longer applies into routine convention or 
 BOUNDARY_CHECK: no external import reaches past a module's public entry point into its internals
 SURFACE_CHECK: the public entry re-exports nothing beyond what an external caller actually needs
 SPEC_CHECK: the module's spec suite exercises happy path, branches, edge cases, and error paths, not just a render/smoke check
+SPEC_SUBJECT_CHECK: each spec imports the module it is named after, and coverage for that module is non-zero; a suite that re-implements its subject inline is rewritten against the real module
+SPEC_ASSERT_CHECK: no case reaches its end without asserting on the subject; a case that only arranges state, or that documents an outcome it declines to pin down, is deleted
+NO_PLACEHOLDER_CHECK: the change adds no stub, README, or "empty by design" note standing in for a scope with nothing to record; the directory is simply absent
 MIRROR_CHECK: each unit/integration spec file's path mirrors its source item's app path under `reqs/unit`/`reqs/integration` respectively, its name is the source item's base name plus the project's test suffix, and `reqs/e2e` cases stay flat
 EXAMPLES_MIRROR_CHECK: each `reqs/<scope>-examples` entry's path mirrors the matching `reqs/<scope>` path one level up
 NO_INDEX_CHECK: the change adds no index, catalogue, or table-of-contents file; anything that was hard to find is renamed or re-filed instead
@@ -168,6 +180,10 @@ DOC_CHECK: the module doc states why/contract/gotchas and does not restate a sig
 RULES_LOCATION_CHECK: every static-analysis, lint, and dependency-graph rule the project enforces lives under `reqs/rules`, named for what it governs
 RULES_SOURCE_CHECK: a rule's thresholds and enumerations import from `constraints/` rather than hardcoding literals in the rule config
 RULES_SEVERITY_CHECK: each rule errors rather than warns, and fails when its pattern matches zero files
+RULE_LIVENESS_CHECK: each rule, check and threshold has been shown to fail against a deliberate violation — the file set it actually matched is known, its severity is fatal, and its config key is one the tool reads; a green run is never accepted as proof it ran
+RULES_IN_CI_CHECK: an automated gate runs the rules, specs and thresholds on every push; a rule invoked only by hand does not count as enforced
+GLOB_EXPANSION_CHECK: a rule invoked through a shell or package script quotes its globs so the tool expands them, not the shell — an unquoted `**` silently narrows the file set under `sh`
+THRESHOLD_DEFAULTS_CHECK: overriding a tool's include/exclude or threshold config replaces its defaults rather than extending them — the resulting file set is verified, not assumed
 APPROACH_CHECK: a code-writing convention agreed in conversation appears as a rule file under `reqs/rules`, not only as prose in a doc
 CROSS_ONCE_CHECK: each cross-functional requirement has exactly one constraint variable and one check under `reqs/cross`; no module spec restates it
 CROSS_SELECTOR_CHECK: the cross-functional check resolves its targets by a stated selector (name pattern, module/component type, tag, manifest field, glob), names that selector in its title, and picks up a newly added matching module without being edited
@@ -179,7 +195,7 @@ ADR_ID_CHECK: each entry id is `<scope>.adr-<n>[.<n>...]`, matches its file's sc
 ADR_SCOPE_CHECK: the entry changes a system boundary, module responsibility, cross-module contract, or cross-functional target — not only an internal implementation detail
 ADR_ATOMIC_CHECK: the entry records exactly one concern; a multi-consequence decision is split into sibling or child entries
 ADR_BAR_CHECK: the entry clears ADR_SCOPE, is non-obvious, costly if unknown, and recurring; routine technical choices are left out
-ADR_STRUCTURE_CHECK: the entry carries every field from ADR_ENTRY_STRUCTURE — none omitted; `status`, `date`, `context`, `decision` and `consequences` hold real content, and a list field is empty only where it genuinely has no entries
+ADR_STRUCTURE_CHECK: an accepted entry carries every field from ADR_ENTRY_STRUCTURE — none omitted; a proposed entry carries at least the ADR_DRAFT_SHAPE fields; `status`, `date`, `context`, `decision` and `consequences` hold real content, and a list field is empty only where it genuinely has no entries
 ADR_VALIDATION_CHECK: the decision is explicit (not implied), the justification is deterministic (not subjective), alternatives are listed with reasons for rejection, consequences include risks and mitigations, `constraints`, `rules`, `spec_changes` and `specs_affected` are enumerated, and the entry traces to a use case or domain invariant
 ADR_DAG_CHECK: the entry's `links` declare upstream dependencies and downstream consequences as fully qualified ids, and following supersede/depend edges across `reqs/adr` never cycles back to this entry
 ADR_IMMUTABLE_CHECK: no `status: accepted` entry is edited in place; a change appears as a new entry marking `superseded` on the old one and linking it
