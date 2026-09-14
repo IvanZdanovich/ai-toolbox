@@ -71,9 +71,12 @@ again. The grant is per browser profile, so it happens once. Settings › Voice
 can reopen that page, and sets the recognition language (it follows your
 browser by default).
 
-If a mic never starts listening, open the side panel's own DevTools
-(right-click inside it → Inspect) — the recognizer's error code is logged
-there.
+That page also has a **Check it works** test: press Start and speak, and the
+words appear there. If they appear in the tab but not in the side panel, the
+problem is the side panel rather than the browser. Either way the side panel's
+own DevTools (right-click inside it → Inspect) logs each step — `Voice:
+recognition started`, `microphone open`, `speech detected`, `heard "…"` — plus
+the recognizer's error code when it fails.
 
 ## Supported providers
 

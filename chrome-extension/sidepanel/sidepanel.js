@@ -157,7 +157,12 @@ class SidePanelApp {
     });
 
     document.getElementById('voiceBtn').addEventListener('click', () => {
-      this.toggleVoiceCommands();
+      // Nothing below the mic may swallow the press silently — a dead button
+      // is exactly the symptom that is impossible to diagnose from the UI.
+      this.toggleVoiceCommands().catch((error) => {
+        console.error('Voice: command mode failed to start', error);
+        Toast.show(`Voice failed to start: ${error.message}`, 'error');
+      });
     });
 
     const expandBtn = document.getElementById('expandBtn');

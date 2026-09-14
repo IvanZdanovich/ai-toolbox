@@ -12,6 +12,17 @@
   display: none;
 }
 
+.mic-heard {
+  align-self: stretch;
+  min-height: var(--spacing-lg);
+  margin: 0;
+  padding: var(--spacing-sm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
 .mic-status--success {
   color: var(--color-success);
 }

@@ -36,11 +36,15 @@ const PERMISSION_PAGE_COOLDOWN_MS = 60000;
 export const MIC_PERMISSION_HINT =
   'Allow the microphone in the tab that just opened, then press the mic again.';
 
-export function openMicPermissionPage() {
-  // Every failed recognition attempt would otherwise stack another tab, and
-  // the panel can fail several times in quick succession.
+/**
+ * @param {{force?: boolean}} options force skips the rate limit — pass it when
+ *   the user just pressed a mic, so a press is never a silent no-op.
+ */
+export function openMicPermissionPage({ force = false } = {}) {
+  // Recognition can fail several times in quick succession, and each failure
+  // would otherwise stack another tab.
   const now = Date.now();
-  if (now - permissionPageOpenedAt < PERMISSION_PAGE_COOLDOWN_MS) {
+  if (!force && now - permissionPageOpenedAt < PERMISSION_PAGE_COOLDOWN_MS) {
     return;
   }
   permissionPageOpenedAt = now;
@@ -51,29 +55,34 @@ export function openMicPermissionPage() {
 }
 
 /**
- * Whether the extension already holds the microphone, sending the user to the
- * permission tab when it doesn't. Checked before starting rather than waiting
- * for recognition to fail, so the very first attempt explains itself instead
- * of reporting a blocked mic after the fact.
+ * Whether the microphone can actually be opened here, sending the user to the
+ * permission tab when it can't.
+ *
+ * This asks for the microphone rather than reading
+ * `navigator.permissions.query({name: 'microphone'})`: for a chrome-extension
+ * origin that query reports 'prompt' even when the mic opens fine, so trusting
+ * it blocks listening that would have worked. getUserMedia is the capability
+ * itself — it resolves silently when the grant is there, and only fails when
+ * it genuinely isn't.
  *
  * @returns {Promise<boolean>} false when the caller should not start listening.
  */
 export async function ensureMicrophoneAccess() {
-  // Firefox and older Chrome don't expose the microphone permission here; let
-  // recognition run and fall back to the error path.
-  if (!navigator.permissions?.query) {
+  // No mediaDevices at all (older browsers): let recognition try and report
+  // its own error rather than blocking here.
+  if (!navigator.mediaDevices?.getUserMedia) {
     return true;
   }
 
   try {
-    const { state } = await navigator.permissions.query({ name: 'microphone' });
-    if (state === 'granted') {
-      return true;
-    }
-    openMicPermissionPage();
-    return false;
-  } catch {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // The recognizer opens its own stream; this one was only the check.
+    stream.getTracks().forEach((track) => track.stop());
     return true;
+  } catch (error) {
+    console.warn('Voice: microphone unavailable —', error.name, error.message);
+    openMicPermissionPage({ force: true });
+    return false;
   }
 }
 
@@ -135,9 +144,17 @@ export function createVoiceSession({
     onStateChange?.(value);
   }
 
+  // Lifecycle logging, on by default: "nothing happens" is the hard failure
+  // to diagnose here, and these three lines separate "never started" from
+  // "started but heard no audio" from "heard audio but no words".
+  recognition.onstart = () => console.debug('Voice: recognition started');
+  recognition.onaudiostart = () => console.debug('Voice: microphone open');
+  recognition.onspeechstart = () => console.debug('Voice: speech detected');
+
   recognition.onresult = (event) => {
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const text = event.results[i][0]?.transcript?.trim();
+      console.debug('Voice: heard', JSON.stringify(text));
       if (text) {
         onTranscript?.(text);
       }

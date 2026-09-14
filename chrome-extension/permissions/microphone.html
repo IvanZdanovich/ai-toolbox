@@ -25,6 +25,17 @@
         Audio is sent to your browser's speech recognition service for
         transcription. AI Toolbox never records or stores it.
       </p>
+
+      <h2>Check it works</h2>
+      <p>
+        Press Start, say a few words, and they should appear below. If nothing
+        appears here either, speech recognition is unavailable in this browser
+        rather than blocked in the side panel.
+      </p>
+      <button type="button" class="btn btn-secondary" id="testBtn">
+        Start test
+      </button>
+      <p class="mic-heard" id="testOutput" role="status" aria-live="polite"></p>
     </main>
 
     <script type="module" src="microphone.js"></script>

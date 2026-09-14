@@ -251,38 +251,68 @@ describe('Microphone permission', () => {
   afterEach(() => {
     vi.useRealTimers();
     delete navigator.permissions;
+    delete navigator.mediaDevices;
   });
 
-  function setPermissionState(state) {
-    navigator.permissions = { query: vi.fn().mockResolvedValue({ state }) };
+  function micOpens() {
+    const track = { stop: vi.fn() };
+    navigator.mediaDevices = {
+      getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [track] }),
+    };
+    return track;
   }
 
-  it('lets listening start once the extension holds the microphone', async () => {
-    setPermissionState('granted');
+  function micBlocked() {
+    const error = new Error('Permission dismissed');
+    error.name = 'NotAllowedError';
+    navigator.mediaDevices = {
+      getUserMedia: vi.fn().mockRejectedValue(error),
+    };
+  }
+
+  it('lets listening start when the microphone actually opens', async () => {
+    const track = micOpens();
+
+    await expect(ensureMicrophoneAccess()).resolves.toBe(true);
+    expect(createdTabs).toHaveLength(0);
+    // The check must not keep the mic — the recognizer opens its own stream.
+    expect(track.stop).toHaveBeenCalled();
+  });
+
+  // Regression: an earlier version trusted
+  // navigator.permissions.query({name:'microphone'}), which reports 'prompt'
+  // for an extension origin even when the mic opens fine — so every press was
+  // refused and the mic button did nothing at all.
+  it('starts listening even while the permission registry still says "prompt"', async () => {
+    micOpens();
+    navigator.permissions = {
+      query: vi.fn().mockResolvedValue({ state: 'prompt' }),
+    };
 
     await expect(ensureMicrophoneAccess()).resolves.toBe(true);
     expect(createdTabs).toHaveLength(0);
   });
 
-  it('sends the user to the permission tab instead of starting when it does not', async () => {
-    setPermissionState('prompt');
+  it('sends the user to the permission tab when the microphone is blocked', async () => {
+    micBlocked();
 
     await expect(ensureMicrophoneAccess()).resolves.toBe(false);
     expect(createdTabs[0]).toContain('permissions/microphone.html');
   });
 
-  it('does not stack a tab per failed attempt', async () => {
-    setPermissionState('denied');
+  // A press must always do something visible, so an explicit attempt opens
+  // the tab even inside the rate limit that suppresses repeat failures.
+  it('opens the tab on every press rather than letting one be a no-op', async () => {
+    micBlocked();
 
     await ensureMicrophoneAccess();
     await ensureMicrophoneAccess();
-    await ensureMicrophoneAccess();
 
-    expect(createdTabs).toHaveLength(1);
+    expect(createdTabs).toHaveLength(2);
   });
 
-  it('falls through to recognition when the browser cannot report the state', async () => {
-    navigator.permissions = undefined;
+  it('falls through to recognition when the browser has no mediaDevices', async () => {
+    navigator.mediaDevices = undefined;
 
     await expect(ensureMicrophoneAccess()).resolves.toBe(true);
     expect(createdTabs).toHaveLength(0);
@@ -293,6 +323,11 @@ describe('Dictation buttons', () => {
   beforeEach(() => {
     FakeRecognition.instances = [];
     globalThis.webkitSpeechRecognition = FakeRecognition;
+    navigator.mediaDevices = {
+      getUserMedia: vi
+        .fn()
+        .mockResolvedValue({ getTracks: () => [{ stop: vi.fn() }] }),
+    };
     document.body.innerHTML = `
       <div id="toastContainer"></div>
       <form id="root">
@@ -304,6 +339,7 @@ describe('Dictation buttons', () => {
 
   afterEach(() => {
     delete globalThis.webkitSpeechRecognition;
+    delete navigator.mediaDevices;
   });
 
   function attach() {
