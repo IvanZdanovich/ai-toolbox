@@ -36,7 +36,7 @@ vi.mock('../../../chrome-extension/shared/storage.js', async () => {
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe('AI Service Integration', () => {
+describe('AiService: Given the AI service over a doubled network', () => {
   let aiService;
   let storage;
 
@@ -64,13 +64,13 @@ describe('AI Service Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('Scenario: User processes template with Mock provider', () => {
+  describe('AiService: When a template is processed with the mock provider', () => {
     beforeEach(async () => {
       storage.getSettings.mockResolvedValue(fixtures.settings.default);
       await aiService.init();
     });
 
-    it('should process template and return mock response', async () => {
+    it('AiService: Then it processes template and return mock response', async () => {
       // Given: A template with inputs
       const template = fixtures.templates.email;
       const inputs = fixtures.userInputs.email;
@@ -86,7 +86,7 @@ describe('AI Service Integration', () => {
       expect(result).toHaveProperty('timestamp');
     });
 
-    it('should replace variables in prompt', async () => {
+    it('AiService: Then it replaces variables in prompt', async () => {
       // Given: A template with variables
       const template = {
         ...fixtures.templates.email,
@@ -107,7 +107,7 @@ describe('AI Service Integration', () => {
       expect(result.processedPrompt).not.toContain('{tone}');
     });
 
-    it('should track processing duration', async () => {
+    it('AiService: Then it tracks processing duration', async () => {
       // When: Processing a template
       const result = await aiService.processTemplate(
         fixtures.templates.email,
@@ -120,13 +120,13 @@ describe('AI Service Integration', () => {
     });
   });
 
-  describe('Scenario: User processes template with OpenAI provider', () => {
+  describe('AiService: When a template is processed with the OpenAI provider', () => {
     beforeEach(async () => {
       storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
       await aiService.init();
     });
 
-    it('should call OpenAI API with correct parameters', async () => {
+    it('AiService: Then it calls OpenAI API with correct parameters', async () => {
       // Given: Mock successful API response
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -157,7 +157,7 @@ describe('AI Service Integration', () => {
       expect(result.provider).toBe('openai');
     });
 
-    it('should handle OpenAI API errors', async () => {
+    it('AiService: Then it handles OpenAI API errors', async () => {
       // Given: Mock API error
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -177,7 +177,7 @@ describe('AI Service Integration', () => {
       ).rejects.toThrow('Rate limit exceeded');
     });
 
-    it('should handle network errors', async () => {
+    it('AiService: Then it handles network errors', async () => {
       // Given: Network failure
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
@@ -191,13 +191,13 @@ describe('AI Service Integration', () => {
     });
   });
 
-  describe('Scenario: User processes template with Claude provider', () => {
+  describe('AiService: When a template is processed with the Claude provider', () => {
     beforeEach(async () => {
       storage.getSettings.mockResolvedValue(fixtures.settings.withClaude);
       await aiService.init();
     });
 
-    it('should call Claude API with correct parameters', async () => {
+    it('AiService: Then it calls Claude API with correct parameters', async () => {
       // Given: Mock successful API response
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -229,13 +229,13 @@ describe('AI Service Integration', () => {
     });
   });
 
-  describe('Scenario: Rate limiting', () => {
+  describe('AiService: When the rate limit is reached', () => {
     beforeEach(async () => {
       storage.getSettings.mockResolvedValue(fixtures.settings.default);
       await aiService.init();
     });
 
-    it('should allow requests within rate limit', async () => {
+    it('AiService: Then it allows requests within rate limit', async () => {
       // Given: Fresh rate limit window
       aiService.requestTimestamps = [];
 
@@ -267,7 +267,7 @@ describe('AI Service Integration', () => {
       expect(results.length + errors.length).toBe(5);
     });
 
-    it('should reject requests exceeding rate limit', async () => {
+    it('AiService: Then it rejects requests exceeding rate limit', async () => {
       // Given: Rate limit near capacity
       const now = Date.now();
       aiService.requestTimestamps = Array.from(
@@ -284,7 +284,7 @@ describe('AI Service Integration', () => {
       ).rejects.toThrow('Rate limit exceeded');
     });
 
-    it('should reset rate limit after window expires', async () => {
+    it('AiService: Then it resets rate limit after window expires', async () => {
       // Given: Old timestamps outside the window
       const oldTime = Date.now() - 120000; // 2 minutes ago
       aiService.requestTimestamps = Array.from({ length: 20 }, () => oldTime);
@@ -300,8 +300,8 @@ describe('AI Service Integration', () => {
     });
   });
 
-  describe('Scenario: Provider configuration validation', () => {
-    it('should require API key for OpenAI', async () => {
+  describe('AiService: When a provider configuration is validated', () => {
+    it('AiService: Then it requires API key for OpenAI', async () => {
       // Given: OpenAI provider without API key
       storage.getSettings.mockResolvedValue({
         ...fixtures.settings.withOpenAI,
@@ -318,7 +318,7 @@ describe('AI Service Integration', () => {
       ).rejects.toThrow('API key');
     });
 
-    it('should require API key for Claude', async () => {
+    it('AiService: Then it requires API key for Claude', async () => {
       // Given: Claude provider without API key
       storage.getSettings.mockResolvedValue({
         ...fixtures.settings.withClaude,
@@ -335,7 +335,7 @@ describe('AI Service Integration', () => {
       ).rejects.toThrow('API key');
     });
 
-    it('should work without API key for mock provider', async () => {
+    it('AiService: Then it works without API key for mock provider', async () => {
       // Given: Mock provider (no API key needed)
       storage.getSettings.mockResolvedValue(fixtures.settings.default);
       await aiService.init();
@@ -351,8 +351,8 @@ describe('AI Service Integration', () => {
     });
   });
 
-  describe('Scenario: Connection testing', () => {
-    it('should test OpenAI connection successfully', async () => {
+  describe('AiService: When a provider connection is tested', () => {
+    it('AiService: Then it tests OpenAI connection successfully', async () => {
       // Given: Valid OpenAI configuration
       storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
       await aiService.init();
@@ -374,7 +374,7 @@ describe('AI Service Integration', () => {
       }
     });
 
-    it('should report failed connection', async () => {
+    it('AiService: Then it reports failed connection', async () => {
       // Given: Invalid API key
       storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
       await aiService.init();
@@ -399,8 +399,8 @@ describe('AI Service Integration', () => {
     });
   });
 
-  describe('Scenario: Provider switching', () => {
-    it('should switch providers dynamically', async () => {
+  describe('AiService: When the active provider is switched', () => {
+    it('AiService: Then it switches providers dynamically', async () => {
       // Given: Initial mock provider
       storage.getSettings.mockResolvedValue(fixtures.settings.default);
       await aiService.init();
@@ -416,7 +416,7 @@ describe('AI Service Integration', () => {
   });
 });
 
-describe('AI Service Provider Adapters', () => {
+describe('AiService: Given the per-provider request adapters', () => {
   let aiService;
   let storage;
 
@@ -468,8 +468,8 @@ describe('AI Service Provider Adapters', () => {
     vi.clearAllMocks();
   });
 
-  describe('Scenario: OpenAI-compatible providers', () => {
-    it('should send the configured model and omit unsupported parameters', async () => {
+  describe('AiService: When an OpenAI-compatible provider is called', () => {
+    it('AiService: Then it sends the configured model and omit unsupported parameters', async () => {
       storage.getSettings.mockResolvedValue(
         settingsFor('openai', { model: 'gpt-6-astra' })
       );
@@ -488,7 +488,7 @@ describe('AI Service Provider Adapters', () => {
       expect(body.temperature).toBeUndefined();
     });
 
-    it('should fall back to the provider default model', async () => {
+    it('AiService: Then it falls back to the provider default model', async () => {
       storage.getSettings.mockResolvedValue(settingsFor('grok'));
       await aiService.init();
       mockFetch.mockResolvedValueOnce(
@@ -503,7 +503,7 @@ describe('AI Service Provider Adapters', () => {
       expect(lastRequest().url).toBe('https://api.x.ai/v1/chat/completions');
     });
 
-    it('should translate tools and parse tool calls back', async () => {
+    it('AiService: Then it translates tools and parse tool calls back', async () => {
       storage.getSettings.mockResolvedValue(settingsFor('groq'));
       await aiService.init();
       mockFetch.mockResolvedValueOnce(
@@ -545,7 +545,7 @@ describe('AI Service Provider Adapters', () => {
       ]);
     });
 
-    it('should send assistant tool calls and tool results back in wire format', async () => {
+    it('AiService: Then it sends assistant tool calls and tool results back in wire format', async () => {
       storage.getSettings.mockResolvedValue(settingsFor('groq'));
       await aiService.init();
       mockFetch.mockResolvedValueOnce(
@@ -579,13 +579,13 @@ describe('AI Service Provider Adapters', () => {
     });
   });
 
-  describe('Scenario: Anthropic adapter', () => {
+  describe('AiService: When the Anthropic adapter is called', () => {
     beforeEach(async () => {
       storage.getSettings.mockResolvedValue(settingsFor('claude'));
       await aiService.init();
     });
 
-    it('should hoist system messages and translate tool schemas', async () => {
+    it('AiService: Then it hoists system messages and translate tool schemas', async () => {
       mockFetch.mockResolvedValueOnce(
         jsonResponse({ content: [{ type: 'text', text: 'ok' }] })
       );
@@ -608,7 +608,7 @@ describe('AI Service Provider Adapters', () => {
       });
     });
 
-    it('should parse tool_use blocks alongside text', async () => {
+    it('AiService: Then it parses tool_use blocks alongside text', async () => {
       mockFetch.mockResolvedValueOnce(
         jsonResponse({
           content: [
@@ -634,7 +634,7 @@ describe('AI Service Provider Adapters', () => {
       ]);
     });
 
-    it('should send tool results as a tool_result block', async () => {
+    it('AiService: Then it sends tool results as a tool_result block', async () => {
       mockFetch.mockResolvedValueOnce(
         jsonResponse({ content: [{ type: 'text', text: 'ok' }] })
       );
@@ -666,7 +666,7 @@ describe('AI Service Provider Adapters', () => {
     });
   });
 
-  describe('Scenario: Gemini adapter', () => {
+  describe('AiService: When the Gemini adapter is called', () => {
     beforeEach(async () => {
       storage.getSettings.mockResolvedValue(
         settingsFor('gemini', { model: 'gemini-3.8-flash' })
@@ -674,7 +674,7 @@ describe('AI Service Provider Adapters', () => {
       await aiService.init();
     });
 
-    it('should authenticate with a header rather than the query string', async () => {
+    it('AiService: Then it authenticates with a header rather than the query string', async () => {
       mockFetch.mockResolvedValueOnce(
         jsonResponse({
           candidates: [{ content: { parts: [{ text: 'ok' }] } }],
@@ -691,7 +691,7 @@ describe('AI Service Provider Adapters', () => {
       expect(init.headers['x-goog-api-key']).toBe('test-key');
     });
 
-    it('should translate tools to function declarations and parse function calls', async () => {
+    it('AiService: Then it translates tools to function declarations and parse function calls', async () => {
       mockFetch.mockResolvedValueOnce(
         jsonResponse({
           candidates: [
@@ -729,8 +729,8 @@ describe('AI Service Provider Adapters', () => {
     });
   });
 
-  describe('Scenario: Local providers', () => {
-    it('should call Ollama on localhost without requiring a key', async () => {
+  describe('AiService: When a local provider is called', () => {
+    it('AiService: Then it calls Ollama on localhost without requiring a key', async () => {
       storage.getSettings.mockResolvedValue({
         provider: 'ollama',
         apiKey: '',
@@ -753,7 +753,7 @@ describe('AI Service Provider Adapters', () => {
       expect(result.content).toBe('local reply');
     });
 
-    it('should honour a custom endpoint for llama.cpp', async () => {
+    it('AiService: Then it honours a custom endpoint for llama.cpp', async () => {
       storage.getSettings.mockResolvedValue({
         provider: 'llamacpp',
         apiKeys: {},
@@ -773,7 +773,7 @@ describe('AI Service Provider Adapters', () => {
       );
     });
 
-    it('should refuse to call a local provider with no model selected', async () => {
+    it('AiService: Then it refuses to call a local provider with no model selected', async () => {
       storage.getSettings.mockResolvedValue({
         provider: 'ollama',
         apiKeys: {},
@@ -787,7 +787,7 @@ describe('AI Service Provider Adapters', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should list the models a local endpoint is serving', async () => {
+    it('AiService: Then it lists the models a local endpoint is serving', async () => {
       storage.getSettings.mockResolvedValue({
         provider: 'ollama',
         apiKeys: {},
@@ -808,8 +808,8 @@ describe('AI Service Provider Adapters', () => {
     });
   });
 
-  describe('Scenario: Retired provider ids', () => {
-    it('should route a stored "llama" provider to Groq', async () => {
+  describe('AiService: When a retired provider id is used', () => {
+    it('AiService: Then it routes a stored "llama" provider to Groq', async () => {
       storage.getSettings.mockResolvedValue({
         provider: 'llama',
         apiKeys: { groq: 'test-key' },
@@ -829,7 +829,7 @@ describe('AI Service Provider Adapters', () => {
   });
 });
 
-describe('AI Service Error Scenarios', () => {
+describe('AiService: Given a provider that fails', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -841,7 +841,7 @@ describe('AI Service Error Scenarios', () => {
     vi.clearAllMocks();
   });
 
-  it('should handle malformed API responses', async () => {
+  it('AiService: Then it handles malformed API responses', async () => {
     // Given: OpenAI provider
     vi.resetModules();
     const storage = (
@@ -874,7 +874,7 @@ describe('AI Service Error Scenarios', () => {
     }
   });
 
-  it('should handle timeout errors', async () => {
+  it('AiService: Then it handles timeout errors', async () => {
     // Given: OpenAI provider
     vi.resetModules();
     const storage = (
@@ -899,7 +899,7 @@ describe('AI Service Error Scenarios', () => {
     ).rejects.toThrow();
   });
 
-  it('should handle JSON parse errors', async () => {
+  it('AiService: Then it handles JSON parse errors', async () => {
     // Given: OpenAI provider
     vi.resetModules();
     const storage = (

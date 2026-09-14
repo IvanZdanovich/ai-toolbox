@@ -66,6 +66,7 @@ export const workflowRunMethods = {
           <label class="form-label">${sanitizeText(variableLabel(variable))}</label>
           <textarea name="${sanitizeText(variable)}"
             class="form-textarea" rows="2"
+            aria-label="${sanitizeText(variableLabel(variable))}"
             placeholder="${sanitizeText(variablePlaceholder(variable))}"></textarea>
         </div>`
             )

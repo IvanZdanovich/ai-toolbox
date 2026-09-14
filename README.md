@@ -99,13 +99,28 @@ run a cheap local model for extraction and a frontier model for the final write-
 
 ```bash
 npm install
-npm test          # Run tests
-npm run lint      # Check code quality
+npm test           # Run the jsdom suite (unit, integration, e2e, cross)
+npm run lint       # Check code quality
+npm run test:smoke # Drive a real Chrome with the extension loaded (optional)
 ```
+
+`npm run test:smoke` needs the [`chrome-devtools`
+CLI](https://github.com/ChromeDevTools/chrome-devtools-mcp) on your machine and
+opens a real browser; it skips itself if the CLI is missing, and it is not part
+of `npm test` or CI. It covers only what jsdom cannot see — Chrome accepting
+`manifest.json`, page modules resolving without a bundler, the service worker
+registering, a run persisting across a reopen.
+
+Every collected spec is `<subject>.spec.js`, with the level in the infix before
+it (`.integration.`, `.e2e.`, `.cross.`; bare for unit), and every case title
+reads `Subject: Given/When/Then …` — so the run output names what broke and
+what owns it, and `npm test -- --reporter=verbose | grep TemplateManager` lists
+what a module is held to. `reqs/rules/spec-titles.rules.js` enforces it.
 
 The extension ships from `chrome-extension/`. Everything that verifies or
 justifies it lives in `reqs/` — specs mirroring the app path, the examples
-they use, cross-functional checks, shared doubles and harness under
+they use, cross-functional checks, the browser smoke checks under
+`reqs/browser/`, shared doubles, harness and drivers under
 `reqs/support/`, the static-analysis rules, and the
 architecture decisions under `reqs/adr/`. Boundary values are declared once
 in `chrome-extension/constraints/` and imported by the app, the examples,

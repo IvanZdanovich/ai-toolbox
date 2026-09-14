@@ -13,7 +13,7 @@ const SUGGESTIONS = [
   { id: 'template-2', title: 'Code Documentation', meta: '' },
 ];
 
-describe('Search Box Integration', () => {
+describe('SearchBox: Given the search box mounted over a list of entries', () => {
   let input;
   let dropdown;
   let onSearch;
@@ -47,8 +47,8 @@ describe('Search Box Integration', () => {
     );
   }
 
-  describe('Scenario: Typing to find an existing entry', () => {
-    it('should list the matches once the search settles', async () => {
+  describe('SearchBox: When a query matching an entry is typed', () => {
+    it('SearchBox: Then it lists the matches once the search settles', async () => {
       await type('email');
 
       expect(onSearch).toHaveBeenCalledWith('email');
@@ -59,7 +59,7 @@ describe('Search Box Integration', () => {
       );
     });
 
-    it('should debounce so a burst of keystrokes searches once', async () => {
+    it('SearchBox: Then it debounces so a burst of keystrokes searches once', async () => {
       input.value = 'e';
       input.dispatchEvent(new Event('input'));
       input.value = 'em';
@@ -70,7 +70,7 @@ describe('Search Box Integration', () => {
       expect(onSearch).toHaveBeenCalledWith('ema');
     });
 
-    it('should show at most six suggestions', async () => {
+    it('SearchBox: Then it shows at most six suggestions', async () => {
       onSearch.mockResolvedValue(
         Array.from({ length: 12 }, (_, i) => ({
           id: `t-${i}`,
@@ -86,7 +86,7 @@ describe('Search Box Integration', () => {
       );
     });
 
-    it('should stay closed when the box is cleared back to blank', async () => {
+    it('SearchBox: Then it stays closed when the box is cleared back to blank', async () => {
       await type('email');
       await type('   ');
 
@@ -94,7 +94,7 @@ describe('Search Box Integration', () => {
       expect(input.getAttribute('aria-expanded')).toBe('false');
     });
 
-    it('should stay closed when nothing matches', async () => {
+    it('SearchBox: Then it stays closed when nothing matches', async () => {
       onSearch.mockResolvedValue([]);
 
       await type('nothing matches this');
@@ -103,7 +103,7 @@ describe('Search Box Integration', () => {
       expect(dropdown.innerHTML).toBe('');
     });
 
-    it('should escape entry text rather than render it as markup', async () => {
+    it('SearchBox: Then it escapes entry text rather than render it as markup', async () => {
       onSearch.mockResolvedValue([
         { id: 'x', title: '<img src=x onerror=alert(1)>', meta: '' },
       ]);
@@ -115,8 +115,8 @@ describe('Search Box Integration', () => {
     });
   });
 
-  describe('Scenario: Picking an entry from the dropdown', () => {
-    it('should open the picked entry and clear the box', async () => {
+  describe('SearchBox: When an entry is picked from the dropdown', () => {
+    it('SearchBox: Then it opens the picked entry and clear the box', async () => {
       await type('email');
       dropdown
         .querySelector('.search-dropdown-item')
@@ -130,7 +130,7 @@ describe('Search Box Integration', () => {
       expect(onSearch).toHaveBeenLastCalledWith('');
     });
 
-    it('should ignore a click on the dropdown background', async () => {
+    it('SearchBox: Then it ignores a click on the dropdown background', async () => {
       await type('email');
       dropdown.dispatchEvent(
         new window.MouseEvent('mousedown', { bubbles: true })
@@ -141,8 +141,8 @@ describe('Search Box Integration', () => {
     });
   });
 
-  describe('Scenario: Asking the AI instead of picking an entry', () => {
-    it('should open a chat with the typed text on Enter', async () => {
+  describe('SearchBox: When the AI is asked instead of picking an entry', () => {
+    it('SearchBox: Then it opens a chat with the typed text on Enter', async () => {
       await type('how do I chain two templates?');
       pressEnter();
       await vi.advanceTimersByTimeAsync(0);
@@ -153,7 +153,7 @@ describe('Search Box Integration', () => {
       expect(dropdown.classList.contains('hidden')).toBe(true);
     });
 
-    it('should do nothing on Enter with a blank box', async () => {
+    it('SearchBox: Then it does nothing on Enter with a blank box', async () => {
       await type('   ');
       pressEnter();
 
@@ -161,8 +161,8 @@ describe('Search Box Integration', () => {
     });
   });
 
-  describe('Scenario: Leaving the search box', () => {
-    it('should close the dropdown on blur', async () => {
+  describe('SearchBox: When focus leaves the search box', () => {
+    it('SearchBox: Then it closes the dropdown on blur', async () => {
       await type('email');
       input.dispatchEvent(new window.FocusEvent('blur'));
       await vi.advanceTimersByTimeAsync(100);

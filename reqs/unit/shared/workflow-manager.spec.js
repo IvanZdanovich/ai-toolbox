@@ -35,7 +35,7 @@ const promptStep = (overrides = {}) => ({
   ...overrides,
 });
 
-describe('Workflow Manager Integration', () => {
+describe('WorkflowManager: Given the workflow manager over a doubled storage', () => {
   let workflowManager;
   let extractWorkflowVariables;
   let storage;
@@ -69,8 +69,8 @@ describe('Workflow Manager Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('Scenario: User creates a workflow', () => {
-    it('should create a multi-step workflow and persist it', async () => {
+  describe('WorkflowManager: When a workflow is created', () => {
+    it('WorkflowManager: Then it creates a multi-step workflow and persist it', async () => {
       const workflow = await workflowManager.createWorkflow({
         name: 'Research Flow',
         description: 'Gather then write',
@@ -93,7 +93,7 @@ describe('Workflow Manager Integration', () => {
       expect(storage.setWorkflows).toHaveBeenCalled();
     });
 
-    it('should emit a creation event', async () => {
+    it('WorkflowManager: Then it emits a creation event', async () => {
       const listener = vi.fn();
       workflowManager.on('workflow-created', listener);
 
@@ -105,7 +105,7 @@ describe('Workflow Manager Integration', () => {
       expect(listener).toHaveBeenCalledOnce();
     });
 
-    it('should roll back when the storage write fails', async () => {
+    it('WorkflowManager: Then it rolls back when the storage write fails', async () => {
       storage.setWorkflows.mockResolvedValue(false);
 
       await expect(
@@ -115,7 +115,7 @@ describe('Workflow Manager Integration', () => {
       expect(await workflowManager.getAllWorkflows()).toHaveLength(0);
     });
 
-    it('should fill in defaults for omitted step fields', async () => {
+    it('WorkflowManager: Then it fills in defaults for omitted step fields', async () => {
       const workflow = await workflowManager.createWorkflow({
         name: 'Flow',
         steps: [{ type: 'prompt', prompt: 'Do the thing' }],
@@ -127,20 +127,20 @@ describe('Workflow Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Workflow validation', () => {
-    it('should reject a workflow with no steps', async () => {
+  describe('WorkflowManager: When a workflow is validated', () => {
+    it('WorkflowManager: Then it rejects a workflow with no steps', async () => {
       await expect(
         workflowManager.createWorkflow({ name: 'Empty', steps: [] })
       ).rejects.toThrow('at least one step');
     });
 
-    it('should reject a workflow without a name', async () => {
+    it('WorkflowManager: Then it rejects a workflow without a name', async () => {
       await expect(
         workflowManager.createWorkflow({ name: '', steps: [promptStep()] })
       ).rejects.toThrow('name is required');
     });
 
-    it('should reject duplicate output keys', async () => {
+    it('WorkflowManager: Then it rejects duplicate output keys', async () => {
       await expect(
         workflowManager.createWorkflow({
           name: 'Flow',
@@ -149,7 +149,7 @@ describe('Workflow Manager Integration', () => {
       ).rejects.toThrow('duplicate output key');
     });
 
-    it('should reject an agent step with no tools enabled', async () => {
+    it('WorkflowManager: Then it rejects an agent step with no tools enabled', async () => {
       await expect(
         workflowManager.createWorkflow({
           name: 'Flow',
@@ -166,7 +166,7 @@ describe('Workflow Manager Integration', () => {
       ).rejects.toThrow('at least one tool');
     });
 
-    it('should drop unknown tools rather than storing them', async () => {
+    it('WorkflowManager: Then it drops unknown tools rather than storing them', async () => {
       const workflow = await workflowManager.createWorkflow({
         name: 'Flow',
         steps: [
@@ -183,7 +183,7 @@ describe('Workflow Manager Integration', () => {
       expect(workflow.steps[0].tools).toEqual(['read_page']);
     });
 
-    it('should reject a template step without a template', async () => {
+    it('WorkflowManager: Then it rejects a template step without a template', async () => {
       await expect(
         workflowManager.createWorkflow({
           name: 'Flow',
@@ -192,7 +192,7 @@ describe('Workflow Manager Integration', () => {
       ).rejects.toThrow('choose a template');
     });
 
-    it('should reject an out-of-range iteration budget', async () => {
+    it('WorkflowManager: Then it rejects an out-of-range iteration budget', async () => {
       await expect(
         workflowManager.createWorkflow({
           name: 'Flow',
@@ -210,7 +210,7 @@ describe('Workflow Manager Integration', () => {
       ).rejects.toThrow('max iterations');
     });
 
-    it('should reject a workflow with more than the allowed number of steps', async () => {
+    it('WorkflowManager: Then it rejects a workflow with more than the allowed number of steps', async () => {
       await expect(
         workflowManager.createWorkflow({
           name: 'Flow',
@@ -222,8 +222,8 @@ describe('Workflow Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Input variables', () => {
-    it('should treat plain placeholders as run inputs', () => {
+  describe('WorkflowManager: When input variables are extracted', () => {
+    it('WorkflowManager: Then it treats plain placeholders as run inputs', () => {
       const variables = extractWorkflowVariables({
         steps: [
           { prompt: 'Research {topic} for {audience}' },
@@ -234,7 +234,7 @@ describe('Workflow Manager Integration', () => {
       expect(variables).toEqual(['topic', 'audience']);
     });
 
-    it('should not treat step references as inputs', () => {
+    it('WorkflowManager: Then it does not treat step references as inputs', () => {
       const variables = extractWorkflowVariables({
         steps: [{ prompt: 'Polish {previous} using {steps.critique}' }],
       });
@@ -243,7 +243,7 @@ describe('Workflow Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Updating and deleting', () => {
+  describe('WorkflowManager: When a workflow is updated or deleted', () => {
     let existing;
 
     beforeEach(async () => {
@@ -253,7 +253,7 @@ describe('Workflow Manager Integration', () => {
       });
     });
 
-    it('should update steps in place', async () => {
+    it('WorkflowManager: Then it updates steps in place', async () => {
       const updated = await workflowManager.updateWorkflow(existing.id, {
         steps: [promptStep({ prompt: 'Rewritten prompt' })],
       });
@@ -262,7 +262,7 @@ describe('Workflow Manager Integration', () => {
       expect(updated.id).toBe(existing.id);
     });
 
-    it('should reject an update that breaks validation', async () => {
+    it('WorkflowManager: Then it rejects an update that breaks validation', async () => {
       await expect(
         workflowManager.updateWorkflow(existing.id, { name: '' })
       ).rejects.toThrow('name is required');
@@ -271,12 +271,12 @@ describe('Workflow Manager Integration', () => {
       expect(unchanged.name).toBe('Flow');
     });
 
-    it('should delete a workflow', async () => {
+    it('WorkflowManager: Then it deletes a workflow', async () => {
       await workflowManager.deleteWorkflow(existing.id);
       expect(await workflowManager.getAllWorkflows()).toHaveLength(0);
     });
 
-    it('should duplicate a workflow with fresh step ids', async () => {
+    it('WorkflowManager: Then it duplicates a workflow with fresh step ids', async () => {
       const copy = await workflowManager.duplicateWorkflow(existing.id);
 
       expect(copy.name).toBe('Flow (Copy)');
@@ -285,8 +285,8 @@ describe('Workflow Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Seeding defaults on first run', () => {
-    it('should seed starter workflows when none exist', async () => {
+  describe('WorkflowManager: When the library is seeded on first run', () => {
+    it('WorkflowManager: Then it seeds starter workflows when none exist', async () => {
       storage.getWorkflowsSeeded.mockResolvedValue(false);
       await workflowManager.init();
 
@@ -300,14 +300,14 @@ describe('Workflow Manager Integration', () => {
       expect(storage.setWorkflowsSeeded).toHaveBeenCalledWith(true);
     });
 
-    it('should not re-seed once the user has emptied the list', async () => {
+    it('WorkflowManager: Then it does not re-seed once the user has emptied the list', async () => {
       storage.getWorkflowsSeeded.mockResolvedValue(true);
       await workflowManager.init();
 
       expect(await workflowManager.getAllWorkflows()).toHaveLength(0);
     });
 
-    it('should mark seeded without overwriting existing workflows', async () => {
+    it('WorkflowManager: Then it marks seeded without overwriting existing workflows', async () => {
       storage.getWorkflowsSeeded.mockResolvedValue(false);
       storage.getWorkflows.mockResolvedValue([
         { id: 'w1', name: 'Mine', description: '', steps: [promptStep()] },
@@ -322,8 +322,8 @@ describe('Workflow Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Import and export', () => {
-    it('should round-trip workflows through export and import', async () => {
+  describe('WorkflowManager: When workflows are imported or exported', () => {
+    it('WorkflowManager: Then it round-trips workflows through export and import', async () => {
       await workflowManager.createWorkflow({
         name: 'Flow',
         steps: [promptStep()],
@@ -339,7 +339,7 @@ describe('Workflow Manager Integration', () => {
       expect(await workflowManager.getAllWorkflows()).toHaveLength(2);
     });
 
-    it('should report per-workflow import failures without aborting', async () => {
+    it('WorkflowManager: Then it reports per-workflow import failures without aborting', async () => {
       const result = await workflowManager.importWorkflows({
         workflows: [
           { name: '', steps: [] },
@@ -351,14 +351,14 @@ describe('Workflow Manager Integration', () => {
       expect(result.errors).toHaveLength(1);
     });
 
-    it('should reject malformed import data', async () => {
+    it('WorkflowManager: Then it rejects malformed import data', async () => {
       await expect(workflowManager.importWorkflows({})).rejects.toThrow(
         'Invalid import data'
       );
     });
   });
 
-  describe('Scenario: Searching workflows', () => {
+  describe('WorkflowManager: When workflows are searched', () => {
     beforeEach(async () => {
       await workflowManager.createWorkflow({
         name: 'Research Brief',
@@ -372,18 +372,18 @@ describe('Workflow Manager Integration', () => {
       });
     });
 
-    it('should match on name', async () => {
+    it('WorkflowManager: Then it matches on name', async () => {
       const results = await workflowManager.searchWorkflows('research');
       expect(results).toHaveLength(1);
       expect(results[0].name).toBe('Research Brief');
     });
 
-    it('should match on step prompt text', async () => {
+    it('WorkflowManager: Then it matches on step prompt text', async () => {
       const results = await workflowManager.searchWorkflows('papers');
       expect(results).toHaveLength(1);
     });
 
-    it('should return everything for an empty query', async () => {
+    it('WorkflowManager: Then it returns everything for an empty query', async () => {
       expect(await workflowManager.searchWorkflows('  ')).toHaveLength(2);
     });
   });

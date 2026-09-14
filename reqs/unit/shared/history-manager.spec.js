@@ -32,7 +32,7 @@ vi.mock('../../../chrome-extension/shared/storage.js', async () => {
   };
 });
 
-describe('History Manager Integration', () => {
+describe('HistoryManager: Given the history manager over a doubled storage', () => {
   let historyManager;
   let storage;
 
@@ -58,8 +58,8 @@ describe('History Manager Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('Scenario: First-time user executes a template', () => {
-    it('should initialize with empty history', async () => {
+  describe('HistoryManager: When the first execution is recorded', () => {
+    it('HistoryManager: Then it initializes with empty history', async () => {
       // Given: A new user with no history
       storage.getHistory.mockResolvedValue([]);
 
@@ -72,7 +72,7 @@ describe('History Manager Integration', () => {
       expect(historyManager.initialized).toBe(true);
     });
 
-    it('should record first template execution', async () => {
+    it('HistoryManager: Then it records first template execution', async () => {
       // Given: Initialized history manager
       storage.getHistory.mockResolvedValue([]);
       await historyManager.init();
@@ -98,7 +98,7 @@ describe('History Manager Integration', () => {
     });
   });
 
-  describe('Scenario: User reviews execution history', () => {
+  describe('HistoryManager: When the history is listed', () => {
     const existingHistory = [
       fixtures.history.successfulExecution,
       fixtures.history.failedExecution,
@@ -110,7 +110,7 @@ describe('History Manager Integration', () => {
       await historyManager.init();
     });
 
-    it('should retrieve all history sorted by date', async () => {
+    it('HistoryManager: Then it retrieves all history sorted by date', async () => {
       // When: User requests all history
       const history = await historyManager.getAllHistory();
 
@@ -123,7 +123,7 @@ describe('History Manager Integration', () => {
       }
     });
 
-    it('should filter history by template', async () => {
+    it('HistoryManager: Then it filters history by template', async () => {
       // When: User filters by template ID
       const filtered = await historyManager.getHistoryByTemplate(
         fixtures.templates.email.id
@@ -135,7 +135,7 @@ describe('History Manager Integration', () => {
       ).toBe(true);
     });
 
-    it('should retrieve specific history entry', async () => {
+    it('HistoryManager: Then it retrieves specific history entry', async () => {
       // When: User retrieves specific entry
       const entry = await historyManager.getHistoryEntry(
         fixtures.history.successfulExecution.id
@@ -146,7 +146,7 @@ describe('History Manager Integration', () => {
       expect(entry.id).toBe(fixtures.history.successfulExecution.id);
     });
 
-    it('should return undefined for non-existent entry', async () => {
+    it('HistoryManager: Then it returns undefined for non-existent entry', async () => {
       // When: User retrieves non-existent entry
       const entry = await historyManager.getHistoryEntry('non-existent-id');
 
@@ -155,7 +155,7 @@ describe('History Manager Integration', () => {
     });
   });
 
-  describe('Scenario: User searches history', () => {
+  describe('HistoryManager: When the history is searched', () => {
     beforeEach(async () => {
       const history = [
         factories.createHistoryEntry({
@@ -179,7 +179,7 @@ describe('History Manager Integration', () => {
       await historyManager.init();
     });
 
-    it('should search history by template name', async () => {
+    it('HistoryManager: Then it searches history by template name', async () => {
       // When: User searches for "Email"
       const results = await historyManager.searchHistory('Email');
 
@@ -192,7 +192,7 @@ describe('History Manager Integration', () => {
       ).toBe(true);
     });
 
-    it('should search history by result content', async () => {
+    it('HistoryManager: Then it searches history by result content', async () => {
       // When: User searches for "customer"
       const results = await historyManager.searchHistory('customer');
 
@@ -200,7 +200,7 @@ describe('History Manager Integration', () => {
       expect(results.length).toBeGreaterThan(0);
     });
 
-    it('should return empty for no matches', async () => {
+    it('HistoryManager: Then it returns empty for no matches', async () => {
       // When: User searches for non-existent term
       const results = await historyManager.searchHistory('xyz123nonexistent');
 
@@ -209,13 +209,13 @@ describe('History Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Recording different execution statuses', () => {
+  describe('HistoryManager: When an execution is recorded with each status', () => {
     beforeEach(async () => {
       storage.getHistory.mockResolvedValue([]);
       await historyManager.init();
     });
 
-    it('should record successful execution', async () => {
+    it('HistoryManager: Then it records successful execution', async () => {
       // When: Recording a successful execution
       const entry = await historyManager.addHistoryEntry(
         'template-001',
@@ -230,7 +230,7 @@ describe('History Manager Integration', () => {
       expect(entry.result).toBe('Successful result');
     });
 
-    it('should record failed execution', async () => {
+    it('HistoryManager: Then it records failed execution', async () => {
       // When: Recording a failed execution
       const entry = await historyManager.addHistoryEntry(
         'template-001',
@@ -244,7 +244,7 @@ describe('History Manager Integration', () => {
       expect(entry.status).toBe('failed');
     });
 
-    it('should update processing entry to completed', async () => {
+    it('HistoryManager: Then it updates processing entry to completed', async () => {
       // Given: A processing entry
       const entry = await historyManager.addHistoryEntry(
         'template-001',
@@ -268,8 +268,8 @@ describe('History Manager Integration', () => {
     });
   });
 
-  describe('Scenario: History limit enforcement', () => {
-    it('should enforce maximum history entries', async () => {
+  describe('HistoryManager: When the history limit is reached', () => {
+    it('HistoryManager: Then it enforces maximum history entries', async () => {
       // Given: History at the limit
       const maxEntries = MAX_HISTORY_ENTRIES;
       const history = factories.createHistoryEntries(maxEntries);
@@ -290,7 +290,7 @@ describe('History Manager Integration', () => {
       expect(allHistory.length).toBeLessThanOrEqual(maxEntries);
     });
 
-    it('should remove oldest entries when limit exceeded', async () => {
+    it('HistoryManager: Then it removes oldest entries when limit exceeded', async () => {
       // Given: History at the limit with known oldest entry
       const maxEntries = MAX_HISTORY_ENTRIES;
       const oldestTimestamp = '2020-01-01T00:00:00.000Z';
@@ -320,14 +320,14 @@ describe('History Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Clearing history', () => {
+  describe('HistoryManager: When the history is cleared', () => {
     beforeEach(async () => {
       const history = factories.createHistoryEntries(10);
       storage.getHistory.mockResolvedValue(history);
       await historyManager.init();
     });
 
-    it('should clear all history', async () => {
+    it('HistoryManager: Then it clears all history', async () => {
       // Given: History with entries
       const initialHistory = await historyManager.getAllHistory();
       expect(initialHistory.length).toBeGreaterThan(0);
@@ -340,7 +340,7 @@ describe('History Manager Integration', () => {
       expect(history).toHaveLength(0);
     });
 
-    it('should clear history for specific template', async () => {
+    it('HistoryManager: Then it clears history for specific template', async () => {
       // Given: History with multiple templates
       const templateId = 'template-to-clear';
       const history = [
@@ -361,13 +361,13 @@ describe('History Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Event emission', () => {
+  describe('HistoryManager: When a change emits an event', () => {
     beforeEach(async () => {
       storage.getHistory.mockResolvedValue([]);
       await historyManager.init();
     });
 
-    it('should emit event when history entry is added', async () => {
+    it('HistoryManager: Then it emits event when history entry is added', async () => {
       // Given: A listener for history events
       const eventSpy = vi.fn();
       historyManager.on?.('history-updated', eventSpy);
@@ -386,7 +386,7 @@ describe('History Manager Integration', () => {
   });
 });
 
-describe('History Manager Error Handling', () => {
+describe('HistoryManager: Given a storage layer that fails', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -397,7 +397,7 @@ describe('History Manager Error Handling', () => {
     vi.clearAllMocks();
   });
 
-  it('should handle storage errors gracefully', async () => {
+  it('HistoryManager: Then it handles storage errors gracefully', async () => {
     // Given: Storage that throws errors
     vi.resetModules();
     const storage = (
@@ -421,7 +421,7 @@ describe('History Manager Error Handling', () => {
     consoleSpy.mockRestore();
   });
 
-  it('should handle update errors for non-existent entries', async () => {
+  it('HistoryManager: Then it handles update errors for non-existent entries', async () => {
     // Given: Initialized history manager
     vi.resetModules();
     const storage = (

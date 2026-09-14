@@ -13,6 +13,18 @@ import {
 // Global test timeout
 vi.setConfig({ testTimeout: 10000 });
 
+// jsdom ships no Web Animations API, and the toast component animates every
+// toast in and out, finishing its removal in the animation's onfinish. Without
+// this the call throws from a timer, outside any case, and Vitest reports it as
+// an unhandled error while the toast never disappears.
+if (typeof Element !== 'undefined' && !Element.prototype.animate) {
+  Element.prototype.animate = function () {
+    const animation = { onfinish: null, cancel() {}, finish() {} };
+    setTimeout(() => animation.onfinish?.(), 0);
+    return animation;
+  };
+}
+
 // Install Chrome mock before all tests
 beforeAll(() => {
   // Install Chrome API mock globally

@@ -506,9 +506,13 @@ class SidePanelApp {
           ${entry.result ? sanitizeText(truncateText(entry.result, 150)) : 'No result'}
         </div>
         <div class="history-entry-actions">
-          <button class="btn btn-small btn-secondary" data-action="copy">Copy Result</button>
+          ${
+            entry.result
+              ? '<button class="btn btn-small btn-secondary" data-action="copy">Copy Result</button>'
+              : ''
+          }
           <button class="btn btn-small btn-secondary" data-action="rerun">Rerun</button>
-          <button class="btn btn-small btn-secondary" data-action="delete">${IconHelper.iconHTML('delete', 'sm')}</button>
+          <button class="btn btn-small btn-secondary" data-action="delete" title="Delete entry" aria-label="Delete entry">${IconHelper.iconHTML('delete', 'sm')}</button>
         </div>
       </div>
     `

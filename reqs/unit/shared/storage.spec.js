@@ -21,7 +21,7 @@ import {
 } from '../../unit-examples/shared/test-data.examples.js';
 import { STORAGE_CHUNK_SIZE } from '../../../chrome-extension/constraints/storage.constraints.js';
 
-describe('Storage Service Integration', () => {
+describe('Storage: Given the storage service over a Chrome storage double', () => {
   let storage;
 
   beforeEach(async () => {
@@ -43,8 +43,8 @@ describe('Storage Service Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('Scenario: Basic storage operations', () => {
-    it('should store and retrieve a value', async () => {
+  describe('Storage: When a value is written and read back', () => {
+    it('Storage: Then it stores and retrieve a value', async () => {
       // Given: A key-value pair
       const key = 'test-key';
       const value = { data: 'test data', count: 42 };
@@ -57,7 +57,7 @@ describe('Storage Service Integration', () => {
       expect(retrieved).toEqual(value);
     });
 
-    it('should return undefined for non-existent key', async () => {
+    it('Storage: Then it returns undefined for non-existent key', async () => {
       // When: Getting non-existent key
       const result = await storage.get('non-existent-key');
 
@@ -65,7 +65,7 @@ describe('Storage Service Integration', () => {
       expect(result).toBeFalsy();
     });
 
-    it('should update existing value', async () => {
+    it('Storage: Then it updates existing value', async () => {
       // Given: An existing value
       const key = 'update-test';
       await storage.set(key, { version: 1 });
@@ -78,7 +78,7 @@ describe('Storage Service Integration', () => {
       expect(result).toEqual({ version: 2, newField: 'added' });
     });
 
-    it('should remove a value', async () => {
+    it('Storage: Then it removes a value', async () => {
       // Given: An existing value
       const key = 'remove-test';
       await storage.set(key, { data: 'to remove' });
@@ -91,7 +91,7 @@ describe('Storage Service Integration', () => {
       expect(result).toBeFalsy();
     });
 
-    it('should clear all storage', async () => {
+    it('Storage: Then it clears all storage', async () => {
       // Given: Multiple stored values
       await storage.set('key1', 'value1');
       await storage.set('key2', 'value2');
@@ -107,8 +107,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: Cache behavior', () => {
-    it('should cache retrieved values', async () => {
+  describe('Storage: When a read is served from the cache', () => {
+    it('Storage: Then it caches retrieved values', async () => {
       // Given: A stored value
       await storage.set('cached-key', { data: 'cached' });
       await storage.get('cached-key'); // First retrieval - caches
@@ -121,7 +121,7 @@ describe('Storage Service Integration', () => {
       // Cache should be faster, but don't assert timing in tests
     });
 
-    it('should invalidate cache on set', async () => {
+    it('Storage: Then it invalidates cache on set', async () => {
       // Given: A cached value
       await storage.set('cache-invalidate', { version: 1 });
       await storage.get('cache-invalidate'); // Cache it
@@ -134,7 +134,7 @@ describe('Storage Service Integration', () => {
       expect(result).toEqual({ version: 2 });
     });
 
-    it('should invalidate cache on remove', async () => {
+    it('Storage: Then it invalidates cache on remove', async () => {
       // Given: A cached value
       await storage.set('cache-remove', { data: 'test' });
       await storage.get('cache-remove'); // Cache it
@@ -148,8 +148,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: Templates storage', () => {
-    it('should store and retrieve templates', async () => {
+  describe('Storage: When templates are persisted', () => {
+    it('Storage: Then it stores and retrieve templates', async () => {
       // Given: A list of templates
       const templates = [
         fixtures.templates.email,
@@ -166,7 +166,7 @@ describe('Storage Service Integration', () => {
       expect(retrieved.map((t) => t.id)).toEqual(templates.map((t) => t.id));
     });
 
-    it('should return empty array for no templates', async () => {
+    it('Storage: Then it returns empty array for no templates', async () => {
       // When: Getting templates when none exist
       const templates = await storage.getTemplates();
 
@@ -174,7 +174,7 @@ describe('Storage Service Integration', () => {
       expect(templates).toEqual([]);
     });
 
-    it('should handle large number of templates', async () => {
+    it('Storage: Then it handles large number of templates', async () => {
       // Given: Many templates
       const templates = factories.createTemplates(50);
 
@@ -187,8 +187,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: History storage', () => {
-    it('should store and retrieve history', async () => {
+  describe('Storage: When history entries are persisted', () => {
+    it('Storage: Then it stores and retrieve history', async () => {
       // Given: History entries
       const history = [
         fixtures.history.successfulExecution,
@@ -203,7 +203,7 @@ describe('Storage Service Integration', () => {
       expect(retrieved).toHaveLength(2);
     });
 
-    it('should return empty array for no history', async () => {
+    it('Storage: Then it returns empty array for no history', async () => {
       // When: Getting history when none exists
       const history = await storage.getHistory();
 
@@ -211,7 +211,7 @@ describe('Storage Service Integration', () => {
       expect(history).toEqual([]);
     });
 
-    it('should handle large history', async () => {
+    it('Storage: Then it handles large history', async () => {
       // Given: Many history entries
       const history = factories.createHistoryEntries(100);
 
@@ -224,8 +224,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: Settings storage', () => {
-    it('should store and retrieve settings', async () => {
+  describe('Storage: When settings are persisted', () => {
+    it('Storage: Then it stores and retrieve settings', async () => {
       // Given: Custom settings
       const settings = fixtures.settings.withOpenAI;
 
@@ -238,7 +238,7 @@ describe('Storage Service Integration', () => {
       expect(retrieved.apiKey).toBe(settings.apiKey);
     });
 
-    it('should merge with default settings', async () => {
+    it('Storage: Then it merges with default settings', async () => {
       // Given: Partial settings
       await storage.setSettings({ provider: 'claude' });
 
@@ -250,7 +250,7 @@ describe('Storage Service Integration', () => {
       expect(retrieved.theme).toBeDefined(); // From defaults
     });
 
-    it('should return defaults when no settings exist', async () => {
+    it('Storage: Then it returns defaults when no settings exist', async () => {
       // When: Getting settings when none exist
       const settings = await storage.getSettings();
 
@@ -261,8 +261,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: Chunked storage for large data', () => {
-    it('should handle data larger than item limit', async () => {
+  describe('Storage: When a value exceeds STORAGE_CHUNK_SIZE', () => {
+    it('Storage: Then it handles data larger than item limit', async () => {
       // Given: Data larger than the chunking threshold
       const largeData = {
         content: 'x'.repeat(STORAGE_CHUNK_SIZE + 1000),
@@ -278,7 +278,7 @@ describe('Storage Service Integration', () => {
       expect(retrieved.metadata.size).toBe('large');
     });
 
-    it('should handle chunked templates', async () => {
+    it('Storage: Then it handles chunked templates', async () => {
       // Given: Many large templates
       const templates = factories.createTemplates(30).map((t) => ({
         ...t,
@@ -296,8 +296,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: Storage info and limits', () => {
-    it('should report storage usage', async () => {
+  describe('Storage: When storage usage is reported', () => {
+    it('Storage: Then it reports storage usage', async () => {
       // Given: Some stored data
       await storage.setTemplates(factories.createTemplates(10));
       await storage.setHistory(factories.createHistoryEntries(20));
@@ -315,8 +315,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: Templates seeded flag', () => {
-    it('should track templates seeded state', async () => {
+  describe('Storage: When the templates-seeded flag is read and set', () => {
+    it('Storage: Then it tracks templates seeded state', async () => {
       // Given: Fresh storage
       expect(await storage.getTemplatesSeeded()).toBe(false);
 
@@ -328,8 +328,8 @@ describe('Storage Service Integration', () => {
     });
   });
 
-  describe('Scenario: Persistence validation', () => {
-    it('should validate data persistence', async () => {
+  describe('Storage: When a persisted value is read back after a reload', () => {
+    it('Storage: Then it validates data persistence', async () => {
       // Given: Stored data
       await storage.setTemplates([fixtures.templates.email]);
       await storage.setHistory([fixtures.history.successfulExecution]);
@@ -346,7 +346,7 @@ describe('Storage Service Integration', () => {
   });
 });
 
-describe('Storage Error Handling', () => {
+describe('Storage: Given a Chrome storage layer that fails', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -357,12 +357,12 @@ describe('Storage Error Handling', () => {
     vi.clearAllMocks();
   });
 
-  it('should handle storage quota exceeded', async () => {
+  it('Storage: Then it handles storage quota exceeded', async () => {
     // This would require mocking quota errors
     // Storage should handle gracefully
   });
 
-  it('should handle corrupted data', async () => {
+  it('Storage: Then it handles corrupted data', async () => {
     // Given: Corrupted data in storage
     testUtils.setStorageState({
       templates: 'not-valid-json-array',

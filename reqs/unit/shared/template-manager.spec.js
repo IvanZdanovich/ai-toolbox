@@ -33,7 +33,7 @@ vi.mock('../../../chrome-extension/shared/storage.js', async () => {
   };
 });
 
-describe('Template Manager Integration', () => {
+describe('TemplateManager: Given the template manager over a doubled storage', () => {
   let templateManager;
   let storage;
 
@@ -69,8 +69,8 @@ describe('Template Manager Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('Scenario: First-time user creates their first template', () => {
-    it('should initialize with empty templates and seed defaults', async () => {
+  describe('TemplateManager: When the first template is created', () => {
+    it('TemplateManager: Then it initializes with empty templates and seed defaults', async () => {
       // Given: A new user with no existing templates
       storage.getTemplates.mockResolvedValue([]);
       storage.getTemplatesSeeded.mockResolvedValue(false);
@@ -83,7 +83,7 @@ describe('Template Manager Integration', () => {
       // Default templates are created during init
     });
 
-    it('should create a new template with valid data', async () => {
+    it('TemplateManager: Then it creates a new template with valid data', async () => {
       // Given: Initialized template manager
       storage.getTemplates.mockResolvedValue([]);
       await templateManager.init();
@@ -109,7 +109,7 @@ describe('Template Manager Integration', () => {
       expect(storage.setTemplates).toHaveBeenCalled();
     });
 
-    it('should reject template with invalid data', async () => {
+    it('TemplateManager: Then it rejects template with invalid data', async () => {
       // Given: Initialized template manager
       storage.getTemplates.mockResolvedValue([]);
       await templateManager.init();
@@ -126,7 +126,7 @@ describe('Template Manager Integration', () => {
     });
   });
 
-  describe('Scenario: User manages existing templates', () => {
+  describe('TemplateManager: When an existing template is updated or removed', () => {
     const existingTemplates = [
       fixtures.templates.email,
       fixtures.templates.codeDoc,
@@ -139,7 +139,7 @@ describe('Template Manager Integration', () => {
       await templateManager.init();
     });
 
-    it('should retrieve all templates sorted by date', async () => {
+    it('TemplateManager: Then it retrieves all templates sorted by date', async () => {
       // When: User requests all templates
       const templates = await templateManager.getAllTemplates();
 
@@ -149,7 +149,7 @@ describe('Template Manager Integration', () => {
       expect(templates.map((t) => t.name)).toContain('Code Documentation');
     });
 
-    it('should update an existing template', async () => {
+    it('TemplateManager: Then it updates an existing template', async () => {
       // Given: An existing template
       const templateId = fixtures.templates.email.id;
 
@@ -166,7 +166,7 @@ describe('Template Manager Integration', () => {
       expect(updated.updatedAt).not.toBe(fixtures.templates.email.updatedAt);
     });
 
-    it('should delete a template', async () => {
+    it('TemplateManager: Then it deletes a template', async () => {
       // Given: An existing template
       const templateId = fixtures.templates.email.id;
       const initialCount = (await templateManager.getAllTemplates()).length;
@@ -180,7 +180,7 @@ describe('Template Manager Integration', () => {
       expect(templates.find((t) => t.id === templateId)).toBeUndefined();
     });
 
-    it('should find template by ID', async () => {
+    it('TemplateManager: Then it finds template by ID', async () => {
       // When: User retrieves a specific template
       const template = await templateManager.getTemplate(
         fixtures.templates.codeDoc.id
@@ -192,7 +192,7 @@ describe('Template Manager Integration', () => {
     });
   });
 
-  describe('Scenario: User searches templates', () => {
+  describe('TemplateManager: When templates are searched', () => {
     beforeEach(async () => {
       const templates = [
         factories.createTemplate({
@@ -217,7 +217,7 @@ describe('Template Manager Integration', () => {
       await templateManager.init();
     });
 
-    it('should find templates by name', async () => {
+    it('TemplateManager: Then it finds templates by name', async () => {
       // When: User searches for "Email"
       const results = await templateManager.searchTemplates('Email');
 
@@ -226,7 +226,7 @@ describe('Template Manager Integration', () => {
       expect(results.every((t) => t.name.includes('Email'))).toBe(true);
     });
 
-    it('should find templates by description', async () => {
+    it('TemplateManager: Then it finds templates by description', async () => {
       // When: User searches for "code"
       const results = await templateManager.searchTemplates('code');
 
@@ -234,7 +234,7 @@ describe('Template Manager Integration', () => {
       expect(results.length).toBeGreaterThan(0);
     });
 
-    it('should return empty array for no matches', async () => {
+    it('TemplateManager: Then it returns empty array for no matches', async () => {
       // When: User searches for non-existent term
       const results = await templateManager.searchTemplates('xyz123');
 
@@ -242,7 +242,7 @@ describe('Template Manager Integration', () => {
       expect(results).toHaveLength(0);
     });
 
-    it('should handle empty search query', async () => {
+    it('TemplateManager: Then it handles empty search query', async () => {
       // When: User searches with empty string
       const results = await templateManager.searchTemplates('');
 
@@ -251,8 +251,8 @@ describe('Template Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Template variable extraction', () => {
-    it('should extract variables from template prompt', async () => {
+  describe('TemplateManager: When variables are extracted from a prompt', () => {
+    it('TemplateManager: Then it extracts variables from template prompt', async () => {
       // Given: A template with variables
       const template = factories.createTemplate({
         prompt: 'Write a {type} about {topic} in {language}',
@@ -274,8 +274,8 @@ describe('Template Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Template limit enforcement', () => {
-    it('should enforce maximum template limit', async () => {
+  describe('TemplateManager: When the template limit is reached', () => {
+    it('TemplateManager: Then it enforces maximum template limit', async () => {
       // Given: Templates at the limit
       const maxTemplates = MAX_TEMPLATES;
       const templates = factories.createTemplates(maxTemplates);
@@ -302,8 +302,8 @@ describe('Template Manager Integration', () => {
     });
   });
 
-  describe('Scenario: Event emission', () => {
-    it('should emit event when template is created', async () => {
+  describe('TemplateManager: When a change emits an event', () => {
+    it('TemplateManager: Then it emits event when template is created', async () => {
       // Given: A listener for template events
       storage.getTemplates.mockResolvedValue([]);
       await templateManager.init();
@@ -322,7 +322,7 @@ describe('Template Manager Integration', () => {
       // Note: Implementation may vary
     });
 
-    it('should emit event when template is deleted', async () => {
+    it('TemplateManager: Then it emits event when template is deleted', async () => {
       // Given: Existing template and listener
       const template = fixtures.templates.email;
       storage.getTemplates.mockResolvedValue([template]);
@@ -340,7 +340,7 @@ describe('Template Manager Integration', () => {
   });
 });
 
-describe('Template Manager Error Handling', () => {
+describe('TemplateManager: Given a storage layer that fails', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -351,7 +351,7 @@ describe('Template Manager Error Handling', () => {
     vi.clearAllMocks();
   });
 
-  it('should handle storage errors gracefully', async () => {
+  it('TemplateManager: Then it handles storage errors gracefully', async () => {
     // Given: Storage that throws errors
     vi.resetModules();
     const storage = (

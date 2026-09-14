@@ -21,23 +21,28 @@ constraints/
   latency.constraints.<ext>      # cross-functional boundaries: budgets, limits, targets
 reqs/
   unit/
-    module1/...                  # mirrors app/module1
+    module1/
+      module1.spec.<ext>         # mirrors app/module1; one real module, collaborators doubled
   integration/
-    module2/...                  # mirrors the app path of the primary module under test
-  e2e/                           # flat — a user/system flow, not one module
+    module2/
+      module2.integration.spec.<ext>   # mirrors the app path of the primary module under test
+  e2e/
+    checkout.e2e.spec.<ext>      # flat — a user/system flow, not one module
   unit-examples/
-    module1/...                  # mirrors reqs/unit/module1
+    module1/
+      module1.examples.<ext>     # named instances backing reqs/unit/module1
   integration-examples/
     module2/...                  # mirrors reqs/integration/module2
   e2e-examples/                  # flat, mirrors reqs/e2e
   cross/
-    latency.spec.<ext>           # one check, resolving its own targets by a stated selector
+    latency.cross.spec.<ext>     # one check, resolving its own targets by a stated selector
   support/
     chrome-api.mock.<ext>        # a dependency's double, shared across levels
     vitest.setup.<ext>           # runner harness: hooks, custom matchers, globals
   rules/
     module1.boundary.<ext>       # public-entry allow-list + reverse deny-rule
     naming.rules.<ext>           # the development approach, executable
+    spec-titles.rules.<ext>      # the spec-title contract, executable
     complexity.rules.<ext>
   adr/
     module1/
@@ -63,6 +68,10 @@ NO_PLACEHOLDER: leave a scope with nothing to record as no directory at all — 
 SCOPE_NAMED_BY_SUBJECT: name an ADR/WIP folder, constraints file, support file, or cross-functional spec after its actual subject — the module, the domain/feature, the dependency, or the non-functional concern — never a catch-all like `system`, `helpers`, or `misc` — otherwise one dumping-ground file accumulates unrelated content and stops being findable by subject
 SCOPE_MATCH: file a doc, ADR entry, WIP entry, rule, or requirement at the smallest scope that fully contains it — otherwise a local trap hides in a global file, a systemic decision hides in one module, or a granular constraint clutters an ADR entry
 SPEC_WITH_MODULE: every module ships unit coverage under `reqs/unit`, and cross-module behavior under `reqs/integration` — otherwise structure changes silently drop coverage
+SPEC_SUFFIX_IS_UNIFORM: every collected spec ends `.spec.<ext>` and states its level in the infix before it (bare unit, `.integration.`, `.e2e.`, `.cross.`) — otherwise two suffixes divide one tree and a reader has to learn which directory means which
+COVERAGE_IS_READABLE_FROM_NAMES: a spec's file path names the module it covers and every case title repeats that name, so what is covered — and what is not — is answerable from the run output and the tree alone, without a coverage report or an index file
+TITLE_IS_THE_REQUIREMENT: each case title states one rule in the domain's words, prefixed by its subject and marked `Given`/`When`/`Then` by block depth — otherwise the suite is a set of passing functions rather than a readable statement of what the system must do
+EXAMPLE_IS_A_NAMED_VARIABLE: every instance a spec consumes is a named constant in `reqs/<scope>-examples/`, composed from `constraints/` and named for what it is in the domain — otherwise the case carries anonymous literals and its intent lives only in its title
 CONSTRAINTS_ARE_SHARED: every boundary value lives in `constraints/`, imported by the app, the examples, the specs, and the rules, and cited by name in ADR and WIP entries — otherwise the same boundary is restated per consumer and the copies drift
 CROSS_FUNCTIONAL_ONCE: declare a requirement that applies to many modules exactly once — one constraint variable and one check resolving its own targets — otherwise the copies diverge, and a module added later silently escapes the requirement
 APPROACH_IS_EXECUTABLE: express the project's code-writing approach (naming, file size, complexity, allowed idioms, import direction) as static-analysis rules under `reqs/rules`, not as prose — otherwise the approach holds only while someone remembers it, and context pressure erodes compliance over a long session
@@ -104,6 +113,38 @@ check under `reqs/<scope>/` whose title states the rule and whose assertion
 references both. The value travels that chain unbroken — a literal restated
 mid-chain is an orphan a later boundary change will miss.
 
+```javascript
+// constraints/template.constraints.js   — the boundary, declared once
+export const MAX_TEMPLATES = 50;
+
+// reqs/unit-examples/shared/template.examples.js   — the instance, named
+export const libraryAtTheLimit = buildLibrary(MAX_TEMPLATES);
+
+// reqs/unit/shared/template-manager.spec.js   — the rule, runnable
+describe('TemplateManager: Given a library holding MAX_TEMPLATES templates', () => {
+  describe('TemplateManager: When one more template is created', () => {
+    it('TemplateManager: Then it refuses the template and names the limit it hit', ...
+```
+
+Each hop refers to the one before it: the example imports the constraint, the
+case imports the example, and the title says which boundary is in play. Nothing
+in the chain writes `50`.
+
+## Naming a case
+
+Three things the title carries, in this order: the **subject** (the module or
+component a failure would indict, PascalCase and dot-separated to reach a
+sub-component), the **keyword** fixed by block depth (outer `describe` =
+`Given` the preconditions, nested `describe` = `When` the condition, `it` =
+`Then` the expected result), and the **rule** itself in the domain's words.
+
+Titled this way, the runner's own output is the coverage report: the suite
+reads top to bottom as a specification, a failing line names its owner, and
+`--reporter=verbose | grep <Subject>` answers "what do we cover here" without
+a coverage tool or an index file. Hold it with a lint rule under `reqs/rules`
+rather than in review, and derive the expected subject from the spec's path so
+no catalogue of module names has to be maintained by hand.
+
 ## Choosing a spec's level
 
 By what stays real, not by what the file is about: one real module with
@@ -117,6 +158,9 @@ BOUNDARY_CHECK: no external import reaches past a module's public entry point in
 SURFACE_CHECK: the public entry re-exports nothing beyond what an external caller actually needs
 SPEC_CHECK: the module's spec suite exercises happy path, branches, edge cases, and error paths, not just a smoke check
 SPEC_SUBJECT_CHECK: each spec imports the module it is named after, and coverage for that module is non-zero; a suite that re-implements its subject inline is rewritten against the real module
+SPEC_SUFFIX_CHECK: every collected spec ends `.spec.<ext>`, its level infix agrees with the directory it sits in, and the runner's file list names every spec that exists
+TITLE_CHECK: every case title carries its subject and its depth's keyword, no two titles in a file are identical, and the lint rule enforcing this has been seen to fail against a violation of each
+EXAMPLE_NAME_CHECK: every instance a spec consumes is a named constant in `reqs/<scope>-examples/`, named for what it is in the domain rather than for the case that first needed it
 NO_INDEX_CHECK: the change adds no index, catalogue, table-of-contents, or placeholder standing in for an empty scope
 NAMED_BY_SUBJECT_CHECK: every ADR/WIP folder, constraints file, rule file, support file, and cross-functional spec is named after its subject — no `system`, `common`, `shared`, `helpers`, or `misc` catch-all
 SCOPE_CHECK: the artifact sits at the file matching SCOPE_MATCH; a system-level tradeoff with alternatives considered is an ADR entry, not a requirement spec

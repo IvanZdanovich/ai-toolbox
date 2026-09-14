@@ -62,7 +62,7 @@ vi.mock('../../../../chrome-extension/shared/agent-runtime.js', () => ({
   default: mockAgentRuntime,
 }));
 
-describe('Editor Tab Integration', () => {
+describe('EditorTab: Given the editor tab mounted with its collaborators doubled', () => {
   let EditorTab;
   let consoleErrorSpy;
 
@@ -105,8 +105,8 @@ describe('Editor Tab Integration', () => {
     return tab;
   }
 
-  describe('Scenario: Creating a new template', () => {
-    it('should render the edit form without error', async () => {
+  describe('EditorTab: When a new template is opened', () => {
+    it('EditorTab: Then it renders the edit form without error', async () => {
       const tab = await mountAndSettle({ type: 'template', mode: 'edit' });
 
       expect(tab.q('[data-role="template-form"]')).not.toBeNull();
@@ -114,8 +114,8 @@ describe('Editor Tab Integration', () => {
     });
   });
 
-  describe('Scenario: Running an existing template', () => {
-    it('should render inputs generated from the template', async () => {
+  describe('EditorTab: When an existing template is run', () => {
+    it('EditorTab: Then it renders inputs generated from the template', async () => {
       mockTemplateManager.getTemplate.mockResolvedValue(
         fixtures.templates.email
       );
@@ -132,7 +132,7 @@ describe('Editor Tab Integration', () => {
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
-    it('should show an error title when the template no longer exists', async () => {
+    it('EditorTab: Then it shows an error title when the template no longer exists', async () => {
       mockTemplateManager.getTemplate.mockResolvedValue(null);
 
       const tab = await mountAndSettle({
@@ -145,8 +145,8 @@ describe('Editor Tab Integration', () => {
     });
   });
 
-  describe('Scenario: Creating a new workflow', () => {
-    it('should render one blank step by default', async () => {
+  describe('EditorTab: When a new workflow is opened', () => {
+    it('EditorTab: Then it renders one blank step by default', async () => {
       const tab = await mountAndSettle({ type: 'workflow', mode: 'edit' });
 
       expect(tab.qa('.workflow-step')).toHaveLength(1);
@@ -154,8 +154,8 @@ describe('Editor Tab Integration', () => {
     });
   });
 
-  describe('Scenario: Running an existing workflow', () => {
-    it('should render the run timeline for each step', async () => {
+  describe('EditorTab: When an existing workflow is run', () => {
+    it('EditorTab: Then it renders the run timeline for each step', async () => {
       const workflow = {
         id: 'wf-1',
         name: 'Demo workflow',
@@ -177,8 +177,8 @@ describe('Editor Tab Integration', () => {
     });
   });
 
-  describe('Scenario: Ad-hoc chat tab', () => {
-    it('should send the seed text as the first message and show the reply', async () => {
+  describe('EditorTab: When an ad-hoc chat tab is opened', () => {
+    it('EditorTab: Then it sends the seed text as the first message and show the reply', async () => {
       mockAiService.chat.mockResolvedValue({ content: 'Hi, how can I help?' });
 
       const tab = await mountAndSettle({
@@ -195,7 +195,7 @@ describe('Editor Tab Integration', () => {
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
-    it('should title the tab after the first message instead of leaving it "New Chat"', async () => {
+    it('EditorTab: Then it titles the tab after the first message instead of leaving it "New Chat"', async () => {
       mockAiService.chat.mockResolvedValue({ content: 'Sure.' });
 
       const tab = await mountAndSettle({
@@ -207,7 +207,7 @@ describe('Editor Tab Integration', () => {
       expect(tab.title).toBe('Summarize this article');
     });
 
-    it('should open empty and send nothing when no seed text is given', async () => {
+    it('EditorTab: Then it opens empty and send nothing when no seed text is given', async () => {
       const tab = await mountAndSettle({ type: 'chat', mode: null });
 
       expect(mockAiService.chat).not.toHaveBeenCalled();
@@ -217,7 +217,7 @@ describe('Editor Tab Integration', () => {
       ).toBe(false);
     });
 
-    it('should ignore a submit with a blank message', async () => {
+    it('EditorTab: Then it ignores a submit with a blank message', async () => {
       const tab = await mountAndSettle({ type: 'chat', mode: null });
 
       tab.q('[data-role="chat-input"]').value = '   ';
@@ -227,7 +227,7 @@ describe('Editor Tab Integration', () => {
       expect(tab.conversation).toHaveLength(0);
     });
 
-    it('should keep placeholder text out of the assistant bubble when the provider returns nothing', async () => {
+    it('EditorTab: Then it keeps placeholder text out of the assistant bubble when the provider returns nothing', async () => {
       mockAiService.chat.mockResolvedValue({ content: '' });
 
       const tab = await mountAndSettle({
@@ -242,7 +242,7 @@ describe('Editor Tab Integration', () => {
       });
     });
 
-    it('should restore the message for retry when the provider call fails', async () => {
+    it('EditorTab: Then it restores the message for retry when the provider call fails', async () => {
       mockAiService.chat.mockRejectedValue(new Error('Provider unavailable'));
 
       const tab = await mountAndSettle({
@@ -257,7 +257,7 @@ describe('Editor Tab Integration', () => {
       expect(tab.q('[data-role="chat-send-btn"]').disabled).toBe(false);
     });
 
-    it('should not touch the DOM when the tab is closed mid-request', async () => {
+    it('EditorTab: Then it does not touch the DOM when the tab is closed mid-request', async () => {
       let resolveChat;
       mockAiService.chat.mockReturnValue(
         new Promise((resolve) => {
@@ -279,8 +279,8 @@ describe('Editor Tab Integration', () => {
     });
   });
 
-  describe('Scenario: Following up on a completed run', () => {
-    it('should seed the thread with the template run so the reply has context', async () => {
+  describe('EditorTab: When a completed run is followed up', () => {
+    it('EditorTab: Then it seeds the thread with the template run so the reply has context', async () => {
       mockTemplateManager.getTemplate.mockResolvedValue({
         ...fixtures.templates.email,
         systemPrompt: 'You are an email assistant.',
@@ -314,7 +314,7 @@ describe('Editor Tab Integration', () => {
       expect(tab.qa('.chat-message')).toHaveLength(2);
     });
 
-    it('should leave the thread hidden when the template run fails', async () => {
+    it('EditorTab: Then it leaves the thread hidden when the template run fails', async () => {
       mockTemplateManager.getTemplate.mockResolvedValue(
         fixtures.templates.email
       );
@@ -336,8 +336,8 @@ describe('Editor Tab Integration', () => {
     });
   });
 
-  describe('Scenario: Unknown editor request', () => {
-    it('should render a fallback message instead of throwing', async () => {
+  describe('EditorTab: When an unknown editor request arrives', () => {
+    it('EditorTab: Then it renders a fallback message instead of throwing', async () => {
       const tab = await mountAndSettle({ type: 'nonsense', mode: 'nonsense' });
 
       expect(tab.root.textContent).toContain('Unknown editor request');

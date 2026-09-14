@@ -44,7 +44,7 @@ const step = (overrides = {}) => ({
 
 const workflow = (steps) => ({ id: 'wf-1', name: 'Flow', steps });
 
-describe('Agent Runtime Integration', () => {
+describe('AgentRuntime: Given the agent runtime over a doubled AI service', () => {
   let runtime;
   let aiService;
   let templateManager;
@@ -70,8 +70,8 @@ describe('Agent Runtime Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('Scenario: Sequential prompt steps', () => {
-    it('should fill run inputs into the first step', async () => {
+  describe('AgentRuntime: When prompt steps run in sequence', () => {
+    it('AgentRuntime: Then it fills run inputs into the first step', async () => {
       aiService.chat.mockResolvedValue({ content: 'done', toolCalls: [] });
 
       await runtime.runWorkflow(
@@ -84,7 +84,7 @@ describe('Agent Runtime Integration', () => {
       );
     });
 
-    it('should pass each step output to the next via {steps.key}', async () => {
+    it('AgentRuntime: Then it passes each step output to the next via {steps.key}', async () => {
       aiService.chat
         .mockResolvedValueOnce({ content: 'first output', toolCalls: [] })
         .mockResolvedValueOnce({ content: 'second output', toolCalls: [] });
@@ -107,7 +107,7 @@ describe('Agent Runtime Integration', () => {
       expect(run.steps).toHaveLength(2);
     });
 
-    it('should expose the last output as {previous}', async () => {
+    it('AgentRuntime: Then it exposes the last output as {previous}', async () => {
       aiService.chat
         .mockResolvedValueOnce({ content: 'alpha', toolCalls: [] })
         .mockResolvedValueOnce({ content: 'beta', toolCalls: [] });
@@ -124,7 +124,7 @@ describe('Agent Runtime Integration', () => {
       );
     });
 
-    it('should honour a per-step provider and model override', async () => {
+    it('AgentRuntime: Then it honours a per-step provider and model override', async () => {
       aiService.chat.mockResolvedValue({ content: 'ok', toolCalls: [] });
 
       await runtime.runWorkflow(
@@ -137,7 +137,7 @@ describe('Agent Runtime Integration', () => {
     });
   });
 
-  describe('Scenario: Agent tool-calling loop', () => {
+  describe('AgentRuntime: When the agent calls a tool', () => {
     const agentStep = step({
       id: 'agent-1',
       type: 'agent',
@@ -151,7 +151,7 @@ describe('Agent Runtime Integration', () => {
       vi.spyOn(AGENT_TOOLS.fetch_url, 'run').mockResolvedValue('page contents');
     });
 
-    it('should run the tool the model asked for and feed back the result', async () => {
+    it('AgentRuntime: Then it runs the tool the model asked for and feed back the result', async () => {
       aiService.chat
         .mockResolvedValueOnce({
           content: '',
@@ -183,7 +183,7 @@ describe('Agent Runtime Integration', () => {
       expect(run.output).toBe('the answer');
     });
 
-    it('should only offer the tools the step enabled', async () => {
+    it('AgentRuntime: Then it only offers the tools the step enabled', async () => {
       aiService.chat.mockResolvedValue({ content: 'done', toolCalls: [] });
 
       await runtime.runWorkflow(workflow([agentStep]));
@@ -193,7 +193,7 @@ describe('Agent Runtime Integration', () => {
       ]);
     });
 
-    it('should return the tool error to the model instead of failing the run', async () => {
+    it('AgentRuntime: Then it returns the tool error to the model instead of failing the run', async () => {
       AGENT_TOOLS.fetch_url.run.mockRejectedValueOnce(new Error('404 gone'));
       aiService.chat
         .mockResolvedValueOnce({
@@ -216,7 +216,7 @@ describe('Agent Runtime Integration', () => {
       expect(run.output).toBe('recovered');
     });
 
-    it('should tell the model when it asks for a tool the step lacks', async () => {
+    it('AgentRuntime: Then it tells the model when it asks for a tool the step lacks', async () => {
       aiService.chat
         .mockResolvedValueOnce({
           content: '',
@@ -231,7 +231,7 @@ describe('Agent Runtime Integration', () => {
       );
     });
 
-    it('should stop at the iteration budget and force a final answer', async () => {
+    it('AgentRuntime: Then it stops at the iteration budget and force a final answer', async () => {
       // A model that never stops asking for tools. Only the forced final call
       // — the one made with no tools offered — returns prose.
       aiService.chat.mockImplementation((request) =>
@@ -261,8 +261,8 @@ describe('Agent Runtime Integration', () => {
     });
   });
 
-  describe('Scenario: Template steps', () => {
-    it('should run the referenced template with the shared context', async () => {
+  describe('AgentRuntime: When a template step runs', () => {
+    it('AgentRuntime: Then it runs the referenced template with the shared context', async () => {
       const template = { id: 't1', name: 'Summary', prompt: 'Sum {text}' };
       templateManager.getTemplate.mockResolvedValue(template);
       aiService.processTemplate.mockResolvedValue({ result: 'summary text' });
@@ -280,7 +280,7 @@ describe('Agent Runtime Integration', () => {
       expect(run.output).toBe('summary text');
     });
 
-    it('should fail clearly when the template was deleted', async () => {
+    it('AgentRuntime: Then it fails clearly when the template was deleted', async () => {
       templateManager.getTemplate.mockResolvedValue(undefined);
 
       await expect(
@@ -291,8 +291,8 @@ describe('Agent Runtime Integration', () => {
     });
   });
 
-  describe('Scenario: Failure and cancellation', () => {
-    it('should stop the run when a step fails and report which one', async () => {
+  describe('AgentRuntime: When a step fails or the run is cancelled', () => {
+    it('AgentRuntime: Then it stops the run when a step fails and report which one', async () => {
       aiService.chat
         .mockResolvedValueOnce({ content: 'ok', toolCalls: [] })
         .mockRejectedValueOnce(new Error('provider exploded'));
@@ -312,7 +312,7 @@ describe('Agent Runtime Integration', () => {
       expect(aiService.chat).toHaveBeenCalledTimes(2);
     });
 
-    it('should stop between steps when the run is cancelled', async () => {
+    it('AgentRuntime: Then it stops between steps when the run is cancelled', async () => {
       const controller = new AbortController();
       aiService.chat.mockImplementation(async () => {
         controller.abort();
@@ -334,8 +334,8 @@ describe('Agent Runtime Integration', () => {
     });
   });
 
-  describe('Scenario: Progress events', () => {
-    it('should report start and completion for every step', async () => {
+  describe('AgentRuntime: When progress is reported', () => {
+    it('AgentRuntime: Then it reports start and completion for every step', async () => {
       aiService.chat.mockResolvedValue({ content: 'ok', toolCalls: [] });
       const events = [];
 
@@ -355,7 +355,7 @@ describe('Agent Runtime Integration', () => {
       ]);
     });
 
-    it('should report tool activity during an agent step', async () => {
+    it('AgentRuntime: Then it reports tool activity during an agent step', async () => {
       vi.spyOn(AGENT_TOOLS.read_page, 'run').mockResolvedValue('page text');
       aiService.chat
         .mockResolvedValueOnce({

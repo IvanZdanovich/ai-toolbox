@@ -10,6 +10,7 @@
     "test:integration": "vitest run reqs/integration",
     "test:e2e": "vitest run reqs/e2e",
     "test:cross": "vitest run reqs/cross",
+    "test:smoke": "node --test --test-concurrency=1 reqs/browser/*.smoke.js",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
     "lint:js": "eslint \"chrome-extension/**/*.js\" \"reqs/**/*.js\" eslint.config.js vitest.config.js",
     "lint:css": "stylelint \"chrome-extension/**/*.css\"",

@@ -19,7 +19,7 @@ import {
   factories,
 } from '../unit-examples/shared/test-data.examples.js';
 
-describe('E2E: Complete Template Workflow', () => {
+describe('Workflows: Given a first-time user with an empty library', () => {
   let templateManager, historyManager, aiService;
 
   beforeEach(async () => {
@@ -44,8 +44,8 @@ describe('E2E: Complete Template Workflow', () => {
     vi.clearAllMocks();
   });
 
-  describe('Workflow: First-time user creates and executes a template', () => {
-    it('should complete full workflow from creation to execution', async () => {
+  describe('Workflows: When the user creates and runs a template', () => {
+    it('Workflows: Then it completes full workflow from creation to execution', async () => {
       // Step 1: Initialize all services
       await templateManager.init();
       await historyManager.init();
@@ -105,8 +105,8 @@ describe('E2E: Complete Template Workflow', () => {
     });
   });
 
-  describe('Workflow: User manages template library', () => {
-    it('should handle create, update, and delete operations', async () => {
+  describe('Workflows: When the user manages the template library', () => {
+    it('Workflows: Then it handles create, update, and delete operations', async () => {
       await templateManager.init();
 
       // Create multiple templates
@@ -146,8 +146,8 @@ describe('E2E: Complete Template Workflow', () => {
     });
   });
 
-  describe('Workflow: User searches and filters content', () => {
-    it('should find templates and history by search', async () => {
+  describe('Workflows: When the user searches and filters content', () => {
+    it('Workflows: Then it finds templates and history by search', async () => {
       await templateManager.init();
       await historyManager.init();
 
@@ -208,7 +208,7 @@ describe('E2E: Complete Template Workflow', () => {
   });
 });
 
-describe('E2E: Settings Configuration Workflow', () => {
+describe('Workflows: Given a user configuring the extension', () => {
   let storage, aiService;
 
   beforeEach(async () => {
@@ -228,8 +228,8 @@ describe('E2E: Settings Configuration Workflow', () => {
     vi.clearAllMocks();
   });
 
-  describe('Workflow: User configures AI provider', () => {
-    it('should switch from mock to OpenAI provider', async () => {
+  describe('Workflows: When the user configures an AI provider', () => {
+    it('Workflows: Then it switches from mock to OpenAI provider', async () => {
       // Step 1: Start with default mock provider
       await aiService.init();
       expect(aiService.settings.provider).toBe('mock');
@@ -257,7 +257,7 @@ describe('E2E: Settings Configuration Workflow', () => {
       expect(aiService.settings.apiKey).toBe('sk-test-key-12345');
     });
 
-    it('should persist settings across sessions', async () => {
+    it('Workflows: Then it persists settings across sessions', async () => {
       // Session 1: Configure settings
       await storage.setSettings({
         provider: 'claude',
@@ -279,8 +279,8 @@ describe('E2E: Settings Configuration Workflow', () => {
     });
   });
 
-  describe('Workflow: User manages storage', () => {
-    it('should track storage usage', async () => {
+  describe('Workflows: When the user manages stored data', () => {
+    it('Workflows: Then it tracks storage usage', async () => {
       // Add some data
       await storage.setTemplates(factories.createTemplates(20));
       await storage.setHistory(factories.createHistoryEntries(50));
@@ -293,7 +293,7 @@ describe('E2E: Settings Configuration Workflow', () => {
       }
     });
 
-    it('should export and import data', async () => {
+    it('Workflows: Then it exports and import data', async () => {
       // Create some data
       const templates = factories.createTemplates(5);
       await storage.setTemplates(templates);
@@ -327,7 +327,7 @@ describe('E2E: Settings Configuration Workflow', () => {
   });
 });
 
-describe('E2E: Error Recovery Workflow', () => {
+describe('Workflows: Given a user hitting failures mid-flow', () => {
   let templateManager, historyManager, aiService;
 
   beforeEach(async () => {
@@ -351,8 +351,8 @@ describe('E2E: Error Recovery Workflow', () => {
     vi.clearAllMocks();
   });
 
-  describe('Workflow: Handling failed template execution', () => {
-    it('should record failed execution and allow retry', async () => {
+  describe('Workflows: When a template run fails', () => {
+    it('Workflows: Then it records failed execution and allow retry', async () => {
       await templateManager.init();
       await historyManager.init();
       await aiService.init();
@@ -394,8 +394,8 @@ describe('E2E: Error Recovery Workflow', () => {
     });
   });
 
-  describe('Workflow: Recovering from corrupted data', () => {
-    it('should handle corrupted templates gracefully', async () => {
+  describe('Workflows: When stored data is corrupted', () => {
+    it('Workflows: Then it handles corrupted templates gracefully', async () => {
       // Inject corrupted data
       testUtils.setStorageState({
         templates: 'corrupted-data-not-array',
@@ -416,8 +416,8 @@ describe('E2E: Error Recovery Workflow', () => {
     });
   });
 
-  describe('Workflow: Rate limit recovery', () => {
-    it('should handle rate limits and recover', async () => {
+  describe('Workflows: When the provider rate limit is hit', () => {
+    it('Workflows: Then it handles rate limits and recover', async () => {
       await aiService.init();
 
       // Fill up rate limit
@@ -442,7 +442,7 @@ describe('E2E: Error Recovery Workflow', () => {
   });
 });
 
-describe('E2E: Multi-session Persistence', () => {
+describe('Workflows: Given a user returning in a new browser session', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -453,8 +453,8 @@ describe('E2E: Multi-session Persistence', () => {
     vi.clearAllMocks();
   });
 
-  describe('Workflow: Data persists across browser sessions', () => {
-    it('should maintain all data across simulated sessions', async () => {
+  describe('Workflows: When the session is reopened', () => {
+    it('Workflows: Then it maintains all data across simulated sessions', async () => {
       // Session 1: Create data
       vi.resetModules();
       let storage = (await import('../../chrome-extension/shared/storage.js'))
@@ -520,7 +520,7 @@ describe('E2E: Multi-session Persistence', () => {
   });
 });
 
-describe('E2E: Concurrent Operations', () => {
+describe('Workflows: Given a user running several operations at once', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -531,8 +531,8 @@ describe('E2E: Concurrent Operations', () => {
     vi.clearAllMocks();
   });
 
-  describe('Workflow: Multiple simultaneous operations', () => {
-    it('should handle concurrent template creations', async () => {
+  describe('Workflows: When the operations run simultaneously', () => {
+    it('Workflows: Then it handles concurrent template creations', async () => {
       vi.resetModules();
       const templateManager = (
         await import('../../chrome-extension/shared/template-manager.js')
@@ -562,7 +562,7 @@ describe('E2E: Concurrent Operations', () => {
       ).toHaveLength(5);
     });
 
-    it('should handle concurrent history additions', async () => {
+    it('Workflows: Then it handles concurrent history additions', async () => {
       vi.resetModules();
       const historyManager = (
         await import('../../chrome-extension/shared/history-manager.js')

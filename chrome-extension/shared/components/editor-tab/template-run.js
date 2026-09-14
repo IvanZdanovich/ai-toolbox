@@ -62,6 +62,7 @@ export const templateRunMethods = {
         <div class="form-group">
           <label class="form-label">${sanitizeText(input.label)}</label>
           <textarea name="${sanitizeText(input.name)}" class="form-textarea"
+                    aria-label="${sanitizeText(input.label)}"
                     placeholder="${sanitizeText(input.placeholder)}" rows="2">${sanitizeText(prefillValues[input.name] ?? input.defaultValue ?? '')}</textarea>
         </div>
       `

@@ -58,7 +58,7 @@ async function bootSidePanel() {
   return app;
 }
 
-describe('Side panel', () => {
+describe('Sidepanel: Given the side panel booted against its real markup', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -71,8 +71,8 @@ describe('Side panel', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Boot', () => {
-    it('finds every container its markup promises', async () => {
+  describe('Sidepanel: When the panel boots', () => {
+    it('Sidepanel: Then it finds every container its markup promises', async () => {
       const app = await bootSidePanel();
 
       expect(app).toBeDefined();
@@ -90,13 +90,13 @@ describe('Side panel', () => {
       }
     });
 
-    it('opens on the templates section', async () => {
+    it('Sidepanel: Then it opens on the templates section', async () => {
       const app = await bootSidePanel();
 
       expect(app.currentSection).toBe('templates');
     });
 
-    it('loads templates, workflows and history through the real managers', async () => {
+    it('Sidepanel: Then it loads templates, workflows and history through the real managers', async () => {
       testUtils.setStorageState({
         [STORAGE_KEYS.TEMPLATES]: [fixtures.templates.email],
         [STORAGE_KEYS.TEMPLATES_SEEDED]: true,
@@ -113,8 +113,8 @@ describe('Side panel', () => {
     });
   });
 
-  describe('Rendering', () => {
-    it('renders one card per stored template', async () => {
+  describe('Sidepanel: When the panel renders its lists', () => {
+    it('Sidepanel: Then it renders one card per stored template', async () => {
       testUtils.setStorageState({
         [STORAGE_KEYS.TEMPLATES]: [
           fixtures.templates.email,
@@ -134,7 +134,7 @@ describe('Side panel', () => {
       expect(list.textContent).toContain(fixtures.templates.codeDoc.name);
     });
 
-    it('shows the empty state when nothing is stored', async () => {
+    it('Sidepanel: Then it shows the empty state when nothing is stored', async () => {
       testUtils.setStorageState({
         [STORAGE_KEYS.TEMPLATES]: [],
         [STORAGE_KEYS.TEMPLATES_SEEDED]: true,
@@ -149,7 +149,7 @@ describe('Side panel', () => {
       });
     });
 
-    it('escapes a template name rather than rendering it as markup', async () => {
+    it('Sidepanel: Then it escapes a template name rather than rendering it as markup', async () => {
       testUtils.setStorageState({
         [STORAGE_KEYS.TEMPLATES]: [
           { ...fixtures.templates.email, name: '<img src=x onerror=alert(1)>' },
@@ -168,8 +168,55 @@ describe('Side panel', () => {
     });
   });
 
-  describe('Navigation', () => {
-    it('switches the active section when a nav tab is clicked', async () => {
+  describe('Sidepanel: When history is opened', () => {
+    async function showHistory(entry) {
+      testUtils.setStorageState({
+        [STORAGE_KEYS.HISTORY]: [entry],
+        [STORAGE_KEYS.TEMPLATES_SEEDED]: true,
+        [STORAGE_KEYS.WORKFLOWS_SEEDED]: true,
+      });
+      await bootSidePanel();
+      document.getElementById('tab-history').click();
+      const list = document.getElementById('historyList');
+      await vi.waitFor(() => {
+        expect(list.children.length).toBeGreaterThan(0);
+      });
+      return list;
+    }
+
+    it('Sidepanel: Then it names the delete button, which shows only an icon', async () => {
+      const list = await showHistory({
+        id: 'h1',
+        templateId: 't1',
+        templateName: 'Greeter',
+        inputs: {},
+        result: 'Hello Ada',
+        status: 'completed',
+        timestamp: new Date().toISOString(),
+      });
+
+      const remove = list.querySelector('[data-action="delete"]');
+      expect(remove.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('Sidepanel: Then it offers no copy button for a run that produced nothing', async () => {
+      const list = await showHistory({
+        id: 'h2',
+        templateId: 't1',
+        templateName: 'Greeter',
+        inputs: {},
+        result: '',
+        status: 'failed',
+        timestamp: new Date().toISOString(),
+      });
+
+      expect(list.querySelector('[data-action="copy"]')).toBeNull();
+      expect(list.querySelector('[data-action="rerun"]')).not.toBeNull();
+    });
+  });
+
+  describe('Sidepanel: When the user moves between tabs', () => {
+    it('Sidepanel: Then it switches the active section when a nav tab is clicked', async () => {
       const app = await bootSidePanel();
 
       document.getElementById('tab-history').click();
@@ -185,7 +232,7 @@ describe('Side panel', () => {
       ).toBe(false);
     });
 
-    it('remembers the section across a reload', async () => {
+    it('Sidepanel: Then it remembers the section across a reload', async () => {
       const app = await bootSidePanel();
       document.getElementById('tab-workflows').click();
       await vi.waitFor(() => {

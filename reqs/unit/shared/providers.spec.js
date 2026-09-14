@@ -14,9 +14,9 @@ import {
   listProviders,
 } from '../../../chrome-extension/shared/providers.js';
 
-describe('Provider Registry Integration', () => {
-  describe('Scenario: Normalizing provider ids', () => {
-    it('should pass through a known provider id unchanged', () => {
+describe('Providers: Given the provider registry', () => {
+  describe('Providers: When a provider id is normalised', () => {
+    it('Providers: Then it passes through a known provider id unchanged', () => {
       expect(normalizeProviderId(AI_PROVIDERS.CLAUDE)).toBe(
         AI_PROVIDERS.CLAUDE
       );
@@ -27,21 +27,21 @@ describe('Provider Registry Integration', () => {
       ['anthropic', AI_PROVIDERS.CLAUDE],
       ['google', AI_PROVIDERS.GEMINI],
       ['xai', AI_PROVIDERS.GROK],
-    ])('should map legacy id %s to %s', (legacyId, expected) => {
+    ])('Providers: Then legacy id %s maps to %s', (legacyId, expected) => {
       expect(normalizeProviderId(legacyId)).toBe(expected);
     });
 
-    it('should fall back to the mock provider for an unknown id', () => {
+    it('Providers: Then it falls back to the mock provider for an unknown id', () => {
       expect(normalizeProviderId('does-not-exist')).toBe(AI_PROVIDERS.MOCK);
     });
 
-    it('should fall back to the mock provider for a missing id', () => {
+    it('Providers: Then it falls back to the mock provider for a missing id', () => {
       expect(normalizeProviderId(undefined)).toBe(AI_PROVIDERS.MOCK);
     });
   });
 
-  describe('Scenario: Resolving a provider definition', () => {
-    it('should return the full definition for a known id', () => {
+  describe('Providers: When a provider definition is resolved', () => {
+    it('Providers: Then it returns the full definition for a known id', () => {
       const provider = getProvider(AI_PROVIDERS.OPENAI);
 
       expect(provider).toMatchObject({
@@ -51,21 +51,21 @@ describe('Provider Registry Integration', () => {
       });
     });
 
-    it('should resolve a legacy id to its replacement definition', () => {
+    it('Providers: Then it resolves a legacy id to its replacement definition', () => {
       const provider = getProvider('anthropic');
 
       expect(provider.id).toBe(AI_PROVIDERS.CLAUDE);
     });
 
-    it('should resolve an unknown id to the mock provider definition', () => {
+    it('Providers: Then it resolves an unknown id to the mock provider definition', () => {
       const provider = getProvider('nope');
 
       expect(provider.id).toBe(AI_PROVIDERS.MOCK);
     });
   });
 
-  describe('Scenario: Listing providers', () => {
-    it('should list every registered provider exactly once', () => {
+  describe('Providers: When the registry is listed', () => {
+    it('Providers: Then it lists every registered provider exactly once', () => {
       const providers = listProviders();
 
       expect(providers).toHaveLength(PROVIDER_IDS.length);
@@ -74,7 +74,7 @@ describe('Provider Registry Integration', () => {
       );
     });
 
-    it('should include every provider referenced by AI_PROVIDERS', () => {
+    it('Providers: Then it includes every provider referenced by AI_PROVIDERS', () => {
       const ids = listProviders().map((p) => p.id);
 
       Object.values(AI_PROVIDERS).forEach((id) => {
@@ -83,12 +83,12 @@ describe('Provider Registry Integration', () => {
     });
   });
 
-  describe('Scenario: Local providers require no API key', () => {
+  describe('Providers: When a local provider is checked for an API key requirement', () => {
     it.each([
       AI_PROVIDERS.OLLAMA,
       AI_PROVIDERS.LLAMACPP,
       AI_PROVIDERS.LMSTUDIO,
-    ])('%s should not require an API key', (id) => {
+    ])('Providers: Then %s requires no API key', (id) => {
       expect(PROVIDERS[id].requiresApiKey).toBe(false);
     });
   });

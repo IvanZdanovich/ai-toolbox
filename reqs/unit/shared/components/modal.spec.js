@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-describe('Modal Component Integration', () => {
+describe('Modal: Given the modal component mounted in the page', () => {
   let modal;
 
   beforeEach(async () => {
@@ -18,8 +18,8 @@ describe('Modal Component Integration', () => {
     ).default;
   });
 
-  describe('Scenario: Rendering the confirm dialog', () => {
-    it('should render the given title and message', () => {
+  describe('Modal: When the confirm dialog is rendered', () => {
+    it('Modal: Then it renders the given title and message', () => {
       modal.confirm('Delete template?', 'This cannot be undone.');
 
       expect(document.querySelector('.modal-title').textContent).toBe(
@@ -30,7 +30,7 @@ describe('Modal Component Integration', () => {
       );
     });
 
-    it('should escape HTML in the title and message', () => {
+    it('Modal: Then it escapes HTML in the title and message', () => {
       modal.confirm('<script>evil()</script>', 'ok');
 
       expect(document.querySelector('.modal-title').innerHTML).not.toContain(
@@ -38,7 +38,7 @@ describe('Modal Component Integration', () => {
       );
     });
 
-    it('should default the button labels to Cancel/Confirm', () => {
+    it('Modal: Then it defaults the button labels to Cancel/Confirm', () => {
       modal.confirm('Title', 'Message');
 
       expect(document.querySelector('.cancel-btn').textContent).toBe('Cancel');
@@ -47,7 +47,7 @@ describe('Modal Component Integration', () => {
       );
     });
 
-    it('should use custom button labels when provided', () => {
+    it('Modal: Then it uses custom button labels when provided', () => {
       modal.confirm('Title', 'Message', {
         confirmText: 'Delete',
         cancelText: 'Keep',
@@ -58,8 +58,8 @@ describe('Modal Component Integration', () => {
     });
   });
 
-  describe('Scenario: Resolving the confirmation', () => {
-    it('should resolve true when the confirm button is clicked', async () => {
+  describe('Modal: When the confirmation resolves', () => {
+    it('Modal: Then it resolves true when the confirm button is clicked', async () => {
       const result = modal.confirm('Title', 'Message');
 
       document.querySelector('.confirm-btn').click();
@@ -67,7 +67,7 @@ describe('Modal Component Integration', () => {
       await expect(result).resolves.toBe(true);
     });
 
-    it('should resolve false when the cancel button is clicked', async () => {
+    it('Modal: Then it resolves false when the cancel button is clicked', async () => {
       const result = modal.confirm('Title', 'Message');
 
       document.querySelector('.cancel-btn').click();
@@ -75,7 +75,7 @@ describe('Modal Component Integration', () => {
       await expect(result).resolves.toBe(false);
     });
 
-    it('should resolve false when Escape is pressed', async () => {
+    it('Modal: Then it resolves false when Escape is pressed', async () => {
       const result = modal.confirm('Title', 'Message');
 
       document.dispatchEvent(
@@ -85,7 +85,7 @@ describe('Modal Component Integration', () => {
       await expect(result).resolves.toBe(false);
     });
 
-    it('should remove the modal from the DOM after resolving', async () => {
+    it('Modal: Then it removes the modal from the DOM after resolving', async () => {
       const result = modal.confirm('Title', 'Message');
 
       document.querySelector('.confirm-btn').click();

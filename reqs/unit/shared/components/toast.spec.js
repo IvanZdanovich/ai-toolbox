@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-describe('Toast Component Integration', () => {
+describe('Toast: Given the toast component mounted in the page', () => {
   let toast;
 
   beforeEach(async () => {
@@ -38,8 +38,8 @@ describe('Toast Component Integration', () => {
     delete HTMLElement.prototype.animate;
   });
 
-  describe('Scenario: Showing a toast', () => {
-    it('should render the message text', () => {
+  describe('Toast: When a toast is shown', () => {
+    it('Toast: Then it renders the message text', () => {
       toast.show('Template saved');
 
       expect(document.querySelector('.toast-message').textContent).toBe(
@@ -47,7 +47,7 @@ describe('Toast Component Integration', () => {
       );
     });
 
-    it('should escape HTML in the message', () => {
+    it('Toast: Then it escapes HTML in the message', () => {
       toast.show('<img src=x onerror=alert(1)>');
 
       expect(document.querySelector('.toast-message').innerHTML).not.toContain(
@@ -55,13 +55,13 @@ describe('Toast Component Integration', () => {
       );
     });
 
-    it('should default to the success type', () => {
+    it('Toast: Then it defaults to the success type', () => {
       toast.show('Done');
 
       expect(document.querySelector('.toast').className).toContain('success');
     });
 
-    it('should warn and do nothing when the container is missing', () => {
+    it('Toast: Then it warns and do nothing when the container is missing', () => {
       document.body.innerHTML = '';
       vi.resetModules();
       return import('../../../../chrome-extension/shared/components/toast.js').then(
@@ -78,14 +78,14 @@ describe('Toast Component Integration', () => {
     });
   });
 
-  describe('Scenario: Type-specific defaults', () => {
+  describe('Toast: When a toast of each type is shown', () => {
     it.each([
       ['success', 3000],
       ['error', 5000],
       ['warning', 5000],
       ['info', 3000],
     ])(
-      '%s toast should auto-dismiss after its default duration',
+      'Toast: Then a %s toast auto-dismisses after its default duration',
       (type, duration) => {
         toast.show('Message', type);
 
@@ -98,8 +98,8 @@ describe('Toast Component Integration', () => {
     );
   });
 
-  describe('Scenario: Manual dismissal', () => {
-    it('should remove the toast when clicked', () => {
+  describe('Toast: When a toast is dismissed by hand', () => {
+    it('Toast: Then it removes the toast when clicked', () => {
       toast.show('Click to dismiss');
       const el = document.querySelector('[data-toast-id]');
 
@@ -108,7 +108,7 @@ describe('Toast Component Integration', () => {
       expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
     });
 
-    it('should not auto-dismiss when duration is 0', () => {
+    it('Toast: Then it does not auto-dismiss when duration is 0', () => {
       toast.show('Persistent', 'info', 0);
 
       vi.advanceTimersByTime(60000);
@@ -116,7 +116,7 @@ describe('Toast Component Integration', () => {
       expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(1);
     });
 
-    it('should ignore hide() for an id that was already removed', () => {
+    it('Toast: Then it ignores hide() for an id that was already removed', () => {
       const id = toast.show('Gone soon', 'info', 100);
       vi.advanceTimersByTime(100);
 
@@ -124,13 +124,13 @@ describe('Toast Component Integration', () => {
     });
   });
 
-  describe('Scenario: Convenience methods route to the right type', () => {
+  describe('Toast: When a convenience method is called', () => {
     it.each([
       ['success', 'success'],
       ['error', 'error'],
       ['warning', 'warning'],
       ['info', 'info'],
-    ])('%s() should render a %s toast', (method, expectedType) => {
+    ])('Toast: Then %s() renders a %s toast', (method, expectedType) => {
       toast[method]('Message');
 
       expect(document.querySelector('.toast').className).toContain(
@@ -139,8 +139,8 @@ describe('Toast Component Integration', () => {
     });
   });
 
-  describe('Scenario: Clearing all toasts', () => {
-    it('should remove every visible toast', () => {
+  describe('Toast: When every toast is cleared', () => {
+    it('Toast: Then it removes every visible toast', () => {
       toast.show('One', 'info', 0);
       toast.show('Two', 'info', 0);
 

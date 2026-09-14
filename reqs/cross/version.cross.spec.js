@@ -16,8 +16,8 @@ const repoRoot = resolve(__dirname, '../..');
 // declares a "version" field.
 const MANIFESTS = ['package.json', 'chrome-extension/manifest.json'];
 
-describe('selector: JSON manifests declaring a "version" field', () => {
-  it('matches at least every known manifest, or the selector is stale', () => {
+describe('Version: Given the files matched by the selector "JSON manifests declaring a version field"', () => {
+  it('Version: Then it matches at least every known manifest, or the selector is stale', () => {
     // EMPTY_RULE_GUARD: a renamed or moved manifest must fail loud, not
     // silently drop out of the check.
     expect(MANIFESTS.length).toBeGreaterThanOrEqual(2);
@@ -26,7 +26,7 @@ describe('selector: JSON manifests declaring a "version" field', () => {
   // CROSS_PER_TARGET_REPORT: one case per target, so a failure names the
   // offending file rather than just the requirement.
   it.each(MANIFESTS)(
-    '%s declares the same version as EXTENSION_VERSION',
+    'Version: Then %s declares the same version as EXTENSION_VERSION',
     (manifestPath) => {
       const manifest = JSON.parse(
         readFileSync(resolve(repoRoot, manifestPath), 'utf8')

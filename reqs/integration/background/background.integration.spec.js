@@ -44,7 +44,7 @@ function createdMenus() {
   return chromeMock.contextMenus.create.mock.calls.map(([menu]) => menu);
 }
 
-describe('Background service worker', () => {
+describe('Background: Given the service worker booted against its real collaborators', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
@@ -63,8 +63,8 @@ describe('Background service worker', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Boot', () => {
-    it('registers a listener for every Chrome event it must answer', async () => {
+  describe('Background: When the worker boots', () => {
+    it('Background: Then it registers a listener for every Chrome event it must answer', async () => {
       await bootBackground();
 
       expect(chromeMock.runtime.onInstalled._listeners).not.toHaveLength(0);
@@ -74,7 +74,7 @@ describe('Background service worker', () => {
       expect(chromeMock.action.onClicked._listeners).not.toHaveLength(0);
     });
 
-    it('opens the side panel from the toolbar icon rather than a popup', async () => {
+    it('Background: Then it opens the side panel from the toolbar icon rather than a popup', async () => {
       await bootBackground();
 
       expect(chromeMock.sidePanel.setPanelBehavior).toHaveBeenCalledWith({
@@ -83,8 +83,8 @@ describe('Background service worker', () => {
     });
   });
 
-  describe('Context menus', () => {
-    it('clears existing menus before rebuilding, so a rebuild cannot duplicate ids', async () => {
+  describe('Background: When a context menu item is used', () => {
+    it('Background: Then it clears existing menus before rebuilding, so a rebuild cannot duplicate ids', async () => {
       await bootBackground();
 
       expect(
@@ -94,7 +94,7 @@ describe('Background service worker', () => {
       );
     });
 
-    it('offers a disabled placeholder when no template is stored', async () => {
+    it('Background: Then it offers a disabled placeholder when no template is stored', async () => {
       await bootBackground();
 
       const placeholder = createdMenus().find(
@@ -104,7 +104,7 @@ describe('Background service worker', () => {
       expect(placeholder.enabled).toBe(false);
     });
 
-    it('lists one entry per stored template, under the root menu', async () => {
+    it('Background: Then it lists one entry per stored template, under the root menu', async () => {
       testUtils.setStorageState({
         [STORAGE_KEYS.TEMPLATES]: [
           { id: 't1', name: 'Summarize', prompt: 'Summarize {text}' },
@@ -127,7 +127,7 @@ describe('Background service worker', () => {
       ).toBeUndefined();
     });
 
-    it('caps the listed templates and says how many were left out', async () => {
+    it('Background: Then it caps the listed templates and says how many were left out', async () => {
       testUtils.setStorageState({
         [STORAGE_KEYS.TEMPLATES]: Array.from({ length: 7 }, (_, i) => ({
           id: `t${i}`,
@@ -149,8 +149,8 @@ describe('Background service worker', () => {
     });
   });
 
-  describe('Messages', () => {
-    it('answers a getTemplates request with what storage holds', async () => {
+  describe('Background: When a message arrives', () => {
+    it('Background: Then it answers a getTemplates request with what storage holds', async () => {
       testUtils.setStorageState({
         [STORAGE_KEYS.TEMPLATES]: [
           { id: 't1', name: 'Summarize', prompt: 'Summarize {text}' },
@@ -164,7 +164,7 @@ describe('Background service worker', () => {
       expect(response.templates[0].name).toBe('Summarize');
     });
 
-    it('reports an unknown action instead of failing silently', async () => {
+    it('Background: Then it reports an unknown action instead of failing silently', async () => {
       await bootBackground();
 
       const response = await sendMessage({ action: 'no-such-action' });
@@ -172,7 +172,7 @@ describe('Background service worker', () => {
       expect(response.error).toBe('Unknown action');
     });
 
-    it('applies a setBadge request to the toolbar icon', async () => {
+    it('Background: Then it applies a setBadge request to the toolbar icon', async () => {
       await bootBackground();
 
       const response = await sendMessage({
@@ -191,8 +191,8 @@ describe('Background service worker', () => {
     });
   });
 
-  describe('Install', () => {
-    it('announces itself once on a fresh install', async () => {
+  describe('Background: When the extension is installed', () => {
+    it('Background: Then it announces itself once on a fresh install', async () => {
       await bootBackground();
 
       chromeMock.runtime.onInstalled._trigger({ reason: 'install' });
@@ -206,7 +206,7 @@ describe('Background service worker', () => {
       expect(notification.title).toContain('AI Toolbox');
     });
 
-    it('resolves the welcome icon absolutely, since the worker runs from /background/', async () => {
+    it('Background: Then it resolves the welcome icon absolutely, since the worker runs from /background/', async () => {
       await bootBackground();
 
       chromeMock.runtime.onInstalled._trigger({ reason: 'install' });
@@ -220,7 +220,7 @@ describe('Background service worker', () => {
       expect(notification.iconUrl).toContain('icons/icon-48.png');
     });
 
-    it('does not announce itself on an update', async () => {
+    it('Background: Then it does not announce itself on an update', async () => {
       await bootBackground();
       chromeMock.notifications.create.mockClear();
 
@@ -234,8 +234,8 @@ describe('Background service worker', () => {
     });
   });
 
-  describe('Startup', () => {
-    it('rebuilds the context menus so they survive a worker restart', async () => {
+  describe('Background: When Chrome starts up', () => {
+    it('Background: Then it rebuilds the context menus so they survive a worker restart', async () => {
       await bootBackground();
       chromeMock.contextMenus.removeAll.mockClear();
 
@@ -247,7 +247,7 @@ describe('Background service worker', () => {
     });
   });
 
-  it('runs against the version the constraints file declares', () => {
+  it('Background: Then it runs against the version the constraints file declares', () => {
     expect(chromeMock.runtime.getManifest().version).toBe(EXTENSION_VERSION);
   });
 });

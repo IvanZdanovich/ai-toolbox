@@ -415,7 +415,7 @@ class AIService {
       maxTokens,
     });
 
-    const response = await fetch(url, {
+    const response = await this.send(provider, url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -427,6 +427,23 @@ class AIService {
 
     const parsed = adapter.parseResponse(await response.json());
     return { ...parsed, provider: provider.id, model };
+  }
+
+  // A request that never reached the server rejects with a bare "Failed to
+  // fetch", which names neither the provider nor the endpoint — and for a local
+  // provider the usual cause is simply that the server is not running.
+  async send(provider, url, init) {
+    try {
+      return await fetch(url, init);
+    } catch (error) {
+      const endpoint = this.resolveBaseUrl(provider.id);
+      throw new Error(
+        provider.local
+          ? `Could not reach ${provider.name} at ${endpoint}. Is the server running?`
+          : `Could not reach ${provider.name} at ${endpoint}: ${error.message}`,
+        { cause: error }
+      );
+    }
   }
 
   async buildHttpError(provider, response) {
@@ -548,7 +565,9 @@ class AIService {
       return {
         success: false,
         provider: this.settings.provider,
-        error: error.message,
+        // processTemplate wraps its cause in "AI processing failed: …", which
+        // reads as noise once validateApiKey prefixes "Connection failed: ".
+        error: error.cause?.message || error.message,
       };
     }
   }
@@ -568,7 +587,7 @@ class AIService {
     }
 
     const apiKey = this.getApiKey(provider.id);
-    const response = await fetch(`${baseUrl}/models`, {
+    const response = await this.send(provider, `${baseUrl}/models`, {
       headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
     });
 

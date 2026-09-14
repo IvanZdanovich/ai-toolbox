@@ -11,11 +11,13 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./reqs/support/vitest.setup.js'],
 
+    // Every level is `.spec.js`; the infix before it states which one, and
+    // the directory it sits in has to agree (SUFFIX_IS_THE_LEVEL).
     include: [
-      './reqs/unit/**/*.test.js',
-      './reqs/integration/**/*.test.js',
-      './reqs/e2e/**/*.test.js',
-      './reqs/cross/**/*.spec.js',
+      './reqs/unit/**/*.spec.js',
+      './reqs/integration/**/*.integration.spec.js',
+      './reqs/e2e/**/*.e2e.spec.js',
+      './reqs/cross/**/*.cross.spec.js',
     ],
     exclude: ['**/node_modules/**', '**/build/**', '**/dist/**'],
 
@@ -35,10 +37,10 @@ export default defineConfig({
       // Flat keys — a nested `global` object is not a Vitest threshold and
       // is silently ignored, which lets coverage regress unnoticed.
       thresholds: {
-        branches: 45,
-        functions: 45,
-        lines: 45,
-        statements: 45,
+        branches: 60,
+        functions: 65,
+        lines: 65,
+        statements: 65,
       },
     },
 

@@ -35,7 +35,7 @@ SPLIT_BEFORE_EDIT: checks a file's length against `MAX_FILE_LINES` before editin
 DOC_IS_WHY_NOT_WHAT: records why a module exists, its contract and its gotchas over restating a signature the code already shows — otherwise the comment duplicates the code and rots against it.
 RECORD_THE_PIVOT: writes an ADR entry under `reqs/adr/<scope>/` when creating, splitting or merging a module, changing a cross-module contract, or choosing a technology, and never for a routine technical choice — otherwise the pivots go unrecorded while the log fills with trivia.
 COVERAGE_GAPS: writes a spec for `settings.js` or `content.js` before changing its logic — both sit at 0% coverage with no spec — otherwise the two least-covered modules keep growing unverified.
-MANIFEST_IS_A_CONSUMER: updates `manifest.json` whenever a file it names moves or is renamed — `manifest.json` references `.js`, `.html`, `.css` and `.png` paths as plain strings no import graph or lint rule follows — and guards any value it duplicates with a `reqs/cross/*.spec.js` check, as `version.spec.js` does — otherwise a rename passes every gate and the extension fails to load.
+MANIFEST_IS_A_CONSUMER: updates `manifest.json` whenever a file it names moves or is renamed — `manifest.json` references `.js`, `.html`, `.css` and `.png` paths as plain strings no import graph or lint rule follows — and guards any value it duplicates with a `reqs/cross/*.cross.spec.js` check, as `version.cross.spec.js` does — otherwise a rename passes every gate and the extension fails to load.
 
 ## Validation
 

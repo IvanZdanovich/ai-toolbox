@@ -7,9 +7,9 @@
 import { describe, it, expect } from 'vitest';
 import IconHelper from '../../../chrome-extension/shared/icon-helper.js';
 
-describe('Icon Helper Integration', () => {
-  describe('Scenario: Building icon markup', () => {
-    it('should default to size sm and no color class', () => {
+describe('IconHelper: Given the icon markup helper', () => {
+  describe('IconHelper: When icon markup is built', () => {
+    it('IconHelper: Then it defaults to size sm and no color class', () => {
       const html = IconHelper.iconHTML('template');
 
       expect(html).toBe(
@@ -17,25 +17,25 @@ describe('Icon Helper Integration', () => {
       );
     });
 
-    it('should apply a custom size', () => {
+    it('IconHelper: Then it applies a custom size', () => {
       const html = IconHelper.iconHTML('template', 'lg');
 
       expect(html).toContain('icon icon--lg');
     });
 
-    it('should append a color modifier class when color is given', () => {
+    it('IconHelper: Then it appends a color modifier class when color is given', () => {
       const html = IconHelper.iconHTML('template', 'sm', 'danger');
 
       expect(html).toContain('icon--sm icon--danger');
     });
 
-    it('should reference the icon by name via the sprite href', () => {
+    it('IconHelper: Then it references the icon by name via the sprite href', () => {
       const html = IconHelper.iconHTML('history');
 
       expect(html).toContain('href="#icon-history"');
     });
 
-    it('should omit the color class entirely when color is an empty string', () => {
+    it('IconHelper: Then it omits the color class entirely when color is an empty string', () => {
       const html = IconHelper.iconHTML('history', 'md', '');
 
       expect(html).not.toContain('icon--md icon--');
