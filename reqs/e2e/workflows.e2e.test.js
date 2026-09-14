@@ -17,7 +17,7 @@ import {
 import {
   fixtures,
   factories,
-} from '../integration-examples/shared/test-data.examples.js';
+} from '../unit-examples/shared/test-data.examples.js';
 
 describe('E2E: Complete Template Workflow', () => {
   let templateManager, historyManager, aiService;

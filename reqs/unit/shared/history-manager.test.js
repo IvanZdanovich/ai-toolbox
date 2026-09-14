@@ -19,7 +19,7 @@ import {
 import {
   fixtures,
   factories,
-} from '../../integration-examples/shared/test-data.examples.js';
+} from '../../unit-examples/shared/test-data.examples.js';
 import { MAX_HISTORY_ENTRIES } from '../../../chrome-extension/constraints/history.constraints.js';
 
 // Mock storage module

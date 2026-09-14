@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { fixtures } from '../../../integration-examples/shared/test-data.examples.js';
+import { fixtures } from '../../../unit-examples/shared/test-data.examples.js';
 
 const mockTemplateManager = {
   getTemplate: vi.fn(),

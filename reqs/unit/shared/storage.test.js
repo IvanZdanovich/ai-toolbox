@@ -18,7 +18,7 @@ import {
 import {
   fixtures,
   factories,
-} from '../../integration-examples/shared/test-data.examples.js';
+} from '../../unit-examples/shared/test-data.examples.js';
 import { STORAGE_CHUNK_SIZE } from '../../../chrome-extension/constraints/storage.constraints.js';
 
 describe('Storage Service Integration', () => {

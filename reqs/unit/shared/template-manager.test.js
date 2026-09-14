@@ -18,7 +18,7 @@ import {
 import {
   fixtures,
   factories,
-} from '../../integration-examples/shared/test-data.examples.js';
+} from '../../unit-examples/shared/test-data.examples.js';
 import { MAX_TEMPLATES } from '../../../chrome-extension/constraints/template.constraints.js';
 
 // Mock the modules before importing

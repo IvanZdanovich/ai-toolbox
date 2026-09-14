@@ -54,14 +54,15 @@ NESTED_APP_ROOT: where the app root is a subdirectory that is packaged or deploy
 
 This file holds what every domain shares. Load the reference for the domain being touched — its placement, naming, and validation rules live there, not here.
 
-| Touching                                               | Load                        |
-| ------------------------------------------------------ | --------------------------- |
-| a unit spec or its example data                        | `references/unit.md`        |
-| an integration spec or its example data                | `references/integration.md` |
-| an e2e case or its example data                        | `references/e2e.md`         |
-| a decision or a plan for something unbuilt             | `references/adr-wip.md`     |
-| a lint, dependency-graph, or boundary rule             | `references/rules.md`       |
-| a boundary value, or the constraint→example→spec chain | `references/constraints.md` |
+| Touching                                               | Load                             |
+| ------------------------------------------------------ | -------------------------------- |
+| a unit spec or its example data                        | `references/unit.md`             |
+| an integration spec or its example data                | `references/integration.md`      |
+| an e2e case or its example data                        | `references/e2e.md`              |
+| a decision or a plan for something unbuilt             | `references/adr-wip.md`          |
+| a lint, dependency-graph, or boundary rule             | `references/rules.md`            |
+| a boundary value, or the constraint→example→spec chain | `references/constraints.md`      |
+| a requirement that must hold across many modules       | `references/cross-functional.md` |
 
 # Principles
 
@@ -107,15 +108,6 @@ COLOCATE_OPTIONAL: add a styles/constants/utils/sub-module file next to the entr
 NEST_RECURSIVELY: a sub-module gets the same folder-plus-entry-point shape as its parent; keep it private unless the parent's entry point re-exports it
 DOC_SCALE: give every top-level module a short doc (why it exists, its contract, its consumers, its gotchas); fold a trivial private sub-module's doc into its parent instead of duplicating a near-empty file
 
-## Cross-functional level
-
-CROSS_FUNCTIONAL_ONCE: declare a requirement that applies to many modules exactly once — one constraint variable and one check that resolves its own targets — never copied into each module's specs — otherwise the copies diverge, and a module added later silently escapes the requirement entirely
-CROSS_DECLARE_ONCE: declare each non-functional/cross-cutting requirement as one constraint variable in `constraints/<concern>.constraints.<ext>` and one check at `reqs/cross/<concern>.spec.<ext>` — never restated inside individual module specs
-CROSS_SELECTOR: have the check resolve its own targets at run time by a stated selector — a name pattern, a module/component type, a tag, a manifest field, or a directory glob — so a module added later is picked up without editing the check
-CROSS_SELECTOR_EXPLICIT: state the selector in the check's title and assert it matched at least the expected minimum, failing loud on zero matches (EMPTY_RULE_GUARD)
-CROSS_PER_TARGET_REPORT: report the result per resolved target, not as one aggregate pass/fail, so a failure names the offending module instead of the requirement
-CROSS_EXEMPTION: record an exemption as a named entry in the concern's constraints file citing the ADR entry that granted it, never as a skip or an inline condition in the check
-
 # Validation
 
 BOUNDARY_CHECK: no external import reaches past a module's public entry point into its internals
@@ -138,8 +130,3 @@ COMPLEXITY_CHECK: a file above the project's size/complexity threshold is split 
 RULE_LIVENESS_CHECK: each rule, check and threshold has been shown to fail against a deliberate violation — the file set it actually matched is known, its severity is fatal, and its config key is one the tool reads; a green run is never accepted as proof it ran
 RULES_IN_CI_CHECK: an automated gate runs the rules, specs and thresholds on every push; a rule invoked only by hand does not count as enforced
 EMPTY_MATCH_CHECK: every rule, cross-functional check, and requirement fails on zero matched files/targets instead of passing silently
-CROSS_ONCE_CHECK: each cross-functional requirement has exactly one constraint variable and one check under `reqs/cross`; no module spec restates it
-CROSS_SELECTOR_CHECK: the cross-functional check resolves its targets by a stated selector (name pattern, module/component type, tag, manifest field, glob), names that selector in its title, and picks up a newly added matching module without being edited
-CROSS_ZERO_CHECK: the cross-functional check fails when its selector matches zero targets
-CROSS_REPORT_CHECK: a cross-functional failure names the offending target, not just the requirement
-CROSS_EXEMPTION_CHECK: every exemption is a named entry in the concern's constraints file citing the ADR entry that granted it — no skip, no inline condition in the check

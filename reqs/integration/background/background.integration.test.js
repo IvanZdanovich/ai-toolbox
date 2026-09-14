@@ -1,500 +1,253 @@
 /**
- * Background Service Worker Integration Tests
+ * Background service worker — integration.
  *
- * Tests the background script including:
- * - Extension lifecycle events
- * - Message handling
- * - Context menu management
- * - Side panel integration
- * - Tab management
+ * Primary module: chrome-extension/background/background.js, whose contract is
+ * with the Chrome extension APIs and with shared/storage.js — both kept real
+ * except for the platform edge, which the chrome mock supplies. The module
+ * constructs itself on import, so each case re-imports it against a fresh mock
+ * and then drives it through the listeners it actually registered.
+ *
+ * Origin: layout.adr-4.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { EXTENSION_VERSION } from '../../../chrome-extension/constraints/version.constraints.js';
 import {
+  chromeMock,
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-  chromeMock,
 } from '../../support/chrome-api.mock.js';
-import { fixtures } from '../../integration-examples/shared/test-data.examples.js';
+import { EXTENSION_VERSION } from '../../../chrome-extension/constraints/version.constraints.js';
+import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
 
-describe('Background Service Worker Integration', () => {
+const BACKGROUND = '../../../chrome-extension/background/background.js';
+
+// Booting the service worker is the subject under test: the module registers
+// its listeners and builds its menus as a side effect of being imported.
+async function bootBackground() {
+  vi.resetModules();
+  await import(BACKGROUND);
+  // init() is async and cannot be awaited from outside; wait for its last step.
+  await vi.waitFor(() => {
+    expect(chromeMock.contextMenus.create).toHaveBeenCalled();
+  });
+}
+
+// Drive the worker the way Chrome does: fire the event, collect the response.
+function sendMessage(request, sender = {}) {
+  return new Promise((resolve) => {
+    chromeMock.runtime.onMessage._trigger(request, sender, resolve);
+  });
+}
+
+function createdMenus() {
+  return chromeMock.contextMenus.create.mock.calls.map(([menu]) => menu);
+}
+
+describe('Background service worker', () => {
   beforeEach(() => {
     installChromeMock();
     testUtils.resetStorage();
-    vi.clearAllMocks();
+    // The mock's API methods are plain functions; spy on the ones whose calls
+    // are the observable outcome here.
+    vi.spyOn(chromeMock.contextMenus, 'create');
+    vi.spyOn(chromeMock.contextMenus, 'removeAll');
+    vi.spyOn(chromeMock.action, 'setBadgeText');
+    vi.spyOn(chromeMock.action, 'setBadgeBackgroundColor');
+    vi.spyOn(chromeMock.notifications, 'create');
+    vi.spyOn(chromeMock.sidePanel, 'setPanelBehavior');
   });
 
   afterEach(() => {
     uninstallChromeMock();
+    vi.restoreAllMocks();
   });
 
-  describe('Scenario: Extension installation', () => {
-    it('should handle fresh installation', async () => {
-      // Given: Extension is being installed for the first time
-      const installHandler = vi.fn();
-      chromeMock.runtime.onInstalled.addListener(installHandler);
+  describe('Boot', () => {
+    it('registers a listener for every Chrome event it must answer', async () => {
+      await bootBackground();
 
-      // When: Install event fires
-      chromeMock.runtime.onInstalled._trigger({ reason: 'install' });
-
-      // Then: Install handler should be called
-      expect(installHandler).toHaveBeenCalledWith({ reason: 'install' });
+      expect(chromeMock.runtime.onInstalled._listeners).not.toHaveLength(0);
+      expect(chromeMock.runtime.onStartup._listeners).not.toHaveLength(0);
+      expect(chromeMock.runtime.onMessage._listeners).not.toHaveLength(0);
+      expect(chromeMock.contextMenus.onClicked._listeners).not.toHaveLength(0);
+      expect(chromeMock.action.onClicked._listeners).not.toHaveLength(0);
     });
 
-    it('should set up initial data on install', async () => {
-      // Given: Fresh installation
-      const setupHandler = async (details) => {
-        if (details.reason === 'install') {
-          await chromeMock.storage.sync.set({ initialized: true });
-        }
-      };
+    it('opens the side panel from the toolbar icon rather than a popup', async () => {
+      await bootBackground();
 
-      chromeMock.runtime.onInstalled.addListener(setupHandler);
+      expect(chromeMock.sidePanel.setPanelBehavior).toHaveBeenCalledWith({
+        openPanelOnActionClick: true,
+      });
+    });
+  });
 
-      // When: Install event fires
-      await chromeMock.runtime.onInstalled._trigger({ reason: 'install' });
+  describe('Context menus', () => {
+    it('clears existing menus before rebuilding, so a rebuild cannot duplicate ids', async () => {
+      await bootBackground();
 
-      // Then: Initial data should be set up
-      const result = await chromeMock.storage.sync.get('initialized');
-      expect(result.initialized).toBe(true);
+      expect(
+        chromeMock.contextMenus.removeAll.mock.invocationCallOrder[0]
+      ).toBeLessThan(
+        chromeMock.contextMenus.create.mock.invocationCallOrder[0]
+      );
     });
 
-    it('should show welcome notification on install', () => {
-      // Given: Notification API available
-      const notificationSpy = vi.spyOn(chromeMock.notifications, 'create');
+    it('offers a disabled placeholder when no template is stored', async () => {
+      await bootBackground();
 
-      // When: Creating welcome notification
-      chromeMock.notifications.create('welcome', {
-        type: 'basic',
-        iconUrl: 'icons/icon-48.png',
-        title: 'AI Toolbox Installed!',
-        message: 'Click the extension icon to get started.',
+      const placeholder = createdMenus().find(
+        (menu) => menu.id === 'no-templates'
+      );
+      expect(placeholder).toBeDefined();
+      expect(placeholder.enabled).toBe(false);
+    });
+
+    it('lists one entry per stored template, under the root menu', async () => {
+      testUtils.setStorageState({
+        [STORAGE_KEYS.TEMPLATES]: [
+          { id: 't1', name: 'Summarize', prompt: 'Summarize {text}' },
+          { id: 't2', name: 'Translate', prompt: 'Translate {text}' },
+        ],
       });
 
-      // Then: Notification should be created
-      expect(notificationSpy).toHaveBeenCalled();
-      const call = notificationSpy.mock.calls[0];
-      expect(call[0]).toBe('welcome');
-      expect(call[1].title).toBe('AI Toolbox Installed!');
+      await bootBackground();
+
+      const entries = createdMenus().filter((menu) =>
+        String(menu.id).startsWith('template-')
+      );
+      expect(entries).toHaveLength(2);
+      expect(entries[0].parentId).toBe('ai-toolbox-main');
+      expect(entries.map((menu) => menu.title).join(' ')).toContain(
+        'Summarize'
+      );
+      expect(
+        createdMenus().find((menu) => menu.id === 'no-templates')
+      ).toBeUndefined();
+    });
+
+    it('caps the listed templates and says how many were left out', async () => {
+      testUtils.setStorageState({
+        [STORAGE_KEYS.TEMPLATES]: Array.from({ length: 7 }, (_, i) => ({
+          id: `t${i}`,
+          name: `Template ${i}`,
+          prompt: 'x',
+        })),
+      });
+
+      await bootBackground();
+
+      const entries = createdMenus().filter((menu) =>
+        String(menu.id).startsWith('template-')
+      );
+      expect(entries).toHaveLength(5);
+      const overflow = createdMenus().find(
+        (menu) => menu.id === 'more-templates'
+      );
+      expect(overflow.title).toContain('2');
     });
   });
 
-  describe('Scenario: Extension update', () => {
-    it('should handle update from previous version', async () => {
-      // Given: Extension is being updated
-      const updateHandler = vi.fn();
-      chromeMock.runtime.onInstalled.addListener(updateHandler);
+  describe('Messages', () => {
+    it('answers a getTemplates request with what storage holds', async () => {
+      testUtils.setStorageState({
+        [STORAGE_KEYS.TEMPLATES]: [
+          { id: 't1', name: 'Summarize', prompt: 'Summarize {text}' },
+        ],
+      });
+      await bootBackground();
 
-      // When: Update event fires
+      const response = await sendMessage({ action: 'getTemplates' });
+
+      expect(response.templates).toHaveLength(1);
+      expect(response.templates[0].name).toBe('Summarize');
+    });
+
+    it('reports an unknown action instead of failing silently', async () => {
+      await bootBackground();
+
+      const response = await sendMessage({ action: 'no-such-action' });
+
+      expect(response.error).toBe('Unknown action');
+    });
+
+    it('applies a setBadge request to the toolbar icon', async () => {
+      await bootBackground();
+
+      const response = await sendMessage({
+        action: 'setBadge',
+        text: '3',
+        color: '#059669',
+      });
+
+      expect(response.success).toBe(true);
+      expect(chromeMock.action.setBadgeText).toHaveBeenCalledWith({
+        text: '3',
+      });
+      expect(chromeMock.action.setBadgeBackgroundColor).toHaveBeenCalledWith({
+        color: '#059669',
+      });
+    });
+  });
+
+  describe('Install', () => {
+    it('announces itself once on a fresh install', async () => {
+      await bootBackground();
+
+      chromeMock.runtime.onInstalled._trigger({ reason: 'install' });
+      await vi.waitFor(() => {
+        expect(chromeMock.notifications.create).toHaveBeenCalled();
+      });
+
+      const [id, notification] =
+        chromeMock.notifications.create.mock.calls.at(-1);
+      expect(id).toBe('welcome');
+      expect(notification.title).toContain('AI Toolbox');
+    });
+
+    it('resolves the welcome icon absolutely, since the worker runs from /background/', async () => {
+      await bootBackground();
+
+      chromeMock.runtime.onInstalled._trigger({ reason: 'install' });
+      await vi.waitFor(() => {
+        expect(chromeMock.notifications.create).toHaveBeenCalled();
+      });
+
+      const [, notification] =
+        chromeMock.notifications.create.mock.calls.at(-1);
+      expect(notification.iconUrl).not.toMatch(/^icons\//);
+      expect(notification.iconUrl).toContain('icons/icon-48.png');
+    });
+
+    it('does not announce itself on an update', async () => {
+      await bootBackground();
+      chromeMock.notifications.create.mockClear();
+
       chromeMock.runtime.onInstalled._trigger({
         reason: 'update',
-        previousVersion: EXTENSION_VERSION,
+        previousVersion: '1.0.0',
       });
+      await testUtils.waitFor(10);
 
-      // Then: Update handler should be called with version info
-      expect(updateHandler).toHaveBeenCalledWith({
-        reason: 'update',
-        previousVersion: EXTENSION_VERSION,
-      });
-    });
-
-    it('should migrate data on major version update', async () => {
-      // Given: Old data format
-      await chromeMock.storage.sync.set({
-        templates: fixtures.templates.email,
-        __schemaVersion: 1,
-      });
-
-      // When: Migration runs
-      const migrateData = async () => {
-        const data = await chromeMock.storage.sync.get([
-          '__schemaVersion',
-          'templates',
-        ]);
-        if (data.__schemaVersion < 2) {
-          // Perform migration
-          await chromeMock.storage.sync.set({
-            __schemaVersion: 2,
-            templates: Array.isArray(data.templates)
-              ? data.templates
-              : [data.templates],
-          });
-        }
-      };
-      await migrateData();
-
-      // Then: Data should be migrated
-      const result = await chromeMock.storage.sync.get('__schemaVersion');
-      expect(result.__schemaVersion).toBe(2);
+      expect(chromeMock.notifications.create).not.toHaveBeenCalled();
     });
   });
 
-  describe('Scenario: Message handling', () => {
-    it('should handle getTemplates message', async () => {
-      // Given: Templates in storage
-      const templates = [fixtures.templates.email, fixtures.templates.codeDoc];
-      await chromeMock.storage.sync.set({ templates });
+  describe('Startup', () => {
+    it('rebuilds the context menus so they survive a worker restart', async () => {
+      await bootBackground();
+      chromeMock.contextMenus.removeAll.mockClear();
 
-      // When: Receiving getTemplates message
-      let response;
-      const messageHandler = async (request, sender, sendResponse) => {
-        if (request.action === 'getTemplates') {
-          const result = await chromeMock.storage.sync.get('templates');
-          sendResponse({ templates: result.templates });
-        }
-        return true;
-      };
+      chromeMock.runtime.onStartup._trigger();
 
-      chromeMock.runtime.onMessage.addListener(messageHandler);
-
-      await new Promise((resolve) => {
-        chromeMock.runtime.onMessage._trigger(
-          { action: 'getTemplates' },
-          { id: chromeMock.runtime.id },
-          (r) => {
-            response = r;
-            resolve();
-          }
-        );
+      await vi.waitFor(() => {
+        expect(chromeMock.contextMenus.removeAll).toHaveBeenCalled();
       });
-
-      // Then: Should return templates
-      expect(response.templates).toHaveLength(2);
-    });
-
-    it('should handle processTemplate message', async () => {
-      // Given: Template execution request
-      const request = {
-        action: 'processTemplate',
-        templateId: fixtures.templates.email.id,
-        inputs: fixtures.userInputs.email,
-      };
-
-      let processStarted = false;
-      const messageHandler = async (request, sender, sendResponse) => {
-        if (request.action === 'processTemplate') {
-          processStarted = true;
-          sendResponse({ success: true });
-        }
-        return true;
-      };
-
-      chromeMock.runtime.onMessage.addListener(messageHandler);
-
-      // When: Sending message
-      await new Promise((resolve) => {
-        chromeMock.runtime.onMessage._trigger(
-          request,
-          { id: chromeMock.runtime.id, tab: { id: 1 } },
-          () => resolve()
-        );
-      });
-
-      // Then: Template processing should start
-      expect(processStarted).toBe(true);
-    });
-
-    it('should validate message sender', async () => {
-      // Given: Message from external source
-      let rejected = false;
-      const messageHandler = (request, sender, sendResponse) => {
-        if (sender.id !== chromeMock.runtime.id) {
-          rejected = true;
-          sendResponse({ error: 'Unauthorized' });
-          return;
-        }
-        sendResponse({ success: true });
-      };
-
-      chromeMock.runtime.onMessage.addListener(messageHandler);
-
-      // When: Receiving message from unknown sender
-      chromeMock.runtime.onMessage._trigger(
-        { action: 'getTemplates' },
-        { id: 'unknown-extension-id' },
-        () => {}
-      );
-
-      // Then: Should reject message
-      expect(rejected).toBe(true);
-    });
-
-    it('should handle unknown actions', async () => {
-      // Given: Unknown action
-      let errorResponse;
-      const messageHandler = (request, sender, sendResponse) => {
-        const knownActions = [
-          'getTemplates',
-          'processTemplate',
-          'openSidePanel',
-        ];
-        if (!knownActions.includes(request.action)) {
-          sendResponse({ error: 'Unknown action' });
-          return;
-        }
-        sendResponse({ success: true });
-      };
-
-      chromeMock.runtime.onMessage.addListener(messageHandler);
-
-      // When: Sending unknown action
-      await new Promise((resolve) => {
-        chromeMock.runtime.onMessage._trigger(
-          { action: 'unknownAction' },
-          { id: chromeMock.runtime.id },
-          (r) => {
-            errorResponse = r;
-            resolve();
-          }
-        );
-      });
-
-      // Then: Should return error
-      expect(errorResponse.error).toBe('Unknown action');
     });
   });
 
-  describe('Scenario: Context menu management', () => {
-    it('should create context menu on startup', async () => {
-      // Given: Extension starts
-      const createSpy = vi.spyOn(chromeMock.contextMenus, 'create');
-
-      // When: Creating context menus
-      chromeMock.contextMenus.create({
-        id: 'ai-toolbox-main',
-        title: 'AI Toolbox',
-        contexts: ['selection'],
-      });
-
-      // Then: Context menu should be created
-      expect(createSpy).toHaveBeenCalled();
-      const call = createSpy.mock.calls[0][0];
-      expect(call.id).toBe('ai-toolbox-main');
-      expect(call.title).toBe('AI Toolbox');
-    });
-
-    it('should add template items to context menu', async () => {
-      // Given: Templates available
-      const templates = [fixtures.templates.email, fixtures.templates.codeDoc];
-      await chromeMock.storage.sync.set({ templates });
-
-      const createSpy = vi.spyOn(chromeMock.contextMenus, 'create');
-
-      // When: Creating template menu items
-      templates.forEach((template) => {
-        chromeMock.contextMenus.create({
-          id: `template-${template.id}`,
-          title: `Process with "${template.name}"`,
-          parentId: 'ai-toolbox-main',
-          contexts: ['selection'],
-        });
-      });
-
-      // Then: Template items should be created
-      expect(createSpy).toHaveBeenCalledTimes(2);
-    });
-
-    it('should handle context menu click', async () => {
-      // Given: Context menu click handler
-      let clickedTemplateId;
-      const clickHandler = (info, _tab) => {
-        if (info.menuItemId.startsWith('template-')) {
-          clickedTemplateId = info.menuItemId.replace('template-', '');
-        }
-      };
-
-      chromeMock.contextMenus.onClicked.addListener(clickHandler);
-
-      // When: User clicks context menu
-      chromeMock.contextMenus.onClicked._trigger(
-        {
-          menuItemId: 'template-email-001',
-          selectionText: 'Selected text',
-        },
-        { id: 1, url: 'https://example.com' }
-      );
-
-      // Then: Should extract template ID
-      expect(clickedTemplateId).toBe('email-001');
-    });
-
-    it('should update context menu with selected text', async () => {
-      // Given: Text is selected on page
-      const updateSpy = vi.spyOn(chromeMock.contextMenus, 'update');
-
-      // When: Updating menu with selection
-      chromeMock.contextMenus.update('ai-toolbox-main', {
-        title: 'AI Toolbox (text selected)',
-      });
-
-      // Then: Menu should be updated
-      expect(updateSpy).toHaveBeenCalled();
-    });
-  });
-
-  describe('Scenario: Side panel integration', () => {
-    it('should configure side panel behavior', async () => {
-      // Given: Side panel API available
-      const setSpy = vi.spyOn(chromeMock.sidePanel, 'setPanelBehavior');
-
-      // When: Setting panel behavior
-      await chromeMock.sidePanel.setPanelBehavior({
-        openPanelOnActionClick: true,
-      });
-
-      // Then: Behavior should be set
-      expect(setSpy).toHaveBeenCalledWith({
-        openPanelOnActionClick: true,
-      });
-    });
-
-    it('should open side panel on action click', async () => {
-      // Given: Action click handler
-      const openSpy = vi.spyOn(chromeMock.sidePanel, 'open');
-      const actionHandler = async (tab) => {
-        await chromeMock.sidePanel.open({ tabId: tab.id });
-      };
-
-      chromeMock.action.onClicked.addListener(actionHandler);
-
-      // When: User clicks extension icon
-      await chromeMock.action.onClicked._trigger({ id: 1 });
-
-      // Then: Side panel should open
-      expect(openSpy).toHaveBeenCalled();
-    });
-  });
-
-  describe('Scenario: Tab management', () => {
-    it('should clean up on tab close', async () => {
-      // Given: Active processing for a tab
-      const activeProcessing = new Map();
-      activeProcessing.set(1, {
-        templateId: 'email-001',
-        startTime: Date.now(),
-      });
-
-      const closeHandler = (tabId) => {
-        activeProcessing.delete(tabId);
-      };
-
-      chromeMock.tabs.onRemoved.addListener(closeHandler);
-
-      // When: Tab is closed
-      chromeMock.tabs.onRemoved._trigger(1, { windowId: 1 });
-
-      // Then: Processing should be cleaned up
-      expect(activeProcessing.has(1)).toBe(false);
-    });
-
-    it('should send message to content script', async () => {
-      // Given: Tab with content script
-      const sendSpy = vi.spyOn(chromeMock.tabs, 'sendMessage');
-
-      // When: Sending message to tab
-      await chromeMock.tabs.sendMessage(1, {
-        action: 'showOverlay',
-        templateId: 'email-001',
-      });
-
-      // Then: Message should be sent
-      expect(sendSpy).toHaveBeenCalled();
-      const call = sendSpy.mock.calls[0];
-      expect(call[0]).toBe(1);
-      expect(call[1].action).toBe('showOverlay');
-    });
-  });
-
-  describe('Scenario: Badge management', () => {
-    it('should set badge for processing state', () => {
-      // Given: Template is processing
-      const setBadgeSpy = vi.spyOn(chromeMock.action, 'setBadgeText');
-      const setColorSpy = vi.spyOn(
-        chromeMock.action,
-        'setBadgeBackgroundColor'
-      );
-
-      // When: Setting processing badge
-      chromeMock.action.setBadgeText({ text: '...' });
-      chromeMock.action.setBadgeBackgroundColor({ color: '#2563eb' });
-
-      // Then: Badge should be set
-      expect(setBadgeSpy).toHaveBeenCalled();
-      expect(setColorSpy).toHaveBeenCalled();
-    });
-
-    it('should clear badge on completion', () => {
-      // Given: Processing complete
-      const setBadgeSpy = vi.spyOn(chromeMock.action, 'setBadgeText');
-
-      // When: Clearing badge
-      chromeMock.action.setBadgeText({ text: '' });
-
-      // Then: Badge should be cleared
-      expect(setBadgeSpy).toHaveBeenCalled();
-      const call = setBadgeSpy.mock.calls[0][0];
-      expect(call.text).toBe('');
-    });
-
-    it('should set error badge on failure', () => {
-      // Given: Processing failed
-      const setColorSpy = vi.spyOn(
-        chromeMock.action,
-        'setBadgeBackgroundColor'
-      );
-
-      // When: Setting error badge
-      chromeMock.action.setBadgeText({ text: '!' });
-      chromeMock.action.setBadgeBackgroundColor({ color: '#dc2626' });
-
-      // Then: Error badge should be set
-      expect(setColorSpy).toHaveBeenCalled();
-      const call = setColorSpy.mock.calls[0][0];
-      expect(call.color).toBe('#dc2626');
-    });
-  });
-
-  describe('Scenario: Storage validation on startup', () => {
-    it('should validate storage on startup', async () => {
-      // Given: Extension starts
-      let validated = false;
-      const startupHandler = async () => {
-        const data = await chromeMock.storage.sync.get([
-          'templates',
-          'history',
-          'settings',
-        ]);
-        validated = true;
-        return data;
-      };
-
-      chromeMock.runtime.onStartup.addListener(startupHandler);
-
-      // When: Startup event fires
-      await chromeMock.runtime.onStartup._trigger();
-
-      // Then: Storage should be validated
-      expect(validated).toBe(true);
-    });
-
-    it('should repair corrupted storage', async () => {
-      // Given: Corrupted templates data
-      await chromeMock.storage.sync.set({ templates: 'not-an-array' });
-
-      // When: Validating and repairing
-      const repair = async () => {
-        const { templates } = await chromeMock.storage.sync.get('templates');
-        if (!Array.isArray(templates)) {
-          await chromeMock.storage.sync.set({ templates: [] });
-        }
-      };
-      await repair();
-
-      // Then: Data should be repaired
-      const { templates } = await chromeMock.storage.sync.get('templates');
-      expect(Array.isArray(templates)).toBe(true);
-    });
+  it('runs against the version the constraints file declares', () => {
+    expect(chromeMock.runtime.getManifest().version).toBe(EXTENSION_VERSION);
   });
 });

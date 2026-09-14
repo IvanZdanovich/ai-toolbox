@@ -35,10 +35,10 @@ export default defineConfig({
       // Flat keys — a nested `global` object is not a Vitest threshold and
       // is silently ignored, which lets coverage regress unnoticed.
       thresholds: {
-        branches: 40,
-        functions: 40,
-        lines: 40,
-        statements: 40,
+        branches: 45,
+        functions: 45,
+        lines: 45,
+        statements: 45,
       },
     },
 
