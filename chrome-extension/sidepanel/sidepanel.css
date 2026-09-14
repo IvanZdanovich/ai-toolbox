@@ -128,7 +128,11 @@ html {
 .nav-tab-editor.active {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 10%,
+    var(--color-surface)
+  );
 }
 
 .nav-tab-order {
@@ -316,6 +320,9 @@ html {
 .search-box .form-input {
   height: var(--button-height);
   padding-left: calc(var(--spacing-sm) * 2 + 1em);
+
+  /* Room for the search icon on the left and the dictation mic on the right. */
+  padding-right: var(--button-height);
   font-size: var(--font-size-xs);
 }
 
@@ -1027,4 +1034,36 @@ html {
 .chat-input {
   flex: 1;
   resize: vertical;
+}
+
+/* ========================================
+   VOICE
+   ======================================== */
+
+/* Dictation mic inside a search box: the field already reserves room for the
+   search icon on the left, so the mic takes the right edge. */
+.search-box .mic-btn {
+  position: absolute;
+  right: var(--spacing-xxs);
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+  width: var(--button-height);
+  height: calc(var(--button-height) - var(--spacing-xs));
+}
+
+/* In the chat form the mic is just another flex item next to Send. */
+.chat-form .mic-btn {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+/* Command mode listening: the footer mic matches the dictation buttons. */
+.footer-btn--listening {
+  color: var(--color-error);
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+
+.footer-btn--listening:hover {
+  color: var(--color-error);
 }

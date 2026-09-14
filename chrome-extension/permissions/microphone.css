@@ -1,0 +1,25 @@
+.mic-page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+}
+
+.mic-status:empty {
+  display: none;
+}
+
+.mic-status--success {
+  color: var(--color-success);
+}
+
+.mic-status--error {
+  color: var(--color-error);
+}
+
+.mic-status--pending {
+  color: var(--color-text-secondary);
+}

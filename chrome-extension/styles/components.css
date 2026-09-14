@@ -117,7 +117,8 @@ select.form-input:hover {
 }
 
 select.form-input:focus {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* Light theme dropdown arrow (system preference) */
@@ -387,6 +388,9 @@ select.form-input option:checked {
   font-size: var(--font-size-sm);
   margin: 0;
   flex: 1;
+
+  /* The voice command help arrives as one newline-separated message. */
+  white-space: pre-line;
 }
 
 .toast::after {
@@ -498,4 +502,55 @@ select.form-input option:checked {
 
 .mt-md {
   margin-top: var(--spacing-md);
+}
+
+/* ========================================
+   DICTATION (MIC BUTTON)
+   ======================================== */
+
+/* Sits right after its [data-voice] field; each context positions it —
+   see .search-box .mic-btn and .chat-form .mic-btn in sidepanel.css. */
+.mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--button-height);
+  height: var(--button-height);
+  margin-top: var(--spacing-xs);
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.mic-btn:hover {
+  background: var(--color-background-hover);
+  color: var(--color-text-primary);
+}
+
+.mic-btn--listening {
+  color: var(--color-error);
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-btn--listening {
+    animation: none;
+  }
 }

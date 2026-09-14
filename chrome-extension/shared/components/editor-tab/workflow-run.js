@@ -65,7 +65,7 @@ export const workflowRunMethods = {
         <div class="form-group">
           <label class="form-label">${sanitizeText(variableLabel(variable))}</label>
           <textarea name="${sanitizeText(variable)}"
-            class="form-textarea" rows="2"
+            class="form-textarea" rows="2" data-voice
             placeholder="${sanitizeText(variablePlaceholder(variable))}"></textarea>
         </div>`
             )

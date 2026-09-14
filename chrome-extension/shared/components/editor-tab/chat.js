@@ -23,8 +23,9 @@ export function chatSectionHTML(title = 'Continue the conversation') {
           data-role="chat-input"
           class="form-textarea chat-input"
           rows="2"
-          placeholder="Type a message…"
+          placeholder="Type or dictate a message…"
           aria-label="Your message"
+          data-voice
         ></textarea>
         <button type="submit" class="btn btn-primary btn-small" data-role="chat-send-btn">
           Send

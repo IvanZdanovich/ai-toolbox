@@ -62,10 +62,35 @@ export const DEFAULT_SETTINGS = {
   provider: AI_PROVIDERS.MOCK,
   defaultProvider: AI_PROVIDERS.MOCK,
   theme: 'auto',
+  // Speech recognition language; empty means follow the browser.
+  voiceLanguage: '',
   // API keys stored per provider
   apiKeys: { ...EMPTY_API_KEYS },
   providerConfig: structuredClone(DEFAULT_PROVIDER_CONFIG),
 };
+
+// Offered in settings for speech recognition. '' follows the browser's own
+// language, which is right for most people; the rest are there for anyone
+// dictating in a language their browser isn't set to.
+export const VOICE_LANGUAGES = [
+  { id: '', name: 'Browser default' },
+  { id: 'en-US', name: 'English (US)' },
+  { id: 'en-GB', name: 'English (UK)' },
+  { id: 'de-DE', name: 'German' },
+  { id: 'es-ES', name: 'Spanish' },
+  { id: 'fr-FR', name: 'French' },
+  { id: 'it-IT', name: 'Italian' },
+  { id: 'nl-NL', name: 'Dutch' },
+  { id: 'pl-PL', name: 'Polish' },
+  { id: 'pt-BR', name: 'Portuguese (Brazil)' },
+  { id: 'ru-RU', name: 'Russian' },
+  { id: 'uk-UA', name: 'Ukrainian' },
+  { id: 'tr-TR', name: 'Turkish' },
+  { id: 'hi-IN', name: 'Hindi' },
+  { id: 'ja-JP', name: 'Japanese' },
+  { id: 'ko-KR', name: 'Korean' },
+  { id: 'zh-CN', name: 'Chinese (Mandarin)' },
+];
 
 export const LIMITS = {
   MAX_TEMPLATES: 50,

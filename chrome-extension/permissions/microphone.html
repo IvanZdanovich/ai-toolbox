@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Toolbox - Microphone Access</title>
+    <link rel="stylesheet" href="../styles/variables.css" />
+    <link rel="stylesheet" href="../styles/base.css" />
+    <link rel="stylesheet" href="../styles/components.css" />
+    <link rel="stylesheet" href="microphone.css" />
+  </head>
+  <body>
+    <main class="mic-page">
+      <h1>Microphone access</h1>
+      <p>
+        Voice input and voice commands need your microphone. Chrome can only ask
+        for it from a normal tab, not from the side panel — so grant it here
+        once and the side panel keeps working.
+      </p>
+      <button type="button" class="btn btn-primary" id="grantBtn">
+        Allow microphone
+      </button>
+      <p class="mic-status" id="micStatus" role="status"></p>
+      <p class="form-help">
+        Audio is sent to your browser's speech recognition service for
+        transcription. AI Toolbox never records or stores it.
+      </p>
+    </main>
+
+    <script type="module" src="microphone.js"></script>
+  </body>
+</html>

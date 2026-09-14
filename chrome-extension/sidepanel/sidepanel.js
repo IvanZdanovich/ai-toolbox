@@ -12,13 +12,32 @@ import {
   sanitizeText,
   EVENTS,
   WORKFLOW_STEP_TYPES,
+  isVoiceSupported,
+  createVoiceSession,
+  ensureMicrophoneAccess,
+  setVoiceLanguage,
+  openMicPermissionPage,
+  voiceErrorMessage,
+  MIC_PERMISSION_HINT,
+  parseVoiceCommand,
+  findByName,
+  VOICE_COMMAND_HELP,
 } from '../shared/index.js';
 import {
   Toast,
   Modal,
   EditorTab,
   createSearchBox,
+  attachDictation,
 } from '../shared/components/index.js';
+
+// Which section's search box "search <text>" should type into. Editor tabs
+// have no search box, so anything else falls back to templates.
+const SEARCH_INPUT_IDS = {
+  templates: 'templateSearch',
+  workflows: 'workflowSearch',
+  history: 'historySearch',
+};
 
 class SidePanelApp {
   constructor() {
@@ -28,6 +47,9 @@ class SidePanelApp {
     this.history = [];
     this.settings = null;
     this.searchTimeout = null;
+
+    // Continuous recognizer behind the footer mic; created on first use.
+    this.voiceSession = null;
 
     // Open template/workflow editor tabs, keyed by uid.
     this.editorTabs = new Map();
@@ -47,10 +69,12 @@ class SidePanelApp {
       ]);
 
       await this.loadData();
+      setVoiceLanguage(this.settings.voiceLanguage);
       await this.restoreUIState();
       this.setupEventListeners();
       this.setupExternalChangeListener();
       this.render();
+      attachDictation(document);
 
       // Validate storage persistence
       const validation = await storage.validatePersistence();
@@ -130,6 +154,10 @@ class SidePanelApp {
     // Footer buttons
     document.getElementById('settingsBtn').addEventListener('click', () => {
       this.openSettingsPage();
+    });
+
+    document.getElementById('voiceBtn').addEventListener('click', () => {
+      this.toggleVoiceCommands();
     });
 
     const expandBtn = document.getElementById('expandBtn');
@@ -773,6 +801,160 @@ class SidePanelApp {
         console.error('Failed to clear history:', error);
         Toast.show('Failed to clear history', 'error');
       }
+    }
+  }
+
+  // ========================================
+  // VOICE COMMANDS
+  // ========================================
+
+  // The footer mic listens continuously and routes each phrase through the
+  // grammar in voice-commands.js, so the panel can be driven hands-free.
+  // Dictation mic buttons share the same microphone, so starting one stops
+  // the other (enforced in voice.js).
+  async toggleVoiceCommands() {
+    if (!isVoiceSupported()) {
+      Toast.show(
+        'Speech recognition is not available in this browser',
+        'error'
+      );
+      return;
+    }
+
+    if (this.voiceSession?.isListening()) {
+      this.voiceSession.stop();
+      return;
+    }
+
+    // Chrome cannot prompt for the microphone from inside a side panel, so
+    // the grant is checked here and handed off to a tab when it's missing.
+    if (!(await ensureMicrophoneAccess())) {
+      Toast.show(MIC_PERMISSION_HINT, 'warning');
+      return;
+    }
+
+    if (!this.voiceSession) {
+      const button = document.getElementById('voiceBtn');
+      this.voiceSession = createVoiceSession({
+        continuous: true,
+        onTranscript: (text) => this.handleVoiceCommand(text),
+        onStateChange: (listening) => {
+          button.classList.toggle('footer-btn--listening', listening);
+          button.setAttribute('aria-pressed', String(listening));
+          if (listening) {
+            Toast.show('Listening — say "help" for commands', 'info');
+          }
+        },
+        onError: (error) => {
+          Toast.show(voiceErrorMessage(error), 'error');
+          if (error === 'not-allowed' || error === 'service-not-allowed') {
+            openMicPermissionPage();
+          }
+        },
+      });
+    }
+
+    this.voiceSession.start();
+  }
+
+  handleVoiceCommand(transcript) {
+    const command = parseVoiceCommand(transcript);
+    if (!command) {
+      Toast.show(
+        `Didn't catch a command in "${transcript}" — say "help" for the list`,
+        'warning'
+      );
+      return;
+    }
+
+    switch (command.action) {
+      case 'section':
+        this.switchSection(command.arg);
+        break;
+      case 'settings':
+        this.openSettingsPage();
+        break;
+      case 'new-template':
+        this.openEditor('template', 'edit');
+        break;
+      case 'new-workflow':
+        this.openEditor('workflow', 'edit');
+        break;
+      case 'new-chat':
+        this.openEditor('chat');
+        break;
+      case 'ask':
+        this.openEditor('chat', null, null, command.arg);
+        break;
+      case 'search':
+        this.voiceSearch(command.arg);
+        break;
+      case 'open':
+        this.voiceOpenByName(command.arg, 'run');
+        break;
+      case 'edit':
+        this.voiceOpenByName(command.arg, 'edit');
+        break;
+      case 'send':
+        this.voiceSubmitActiveTab();
+        break;
+      case 'close':
+        this.closeEditorTab(this.currentSection);
+        break;
+      case 'stop':
+        this.voiceSession?.stop();
+        break;
+      case 'help':
+        Toast.show(VOICE_COMMAND_HELP.join('\n'), 'info', 12000);
+        break;
+    }
+  }
+
+  voiceSearch(query) {
+    const inputId =
+      SEARCH_INPUT_IDS[this.currentSection] || SEARCH_INPUT_IDS.templates;
+    if (!SEARCH_INPUT_IDS[this.currentSection]) {
+      this.switchSection('templates');
+    }
+
+    const input = document.getElementById(inputId);
+    input.value = query;
+    // The search box debounces on 'input', so this filters the list the same
+    // way typing would.
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // "open <name>" / "edit <name>" — a template first, then a workflow, so a
+  // name that exists in both resolves the way the lists are ordered.
+  voiceOpenByName(spokenName, mode) {
+    const template = findByName(this.templates, spokenName);
+    if (template) {
+      this.openEditor('template', mode, template.id);
+      return;
+    }
+
+    const workflow = findByName(this.workflows, spokenName);
+    if (workflow) {
+      this.openEditor('workflow', mode, workflow.id);
+      return;
+    }
+
+    Toast.show(`No template or workflow matching "${spokenName}"`, 'warning');
+  }
+
+  // "send" means the chat box when a conversation is open, otherwise the
+  // tab's own submit — run the template/workflow, or save the edit.
+  voiceSubmitActiveTab() {
+    const section = document.getElementById(this.currentSection);
+    const target =
+      section?.querySelector(
+        '[data-role="chat-section"]:not(.hidden) [data-role="chat-send-btn"]'
+      ) || section?.querySelector('button[type="submit"]');
+
+    if (target) {
+      target.click();
+    } else {
+      Toast.show('Nothing to send in this tab', 'warning');
     }
   }
 

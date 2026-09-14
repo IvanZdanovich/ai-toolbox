@@ -1,5 +1,6 @@
 import { sanitizeText } from '../../helpers.js';
 import Toast from '../toast.js';
+import { attachDictation } from '../mic-button.js';
 import { templateEditHTML, templateEditMethods } from './template-edit.js';
 import { templateRunHTML, templateRunMethods } from './template-run.js';
 import { workflowEditHTML, workflowEditMethods } from './workflow-edit.js';
@@ -85,10 +86,14 @@ class EditorTab {
     section.innerHTML = this.skeletonHTML();
     this.root = section;
 
-    this.init().catch((error) => {
-      console.error('Failed to initialize editor tab:', error);
-      Toast.show('Failed to open editor', 'error');
-    });
+    this.init()
+      // After init, not before: the run modes build their input fields from
+      // the template/workflow they just loaded, and those fields want mics too.
+      .then(() => attachDictation(section))
+      .catch((error) => {
+        console.error('Failed to initialize editor tab:', error);
+        Toast.show('Failed to open editor', 'error');
+      });
 
     return section;
   }
@@ -151,10 +156,7 @@ class EditorTab {
       'hidden',
       !show
     );
-    this.q('[data-role="editor-export-btn"]').classList.toggle(
-      'hidden',
-      !show
-    );
+    this.q('[data-role="editor-export-btn"]').classList.toggle('hidden', !show);
   }
 }
 

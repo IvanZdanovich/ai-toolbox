@@ -36,7 +36,7 @@ export function templateEditHTML() {
           </button>
         </div>
         <p class="form-help">Use {variable_name} for dynamic inputs</p>
-        <textarea data-role="template-prompt" class="form-textarea" required maxlength="2000" rows="6"></textarea>
+        <textarea data-role="template-prompt" class="form-textarea" required maxlength="2000" rows="6" data-voice></textarea>
       </div>
 
       <div data-role="template-variables" class="template-variables"></div>
@@ -82,9 +82,8 @@ export const templateEditMethods = {
       () => this.generateDescription()
     );
 
-    this.q('[data-role="generate-prompt-btn"]').addEventListener(
-      'click',
-      () => this.generatePrompt()
+    this.q('[data-role="generate-prompt-btn"]').addEventListener('click', () =>
+      this.generatePrompt()
     );
 
     this.q('[data-role="template-form"]').addEventListener('submit', (e) => {
@@ -92,14 +91,12 @@ export const templateEditMethods = {
       this.saveTemplate();
     });
 
-    this.q('[data-role="editor-duplicate-btn"]').addEventListener(
-      'click',
-      () => this.duplicateTemplate()
+    this.q('[data-role="editor-duplicate-btn"]').addEventListener('click', () =>
+      this.duplicateTemplate()
     );
 
-    this.q('[data-role="editor-export-btn"]').addEventListener(
-      'click',
-      () => this.exportTemplate()
+    this.q('[data-role="editor-export-btn"]').addEventListener('click', () =>
+      this.exportTemplate()
     );
   },
 
@@ -377,9 +374,8 @@ Generate the prompt template now:`;
           templateData
         );
       } else {
-        this.currentTemplate = await templateManager.createTemplate(
-          templateData
-        );
+        this.currentTemplate =
+          await templateManager.createTemplate(templateData);
         this.id = this.currentTemplate.id;
         this.setTitle('Edit Template');
       }
