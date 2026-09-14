@@ -13,25 +13,5 @@ export {
   downloadAsJson,
   parseJsonFile,
 } from './helpers.js';
-export {
-  EVENTS,
-  WORKFLOW_STEP_TYPES,
-  EXTENSION_VERSION,
-  EMPTY_API_KEYS,
-  VOICE_LANGUAGES,
-} from './constants.js';
+export { EVENTS, WORKFLOW_STEP_TYPES, EXTENSION_VERSION, EMPTY_API_KEYS } from './constants.js';
 export { AI_PROVIDERS, normalizeProviderId } from './providers.js';
-export {
-  isVoiceSupported,
-  createVoiceSession,
-  ensureMicrophoneAccess,
-  setVoiceLanguage,
-  openMicPermissionPage,
-  voiceErrorMessage,
-  MIC_PERMISSION_HINT,
-} from './voice.js';
-export {
-  parseVoiceCommand,
-  findByName,
-  VOICE_COMMAND_HELP,
-} from './voice-commands.js';

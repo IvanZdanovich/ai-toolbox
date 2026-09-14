@@ -7,8 +7,6 @@ import {
   EMPTY_API_KEYS,
   AI_PROVIDERS,
   normalizeProviderId,
-  openMicPermissionPage,
-  VOICE_LANGUAGES,
 } from '../shared/index.js';
 import { Toast } from '../shared/components/index.js';
 
@@ -94,13 +92,6 @@ class SettingsPage {
       });
     }
 
-    const micPermissionBtn = document.getElementById('micPermissionBtn');
-    if (micPermissionBtn) {
-      micPermissionBtn.addEventListener('click', () => {
-        openMicPermissionPage();
-      });
-    }
-
     const refreshModelsBtn = document.getElementById('refreshModelsBtn');
     if (refreshModelsBtn) {
       refreshModelsBtn.addEventListener('click', () => {
@@ -176,18 +167,7 @@ class SettingsPage {
     providerSelect.style.webkitTextFillColor = 'inherit';
 
     this.selectProvider(currentProvider);
-    this.populateVoiceLanguages();
     this.updateStorageInfo();
-  }
-
-  populateVoiceLanguages() {
-    const select = document.getElementById('voiceLanguage');
-    const current = this.settings.voiceLanguage || '';
-
-    select.innerHTML = VOICE_LANGUAGES.map(
-      ({ id, name }) =>
-        `<option value="${id}"${id === current ? ' selected' : ''}>${name}</option>`
-    ).join('');
   }
 
   // Loads every provider-scoped field — key, endpoint, model — for one provider.
@@ -396,7 +376,6 @@ class SettingsPage {
         apiKey, // Keep for backward compatibility
         apiKeys,
         providerConfig,
-        voiceLanguage: document.getElementById('voiceLanguage').value,
       });
 
       this.settings = await storage.getSettings();

@@ -61,7 +61,7 @@ export const templateRunMethods = {
           (input) => `
         <div class="form-group">
           <label class="form-label">${sanitizeText(input.label)}</label>
-          <textarea name="${sanitizeText(input.name)}" class="form-textarea" data-voice
+          <textarea name="${sanitizeText(input.name)}" class="form-textarea"
                     placeholder="${sanitizeText(input.placeholder)}" rows="2">${sanitizeText(prefillValues[input.name] ?? input.defaultValue ?? '')}</textarea>
         </div>
       `

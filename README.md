@@ -5,7 +5,6 @@ A Chrome extension that provides an AI-powered template toolbox for automating r
 ## Features
 
 - Reusable prompt templates with custom variables
-- **Voice input and voice control** — dictate into any prompt, input or chat box, and drive the side panel hands-free
 - **Agentic workflows** — chain prompts, saved templates and tool-using agents into one repeatable run
 - Cloud and **local** AI providers, with per-provider model and endpoint settings
 - Side panel UI for quick access
@@ -35,48 +34,6 @@ Tools an agent step can be given:
 Tools are opt-in per step, agent loops are bounded by a per-step iteration
 budget, and a run can be stopped mid-flight. Three starter workflows (Research
 Brief, Page to Action Items, Draft/Critique/Revise) are seeded on first launch.
-
-## Voice
-
-Speech recognition is the browser's own — nothing is sent to your AI provider
-and nothing is recorded.
-
-**Voice input (dictation).** A mic button sits next to every field worth
-speaking into: the section search boxes, the chat box, template prompts, and
-the variable inputs on a template or workflow run. Click it, talk, click again
-to stop. What you say is appended to whatever the field already holds.
-
-**Voice control.** The mic in the side panel footer starts continuous command
-mode. Say "help" for the list at any time:
-
-| Say                                          | What happens                                            |
-| -------------------------------------------- | ------------------------------------------------------- |
-| "templates" / "workflows" / "history"        | Switch section                                          |
-| "new template" / "new workflow" / "new chat" | Open a fresh editor tab                                 |
-| "open \<name>" / "edit \<name>"              | Open that template or workflow                          |
-| "search \<text>"                             | Filter the current section                              |
-| "ask \<question>"                            | Start a chat with that question                         |
-| "send"                                       | Send the open chat message, or run/save the current tab |
-| "close"                                      | Close the current editor tab                            |
-| "stop"                                       | Stop listening                                          |
-
-Dictation and command mode share the one microphone, so starting either stops
-the other.
-
-**First run — you must grant the microphone once.** Chrome only asks for
-microphone access from a normal tab, never from a side panel. The first time
-you press a mic, AI Toolbox opens a one-purpose tab that immediately shows
-Chrome's prompt: click **Allow**, go back to the side panel, and press the mic
-again. The grant is per browser profile, so it happens once. Settings › Voice
-can reopen that page, and sets the recognition language (it follows your
-browser by default).
-
-That page also has a **Check it works** test: press Start and speak, and the
-words appear there. If they appear in the tab but not in the side panel, the
-problem is the side panel rather than the browser. Either way the side panel's
-own DevTools (right-click inside it → Inspect) logs each step — `Voice:
-recognition started`, `microphone open`, `speech detected`, `heard "…"` — plus
-the recognizer's error code when it fails.
 
 ## Supported providers
 
