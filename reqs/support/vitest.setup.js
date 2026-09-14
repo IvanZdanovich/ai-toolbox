@@ -8,7 +8,7 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from './mocks/chrome-api.mock.js';
+} from './chrome-api.mock.js';
 
 // Global test timeout
 vi.setConfig({ testTimeout: 10000 });

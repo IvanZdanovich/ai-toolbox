@@ -14,7 +14,7 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../mocks/chrome-api.mock.js';
+} from '../../support/chrome-api.mock.js';
 import { MAX_WORKFLOW_STEPS } from '../../../chrome-extension/constraints/workflow.constraints.js';
 import { MAX_AGENT_ITERATIONS } from '../../../chrome-extension/constraints/agent.constraints.js';
 

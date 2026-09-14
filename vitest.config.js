@@ -9,7 +9,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./reqs/setup.js'],
+    setupFiles: ['./reqs/support/vitest.setup.js'],
 
     include: [
       './reqs/unit/**/*.test.js',

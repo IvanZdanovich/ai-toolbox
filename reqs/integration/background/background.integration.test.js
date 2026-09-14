@@ -16,7 +16,7 @@ import {
   uninstallChromeMock,
   testUtils,
   chromeMock,
-} from '../../mocks/chrome-api.mock.js';
+} from '../../support/chrome-api.mock.js';
 import { fixtures } from '../../integration-examples/shared/test-data.examples.js';
 
 describe('Background Service Worker Integration', () => {

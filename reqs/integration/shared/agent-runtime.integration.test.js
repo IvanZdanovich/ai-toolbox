@@ -14,7 +14,7 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../mocks/chrome-api.mock.js';
+} from '../../support/chrome-api.mock.js';
 import { AGENT_TOOLS } from '../../../chrome-extension/shared/agent-tools.js';
 
 // The runtime pulls in ai-service, which touches chrome.storage at import time;

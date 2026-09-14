@@ -25,3 +25,16 @@
 - **spec_changes:** implementation — four integration specs import their boundary values from `constraints/` instead of `shared/constants.js`
 - **specs_affected:** integration · cross (`reqs/cross/version.spec.js`)
 - **links:** upstream `layout.adr-1`
+
+## layout.adr-3 — Shared doubles, harness and spec-driving scripts live in `reqs/support`
+
+- **status:** accepted
+- **date:** 2026-09-14
+- **context:** `reqs/mocks/chrome-api.mock.js` and `reqs/setup.js` are neither specs nor examples: the first doubles an external dependency for eight suites across two levels, the second installs that double, resets storage between cases, and registers custom matchers. Filed as they were, `reqs/mocks/` named a role rather than a subject, and `reqs/setup.js` sat loose at the root of a tree where every other file states a requirement. Neither asserts anything, so counting them alongside specs blurs what the suite actually covers.
+- **decision:** Collect under `reqs/support` every method, script, command, harness or double that serves the specs rather than stating a requirement — including anything resolving cross-module relations or an external dependency for more than one level. Files are named for what they double or drive (`chrome-api.mock.js`, `vitest.setup.js`), never for their role. Alternative considered: keep `reqs/mocks/` and add sibling role-named directories (`reqs/helpers/`, `reqs/harness/`) — rejected, each new kind of scaffolding would invent another top-level directory and none is named by subject. Alternative considered: colocate every double beside its first consumer — rejected for a double eight suites share, though it remains right for a single-consumer stub.
+- **consequences:** Positive — one place to look for scaffolding, named by subject, and a directory the gate can exclude from coverage without listing files. Negative — a single-consumer double now has two plausible homes, so the "second consumer" rule has to be applied by judgement. Risk — `reqs/support` becomes the junk drawer `reqs/mocks` was starting to be. Mitigation — SUPPORT_ON_DEMAND in the skill: a file arrives there when a second consumer needs it, not before.
+- **constraints:** none introduced
+- **rules:** none changed
+- **spec_changes:** architecture — ten suites re-point their mock import to `reqs/support/`; the runner's `setupFiles` points at `reqs/support/vitest.setup.js`
+- **specs_affected:** integration · e2e
+- **links:** upstream `layout.adr-1`

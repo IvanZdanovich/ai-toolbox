@@ -14,7 +14,7 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../mocks/chrome-api.mock.js';
+} from '../../support/chrome-api.mock.js';
 import {
   fixtures,
   factories,
