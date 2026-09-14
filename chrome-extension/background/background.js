@@ -61,13 +61,22 @@ class AIToolboxBackground {
 
   showWelcomeNotification() {
     if (chrome.notifications) {
-      chrome.notifications.create('welcome', {
-        type: 'basic',
-        iconUrl: 'icons/icon-48.png',
-        title: 'AI Toolbox Installed!',
-        message:
-          'Click the extension icon to get started with AI-powered templates.',
-      });
+      chrome.notifications
+        .create('welcome', {
+          type: 'basic',
+          // Must be absolute: a relative path resolves against the service
+          // worker's own directory (/background/), where the icon isn't, and
+          // the notification fails with "Unable to download all specified
+          // images".
+          iconUrl: chrome.runtime.getURL('icons/icon-48.png'),
+          title: 'AI Toolbox Installed!',
+          message:
+            'Click the extension icon to get started with AI-powered templates.',
+        })
+        .catch((error) => {
+          // A welcome notification is never worth an unhandled rejection.
+          console.warn('Welcome notification could not be shown:', error);
+        });
     }
   }
 
