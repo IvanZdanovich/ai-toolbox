@@ -207,16 +207,21 @@ export const chromeMock = {
     onClicked: createMockEvent('action.onClicked'),
   },
 
+  // Manifest V3 returns a promise from these as well as invoking the
+  // callback; background.js relies on the promise to swallow a failed
+  // welcome notification, so the double has to return one too.
   notifications: {
     create: (notificationId, options, callback) => {
       if (callback) {
         callback(notificationId);
       }
+      return Promise.resolve(notificationId);
     },
     clear: (notificationId, callback) => {
       if (callback) {
         callback(true);
       }
+      return Promise.resolve(true);
     },
   },
 
