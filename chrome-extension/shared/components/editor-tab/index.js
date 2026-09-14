@@ -151,10 +151,7 @@ class EditorTab {
       'hidden',
       !show
     );
-    this.q('[data-role="editor-export-btn"]').classList.toggle(
-      'hidden',
-      !show
-    );
+    this.q('[data-role="editor-export-btn"]').classList.toggle('hidden', !show);
   }
 }
 

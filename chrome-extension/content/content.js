@@ -75,11 +75,7 @@ class AIToolboxContent {
           sendResponse({ success: true });
           break;
         case 'showError':
-          this.showErrorOverlay(
-            { name: 'AI Toolbox' },
-            '',
-            request.message
-          );
+          this.showErrorOverlay({ name: 'AI Toolbox' }, '', request.message);
           sendResponse({ success: true });
           break;
         default:

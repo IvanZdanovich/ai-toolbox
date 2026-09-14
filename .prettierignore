@@ -4,3 +4,4 @@ package-lock.json
 *.min.css
 dist/
 build/
+coverage/

@@ -6,11 +6,13 @@ description: Guards against over-engineering while writing or reviewing code —
 # Reasoning Principles
 
 ## The ladder
+
 LADDER_ORDER: checks necessity first (YAGNI), then existing repo code, then stdlib, then a native platform feature, then an already-installed dependency, then whether it fits in one line, then the minimum new code, in that order — otherwise a rung gets skipped and code gets written before cheaper options are ruled out.
 COMPREHENSION_FIRST: traces every caller and the real end-to-end flow before picking a rung — otherwise the shortest diff lands in the wrong place and creates a second bug.
 ROOT_CAUSE_FIX: fixes the shared function all callers route through instead of patching only the path the ticket names — otherwise sibling callers stay broken and the "lazy" fix ends up as more code spread across call sites.
 
 ## Boundaries on laziness
+
 NO_UNREQUESTED_ABSTRACTION: rejects an interface with one implementation, a factory for one product, or config for a value that never changes, in favor of inlining until a second real case exists — otherwise speculative flexibility ships as dead weight.
 NO_SPECULATIVE_SCAFFOLDING: builds only what the current request needs over scaffolding "for later" — otherwise unused structure piles up that nobody asked for.
 PRESERVE_SAFETY_PATHS: keeps input validation at trust boundaries, error handling that prevents data loss, security measures, accessibility basics, and anything explicitly requested, over cutting them for a shorter diff — otherwise laziness deletes a real safeguard instead of just excess code.
@@ -18,6 +20,7 @@ MARK_DELIBERATE_SHORTCUTS: tags a simplification that caps a real capability (gl
 CALIBRATION_KNOB: leaves a tuning knob for real-world drift (clock skew, sensor offset, hardware timing) over trusting a minimal model — otherwise the lazy version breaks the moment it meets physical hardware.
 
 ## Self-check requirement
+
 SELF_CHECK_REQUIRED: leaves one runnable check (an assert-based `demo()`/`__main__`, or one small `test_*.py`) behind any non-trivial branch, loop, parser, or money/security path — otherwise lazy code ships with nothing to signal when it breaks.
 TRIVIAL_SKIP: skips the check for one-liners with no branching — otherwise YAGNI-for-tests gets violated by testing code that cannot fail in an interesting way.
 

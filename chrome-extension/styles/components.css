@@ -117,7 +117,8 @@ select.form-input:hover {
 }
 
 select.form-input:focus {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* Light theme dropdown arrow (system preference) */

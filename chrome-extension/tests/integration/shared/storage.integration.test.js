@@ -110,9 +110,7 @@ describe('Storage Service Integration', () => {
       await storage.get('cached-key'); // First retrieval - caches
 
       // When: Getting the same key again
-      const start = performance.now();
       const result = await storage.get('cached-key');
-      const duration = performance.now() - start;
 
       // Then: Should be retrieved from cache (fast)
       expect(result).toEqual({ data: 'cached' });

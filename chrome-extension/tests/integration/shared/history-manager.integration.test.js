@@ -310,8 +310,9 @@ describe('History Manager Integration', () => {
       );
 
       // Then: Oldest entry should be removed
-      const entry = await historyManager.getHistoryEntry('oldest-entry');
-      // Entry might or might not exist depending on implementation
+      await expect(
+        historyManager.getHistoryEntry('oldest-entry')
+      ).resolves.toBeFalsy();
     });
   });
 

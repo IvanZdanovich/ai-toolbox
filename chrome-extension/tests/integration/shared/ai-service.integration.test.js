@@ -15,7 +15,7 @@ import {
   uninstallChromeMock,
   testUtils,
 } from '../../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../../fixtures/test-data.js';
+import { fixtures } from '../../fixtures/test-data.js';
 
 // Mock storage module
 vi.mock('../../../shared/storage.js', async () => {

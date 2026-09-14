@@ -52,7 +52,9 @@ class Toast {
 
   hide(id) {
     const toast = this.toasts.get(id);
-    if (!toast) return;
+    if (!toast) {
+      return;
+    }
 
     this.animateOut(toast, () => {
       if (toast.parentNode) {

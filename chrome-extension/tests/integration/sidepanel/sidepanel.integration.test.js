@@ -16,7 +16,7 @@ import {
   uninstallChromeMock,
   testUtils,
 } from '../../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../../fixtures/test-data.js';
+import { fixtures } from '../../fixtures/test-data.js';
 
 // Mock DOM environment
 function createMockDOM() {
@@ -366,26 +366,6 @@ describe('Side Panel Integration', () => {
       // Then: Only matching templates should be returned
       expect(results).toHaveLength(1);
       expect(results[0].name).toBe('Email Response');
-    });
-
-    it('should debounce search input', async () => {
-      // Given: Search with debounce
-      const searchInput = document.getElementById('templateSearch');
-      let searchCalls = 0;
-
-      const debouncedSearch = (query) => {
-        searchCalls++;
-        return mockTemplateManager.searchTemplates(query);
-      };
-
-      // When: Rapid typing (simulated)
-      searchInput.value = 'e';
-      searchInput.value = 'em';
-      searchInput.value = 'ema';
-      searchInput.value = 'email';
-
-      // With debounce, only final search should execute
-      // (In real implementation)
     });
   });
 

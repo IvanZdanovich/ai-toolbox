@@ -12,7 +12,9 @@ describe('Icon Helper Integration', () => {
     it('should default to size sm and no color class', () => {
       const html = IconHelper.iconHTML('template');
 
-      expect(html).toBe('<svg class="icon icon--sm"><use href="#icon-template"></use></svg>');
+      expect(html).toBe(
+        '<svg class="icon icon--sm"><use href="#icon-template"></use></svg>'
+      );
     });
 
     it('should apply a custom size', () => {

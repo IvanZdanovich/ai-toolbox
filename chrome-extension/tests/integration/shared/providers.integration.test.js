@@ -17,7 +17,9 @@ import {
 describe('Provider Registry Integration', () => {
   describe('Scenario: Normalizing provider ids', () => {
     it('should pass through a known provider id unchanged', () => {
-      expect(normalizeProviderId(AI_PROVIDERS.CLAUDE)).toBe(AI_PROVIDERS.CLAUDE);
+      expect(normalizeProviderId(AI_PROVIDERS.CLAUDE)).toBe(
+        AI_PROVIDERS.CLAUDE
+      );
     });
 
     it.each([
@@ -67,7 +69,9 @@ describe('Provider Registry Integration', () => {
       const providers = listProviders();
 
       expect(providers).toHaveLength(PROVIDER_IDS.length);
-      expect(new Set(providers.map((p) => p.id)).size).toBe(PROVIDER_IDS.length);
+      expect(new Set(providers.map((p) => p.id)).size).toBe(
+        PROVIDER_IDS.length
+      );
     });
 
     it('should include every provider referenced by AI_PROVIDERS', () => {
@@ -80,11 +84,12 @@ describe('Provider Registry Integration', () => {
   });
 
   describe('Scenario: Local providers require no API key', () => {
-    it.each([AI_PROVIDERS.OLLAMA, AI_PROVIDERS.LLAMACPP, AI_PROVIDERS.LMSTUDIO])(
-      '%s should not require an API key',
-      (id) => {
-        expect(PROVIDERS[id].requiresApiKey).toBe(false);
-      }
-    );
+    it.each([
+      AI_PROVIDERS.OLLAMA,
+      AI_PROVIDERS.LLAMACPP,
+      AI_PROVIDERS.LMSTUDIO,
+    ])('%s should not require an API key', (id) => {
+      expect(PROVIDERS[id].requiresApiKey).toBe(false);
+    });
   });
 });

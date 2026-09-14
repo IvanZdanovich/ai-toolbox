@@ -517,7 +517,7 @@ else stays as close to the original as possible.`,
         id: generateId(),
         name: 'Template Builder',
         description:
-          'Design a new toolbox template (prompt + variables) for a specific task, following this app\'s template rules',
+          "Design a new toolbox template (prompt + variables) for a specific task, following this app's template rules",
         prompt: `Design a new template for this toolbox: {task_description}
 
 Ground it in this scenario: {example_scenario}

@@ -13,5 +13,10 @@ export {
   downloadAsJson,
   parseJsonFile,
 } from './helpers.js';
-export { EVENTS, WORKFLOW_STEP_TYPES, EXTENSION_VERSION, EMPTY_API_KEYS } from './constants.js';
+export {
+  EVENTS,
+  WORKFLOW_STEP_TYPES,
+  EXTENSION_VERSION,
+  EMPTY_API_KEYS,
+} from './constants.js';
 export { AI_PROVIDERS, normalizeProviderId } from './providers.js';

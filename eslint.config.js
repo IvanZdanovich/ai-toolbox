@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 
 export default [
+  { ignores: ['**/coverage/**', '**/node_modules/**'] },
   js.configs.recommended,
   {
     languageOptions: {
@@ -13,9 +14,12 @@ export default [
       },
     },
     rules: {
-      'no-unused-vars': 'warn',
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', caughtErrors: 'none' },
+      ],
       'no-console': 'off',
-      'prefer-const': 'warn',
+      'prefer-const': 'error',
       'no-var': 'error',
       eqeqeq: 'error',
       curly: 'error',
@@ -23,7 +27,7 @@ export default [
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-script-url': 'error',
-      'no-alert': 'warn',
+      'no-alert': 'error',
     },
   },
   {
@@ -63,6 +67,24 @@ export default [
     },
   },
   {
+    files: ['chrome-extension/tests/**/*.js'],
+    languageOptions: {
+      globals: {
+        global: 'readonly',
+        performance: 'readonly',
+      },
+    },
+  },
+  {
+    files: ['chrome-extension/vitest.config.js', 'eslint.config.js'],
+    languageOptions: {
+      globals: {
+        __dirname: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
+  {
     files: [
       'chrome-extension/background/**/*.js',
       'chrome-extension/sidepanel/**/*.js',
@@ -76,14 +98,29 @@ export default [
           patterns: [
             {
               group: ['../shared/*.js', '!../shared/index.js'],
-              message: "Import from 'shared/index.js' instead of reaching into shared/ internals.",
+              message:
+                "Import from 'shared/index.js' instead of reaching into shared/ internals.",
             },
             {
-              group: ['../shared/components/*.js', '!../shared/components/index.js'],
+              group: [
+                '../shared/components/*.js',
+                '!../shared/components/index.js',
+              ],
               message:
                 "Import from 'shared/components/index.js' instead of reaching into shared/components/ internals.",
             },
           ],
+        },
+      ],
+      // no-restricted-imports only sees static imports, so a dynamic
+      // import() would otherwise slip past the boundary above.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'ImportExpression > Literal[value=/^\\.\\.\\/shared\\/(?!index\\.js$|components\\/index\\.js$).+/]',
+          message:
+            "Import from 'shared/index.js' instead of reaching into shared/ internals.",
         },
       ],
     },

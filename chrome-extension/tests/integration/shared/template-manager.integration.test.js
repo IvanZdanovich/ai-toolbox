@@ -20,7 +20,6 @@ import { LIMITS } from '../../../shared/constants.js';
 
 // Mock the modules before importing
 vi.mock('../../../shared/storage.js', async () => {
-  const { chromeMock } = await import('../../mocks/chrome-api.mock.js');
   return {
     default: {
       getTemplates: vi.fn().mockResolvedValue([]),
@@ -288,7 +287,7 @@ describe('Template Manager Integration', () => {
       // Then: Should reject or handle gracefully
       // Implementation may vary - either throws or returns null
       try {
-        const result = await templateManager.createTemplate(newTemplate);
+        await templateManager.createTemplate(newTemplate);
         // If it succeeds, it should have replaced an old one
         const allTemplates = await templateManager.getAllTemplates();
         expect(allTemplates.length).toBeLessThanOrEqual(maxTemplates);

@@ -77,14 +77,12 @@ export const workflowEditMethods = {
       this.saveWorkflow();
     });
 
-    this.q('[data-role="editor-duplicate-btn"]').addEventListener(
-      'click',
-      () => this.duplicateWorkflow()
+    this.q('[data-role="editor-duplicate-btn"]').addEventListener('click', () =>
+      this.duplicateWorkflow()
     );
 
-    this.q('[data-role="editor-export-btn"]').addEventListener(
-      'click',
-      () => this.exportWorkflow()
+    this.q('[data-role="editor-export-btn"]').addEventListener('click', () =>
+      this.exportWorkflow()
     );
   },
 

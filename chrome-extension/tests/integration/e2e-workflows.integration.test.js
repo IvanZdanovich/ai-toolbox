@@ -17,7 +17,7 @@ import {
 import { fixtures, factories } from '../fixtures/test-data.js';
 
 describe('E2E: Complete Template Workflow', () => {
-  let storage, templateManager, historyManager, aiService;
+  let templateManager, historyManager, aiService;
 
   beforeEach(async () => {
     installChromeMock();
@@ -25,7 +25,6 @@ describe('E2E: Complete Template Workflow', () => {
     vi.resetModules();
 
     // Import all modules fresh
-    storage = (await import('../../shared/storage.js')).default;
     templateManager = (await import('../../shared/template-manager.js'))
       .default;
     historyManager = (await import('../../shared/history-manager.js')).default;
@@ -318,14 +317,13 @@ describe('E2E: Settings Configuration Workflow', () => {
 });
 
 describe('E2E: Error Recovery Workflow', () => {
-  let storage, templateManager, historyManager, aiService;
+  let templateManager, historyManager, aiService;
 
   beforeEach(async () => {
     installChromeMock();
     testUtils.resetStorage();
     vi.resetModules();
 
-    storage = (await import('../../shared/storage.js')).default;
     templateManager = (await import('../../shared/template-manager.js'))
       .default;
     historyManager = (await import('../../shared/history-manager.js')).default;

@@ -18,7 +18,9 @@ describe('Toast Component Integration', () => {
       const controls = {};
       Object.defineProperty(controls, 'onfinish', {
         set(fn) {
-          if (typeof fn === 'function') fn();
+          if (typeof fn === 'function') {
+            fn();
+          }
         },
       });
       return controls;
@@ -38,13 +40,17 @@ describe('Toast Component Integration', () => {
     it('should render the message text', () => {
       toast.show('Template saved');
 
-      expect(document.querySelector('.toast-message').textContent).toBe('Template saved');
+      expect(document.querySelector('.toast-message').textContent).toBe(
+        'Template saved'
+      );
     });
 
     it('should escape HTML in the message', () => {
       toast.show('<img src=x onerror=alert(1)>');
 
-      expect(document.querySelector('.toast-message').innerHTML).not.toContain('<img');
+      expect(document.querySelector('.toast-message').innerHTML).not.toContain(
+        '<img'
+      );
     });
 
     it('should default to the success type', () => {
@@ -56,13 +62,17 @@ describe('Toast Component Integration', () => {
     it('should warn and do nothing when the container is missing', () => {
       document.body.innerHTML = '';
       vi.resetModules();
-      return import('../../../../shared/components/toast.js').then(({ default: freshToast }) => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const id = freshToast.show('No container');
+      return import('../../../../shared/components/toast.js').then(
+        ({ default: freshToast }) => {
+          const warnSpy = vi
+            .spyOn(console, 'warn')
+            .mockImplementation(() => {});
+          const id = freshToast.show('No container');
 
-        expect(id).toBeUndefined();
-        warnSpy.mockRestore();
-      });
+          expect(id).toBeUndefined();
+          warnSpy.mockRestore();
+        }
+      );
     });
   });
 
@@ -72,15 +82,18 @@ describe('Toast Component Integration', () => {
       ['error', 5000],
       ['warning', 5000],
       ['info', 3000],
-    ])('%s toast should auto-dismiss after its default duration', (type, duration) => {
-      toast.show('Message', type);
+    ])(
+      '%s toast should auto-dismiss after its default duration',
+      (type, duration) => {
+        toast.show('Message', type);
 
-      vi.advanceTimersByTime(duration - 1);
-      expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(1);
+        vi.advanceTimersByTime(duration - 1);
+        expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(1);
 
-      vi.advanceTimersByTime(1);
-      expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
-    });
+        vi.advanceTimersByTime(1);
+        expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
+      }
+    );
   });
 
   describe('Scenario: Manual dismissal', () => {
@@ -118,7 +131,9 @@ describe('Toast Component Integration', () => {
     ])('%s() should render a %s toast', (method, expectedType) => {
       toast[method]('Message');
 
-      expect(document.querySelector('.toast').className).toContain(expectedType);
+      expect(document.querySelector('.toast').className).toContain(
+        expectedType
+      );
     });
   });
 

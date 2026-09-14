@@ -1,6 +1,8 @@
 import {
   aiService,
   storage,
+  templateManager,
+  workflowManager,
   downloadAsJson,
   parseJsonFile,
   EXTENSION_VERSION,
@@ -388,12 +390,6 @@ class SettingsPage {
 
   async exportData() {
     try {
-      const [{ default: templateManager }, { default: workflowManager }] =
-        await Promise.all([
-          import('../shared/template-manager.js'),
-          import('../shared/workflow-manager.js'),
-        ]);
-
       await Promise.all([templateManager.init(), workflowManager.init()]);
 
       const templates = await templateManager.exportTemplates();
@@ -428,8 +424,6 @@ class SettingsPage {
       const errors = [];
 
       if (data.templates) {
-        const { default: templateManager } =
-          await import('../shared/template-manager.js');
         await templateManager.init();
 
         const result = await templateManager.importTemplates(data);
@@ -438,8 +432,6 @@ class SettingsPage {
       }
 
       if (data.workflows) {
-        const { default: workflowManager } =
-          await import('../shared/workflow-manager.js');
         await workflowManager.init();
 
         const result = await workflowManager.importWorkflows(data);

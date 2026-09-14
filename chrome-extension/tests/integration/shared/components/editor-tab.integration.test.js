@@ -75,7 +75,9 @@ describe('Editor Tab Integration', () => {
       const controls = {};
       Object.defineProperty(controls, 'onfinish', {
         set(fn) {
-          if (typeof fn === 'function') fn();
+          if (typeof fn === 'function') {
+            fn();
+          }
         },
       });
       return controls;

@@ -128,7 +128,11 @@ html {
 .nav-tab-editor.active {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 10%,
+    var(--color-surface)
+  );
 }
 
 .nav-tab-order {

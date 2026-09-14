@@ -17,7 +17,7 @@ import {
   testUtils,
   chromeMock,
 } from '../../mocks/chrome-api.mock.js';
-import { fixtures, factories } from '../../fixtures/test-data.js';
+import { fixtures } from '../../fixtures/test-data.js';
 
 describe('Background Service Worker Integration', () => {
   beforeEach(() => {
@@ -45,11 +45,9 @@ describe('Background Service Worker Integration', () => {
 
     it('should set up initial data on install', async () => {
       // Given: Fresh installation
-      let dataSetup = false;
       const setupHandler = async (details) => {
         if (details.reason === 'install') {
           await chromeMock.storage.sync.set({ initialized: true });
-          dataSetup = true;
         }
       };
 
@@ -301,7 +299,7 @@ describe('Background Service Worker Integration', () => {
     it('should handle context menu click', async () => {
       // Given: Context menu click handler
       let clickedTemplateId;
-      const clickHandler = (info, tab) => {
+      const clickHandler = (info, _tab) => {
         if (info.menuItemId.startsWith('template-')) {
           clickedTemplateId = info.menuItemId.replace('template-', '');
         }

@@ -26,7 +26,9 @@ function createMockEvent(name) {
     },
     removeListener: (callback) => {
       const index = listeners.indexOf(callback);
-      if (index > -1) listeners.splice(index, 1);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
     },
     hasListener: (callback) => listeners.includes(callback),
     // Test helper to trigger the event
@@ -63,7 +65,9 @@ function createMockStorageArea(storageMap) {
           result[key] = storageMap.has(key) ? storageMap.get(key) : keys[key];
         });
       }
-      if (callback) callback(result);
+      if (callback) {
+        callback(result);
+      }
       return Promise.resolve(result);
     },
 
@@ -71,20 +75,26 @@ function createMockStorageArea(storageMap) {
       Object.entries(items).forEach(([key, value]) => {
         storageMap.set(key, value);
       });
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
       return Promise.resolve();
     },
 
     remove: (keys, callback) => {
       const keysArray = Array.isArray(keys) ? keys : [keys];
       keysArray.forEach((key) => storageMap.delete(key));
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
       return Promise.resolve();
     },
 
     clear: (callback) => {
       storageMap.clear();
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
       return Promise.resolve();
     },
 
@@ -93,7 +103,9 @@ function createMockStorageArea(storageMap) {
       storageMap.forEach((value) => {
         size += JSON.stringify(value).length;
       });
-      if (callback) callback(size);
+      if (callback) {
+        callback(size);
+      }
       return Promise.resolve(size);
     },
 
@@ -121,7 +133,9 @@ export const chromeMock = {
       version: EXTENSION_VERSION,
     }),
     sendMessage: (message, callback) => {
-      if (callback) callback({ success: true });
+      if (callback) {
+        callback({ success: true });
+      }
       return Promise.resolve({ success: true });
     },
     onMessage: createMockEvent('runtime.onMessage'),
@@ -133,16 +147,22 @@ export const chromeMock = {
   tabs: {
     query: (queryInfo, callback) => {
       const tabs = [{ id: 1, url: 'https://example.com', active: true }];
-      if (callback) callback(tabs);
+      if (callback) {
+        callback(tabs);
+      }
       return Promise.resolve(tabs);
     },
     sendMessage: (tabId, message, callback) => {
-      if (callback) callback({ success: true });
+      if (callback) {
+        callback({ success: true });
+      }
       return Promise.resolve({ success: true });
     },
     create: (createProperties, callback) => {
       const tab = { id: Date.now(), ...createProperties };
-      if (callback) callback(tab);
+      if (callback) {
+        callback(tab);
+      }
       return Promise.resolve(tab);
     },
     onRemoved: createMockEvent('tabs.onRemoved'),
@@ -150,16 +170,24 @@ export const chromeMock = {
 
   contextMenus: {
     create: (createProperties, callback) => {
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
     },
     update: (id, updateProperties, callback) => {
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
     },
     remove: (menuItemId, callback) => {
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
     },
     removeAll: (callback) => {
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
       return Promise.resolve();
     },
     onClicked: createMockEvent('contextMenus.onClicked'),
@@ -167,30 +195,38 @@ export const chromeMock = {
 
   action: {
     setBadgeText: (details, callback) => {
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
     },
     setBadgeBackgroundColor: (details, callback) => {
-      if (callback) callback();
+      if (callback) {
+        callback();
+      }
     },
     onClicked: createMockEvent('action.onClicked'),
   },
 
   notifications: {
     create: (notificationId, options, callback) => {
-      if (callback) callback(notificationId);
+      if (callback) {
+        callback(notificationId);
+      }
     },
     clear: (notificationId, callback) => {
-      if (callback) callback(true);
+      if (callback) {
+        callback(true);
+      }
     },
   },
 
   sidePanel: {
-    open: (options) => Promise.resolve(),
-    setPanelBehavior: (behavior) => Promise.resolve(),
+    open: (_options) => Promise.resolve(),
+    setPanelBehavior: (_behavior) => Promise.resolve(),
   },
 
   i18n: {
-    getMessage: (messageName, substitutions) => messageName,
+    getMessage: (messageName, _substitutions) => messageName,
     getUILanguage: () => 'en',
   },
 };
