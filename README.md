@@ -103,6 +103,14 @@ npm test          # Run tests
 npm run lint      # Check code quality
 ```
 
+The extension ships from `chrome-extension/`. Everything that verifies or
+justifies it lives in `reqs/` — specs mirroring the app path, the examples
+they use, cross-functional checks, the static-analysis rules, and the
+architecture decisions under `reqs/adr/`. Boundary values are declared once
+in `chrome-extension/constraints/` and imported by the app, the examples,
+the specs and the rules alike; `reqs/adr/layout/layout.adr.md` records why
+that directory sits inside the extension rather than beside it.
+
 ## License
 
 MIT

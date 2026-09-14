@@ -1,17 +1,27 @@
 import { AI_PROVIDERS, PROVIDERS, PROVIDER_IDS } from './providers.js';
+import {
+  MAX_TEMPLATES,
+  MAX_TEMPLATE_NAME_LENGTH,
+  MAX_TEMPLATE_DESCRIPTION_LENGTH,
+  MAX_TEMPLATE_PROMPT_LENGTH,
+} from '../constraints/template.constraints.js';
+import {
+  MAX_WORKFLOWS,
+  MAX_WORKFLOW_STEPS,
+} from '../constraints/workflow.constraints.js';
+import {
+  MAX_AGENT_ITERATIONS,
+  DEFAULT_AGENT_ITERATIONS,
+  MAX_TOOL_OUTPUT_CHARS,
+} from '../constraints/agent.constraints.js';
+import { MAX_HISTORY_ENTRIES } from '../constraints/history.constraints.js';
+import {
+  STORAGE_CHUNK_SIZE,
+  STORAGE_KEYS,
+} from '../constraints/storage.constraints.js';
 
-export const EXTENSION_VERSION = '1.1.0';
-
-export const STORAGE_KEYS = {
-  TEMPLATES: 'templates',
-  WORKFLOWS: 'workflows',
-  HISTORY: 'history',
-  SETTINGS: 'settings',
-  TEMPLATES_SEEDED: 'templates_seeded',
-  WORKFLOWS_SEEDED: 'workflows_seeded',
-  LAST_ACTIVE_SECTION: 'last_active_section',
-  LAST_ACTIVE_PAGE: 'last_active_page',
-};
+export { EXTENSION_VERSION } from '../constraints/version.constraints.js';
+export { STORAGE_KEYS };
 
 // Re-exported so existing imports keep working; providers.js is the source.
 export { AI_PROVIDERS };
@@ -67,18 +77,20 @@ export const DEFAULT_SETTINGS = {
   providerConfig: structuredClone(DEFAULT_PROVIDER_CONFIG),
 };
 
+// Aggregated for the app's existing call sites; every value is declared
+// once in constraints/ and only re-exported here.
 export const LIMITS = {
-  MAX_TEMPLATES: 50,
-  MAX_WORKFLOWS: 20,
-  MAX_WORKFLOW_STEPS: 8,
-  MAX_AGENT_ITERATIONS: 10,
-  DEFAULT_AGENT_ITERATIONS: 5,
-  MAX_HISTORY_ENTRIES: 100,
-  MAX_TEMPLATE_NAME_LENGTH: 50,
-  MAX_TEMPLATE_DESCRIPTION_LENGTH: 200,
-  MAX_TEMPLATE_PROMPT_LENGTH: 2000,
-  MAX_TOOL_OUTPUT_CHARS: 8000,
-  STORAGE_CHUNK_SIZE: 7000, // Chrome storage sync item limit is 8KB
+  MAX_TEMPLATES,
+  MAX_WORKFLOWS,
+  MAX_WORKFLOW_STEPS,
+  MAX_AGENT_ITERATIONS,
+  DEFAULT_AGENT_ITERATIONS,
+  MAX_HISTORY_ENTRIES,
+  MAX_TEMPLATE_NAME_LENGTH,
+  MAX_TEMPLATE_DESCRIPTION_LENGTH,
+  MAX_TEMPLATE_PROMPT_LENGTH,
+  MAX_TOOL_OUTPUT_CHARS,
+  STORAGE_CHUNK_SIZE,
 };
 
 export const EVENTS = {
