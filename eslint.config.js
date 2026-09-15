@@ -63,7 +63,7 @@ export default [
     },
   },
   {
-    files: ['vitest.config.js', 'eslint.config.js'],
+    files: ['vitest.config.js', 'eslint.config.js', 'playwright.config.js'],
     languageOptions: {
       globals: { __dirname: 'readonly', process: 'readonly' },
     },

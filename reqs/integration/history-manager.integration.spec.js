@@ -14,12 +14,12 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
-import { MAX_HISTORY_ENTRIES } from '../../../chrome-extension/constraints/history.constraints.js';
-import { HISTORY_STATUS } from '../../../chrome-extension/shared/constants.js';
+} from '../support/chrome-api.mock.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
+import { MAX_HISTORY_ENTRIES } from '../../chrome-extension/constraints/history.constraints.js';
+import { HISTORY_STATUS } from '../../chrome-extension/shared/constants.js';
 
-const HISTORY_MANAGER = '../../../chrome-extension/shared/history-manager.js';
+const HISTORY_MANAGER = '../../chrome-extension/shared/history-manager.js';
 
 async function freshManager() {
   vi.resetModules();

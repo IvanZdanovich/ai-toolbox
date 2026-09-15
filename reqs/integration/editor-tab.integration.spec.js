@@ -21,18 +21,15 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../../support/chrome-api.mock.js';
-import { STORAGE_KEYS } from '../../../../chrome-extension/constraints/storage.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
 
 const EDITOR_TAB =
-  '../../../../chrome-extension/shared/components/editor-tab/index.js';
-const TEMPLATE_MANAGER =
-  '../../../../chrome-extension/shared/template-manager.js';
-const WORKFLOW_MANAGER =
-  '../../../../chrome-extension/shared/workflow-manager.js';
-const HISTORY_MANAGER =
-  '../../../../chrome-extension/shared/history-manager.js';
-const AI_SERVICE = '../../../../chrome-extension/shared/ai-service.js';
+  '../../chrome-extension/shared/components/editor-tab/index.js';
+const TEMPLATE_MANAGER = '../../chrome-extension/shared/template-manager.js';
+const WORKFLOW_MANAGER = '../../chrome-extension/shared/workflow-manager.js';
+const HISTORY_MANAGER = '../../chrome-extension/shared/history-manager.js';
+const AI_SERVICE = '../../chrome-extension/shared/ai-service.js';
 
 let chatReplies;
 let chatRequests;

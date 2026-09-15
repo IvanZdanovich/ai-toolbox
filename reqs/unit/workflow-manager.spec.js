@@ -14,11 +14,11 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { MAX_WORKFLOW_STEPS } from '../../../chrome-extension/constraints/workflow.constraints.js';
-import { MAX_AGENT_ITERATIONS } from '../../../chrome-extension/constraints/agent.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { MAX_WORKFLOW_STEPS } from '../../chrome-extension/constraints/workflow.constraints.js';
+import { MAX_AGENT_ITERATIONS } from '../../chrome-extension/constraints/agent.constraints.js';
 
-vi.mock('../../../chrome-extension/shared/storage.js', () => ({
+vi.mock('../../chrome-extension/shared/storage.js', () => ({
   default: {
     getWorkflows: vi.fn().mockResolvedValue([]),
     setWorkflows: vi.fn().mockResolvedValue(true),
@@ -45,7 +45,7 @@ describe('WorkflowManager: Given the workflow manager over a doubled storage', (
     testUtils.resetStorage();
     vi.resetModules();
 
-    storage = (await import('../../../chrome-extension/shared/storage.js'))
+    storage = (await import('../../chrome-extension/shared/storage.js'))
       .default;
     storage.getWorkflows.mockResolvedValue([]);
     storage.setWorkflows.mockResolvedValue(true);
@@ -54,7 +54,7 @@ describe('WorkflowManager: Given the workflow manager over a doubled storage', (
     storage.setWorkflowsSeeded.mockResolvedValue(true);
 
     const module =
-      await import('../../../chrome-extension/shared/workflow-manager.js');
+      await import('../../chrome-extension/shared/workflow-manager.js');
     workflowManager = module.default;
     extractWorkflowVariables = module.extractWorkflowVariables;
 

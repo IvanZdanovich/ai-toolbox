@@ -21,12 +21,12 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
-import { MAX_TOOL_OUTPUT_CHARS } from '../../../chrome-extension/constraints/agent.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
+import { MAX_TOOL_OUTPUT_CHARS } from '../../chrome-extension/constraints/agent.constraints.js';
 
-const AGENT_RUNTIME = '../../../chrome-extension/shared/agent-runtime.js';
-const TEMPLATE_MANAGER = '../../../chrome-extension/shared/template-manager.js';
+const AGENT_RUNTIME = '../../chrome-extension/shared/agent-runtime.js';
+const TEMPLATE_MANAGER = '../../chrome-extension/shared/template-manager.js';
 
 const CHAT_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 

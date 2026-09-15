@@ -1,11 +1,16 @@
 /**
- * End-to-End Workflow Integration Tests
+ * Cross-module contracts under `chrome-extension/shared/` — integration.
  *
- * Tests complete user workflows across all components:
- * - Full template lifecycle (create → execute → view history)
- * - Settings configuration workflow
- * - Error recovery scenarios
- * - Data persistence across sessions
+ * Every module in each case is real and only the platform edge is doubled, so
+ * what these cases hold is the seam between the shared services — the shapes
+ * `template-manager`, `history-manager`, `ai-service` and `storage` exchange
+ * as one library flow runs through all four. Nothing here drives a surface a
+ * user has: the cases call the modules directly, which is what makes them
+ * integration rather than e2e. The user-facing flows moved to `reqs/e2e/`,
+ * where Playwright drives the shipped side panel in a real Chrome.
+ *
+ * It sits flat under `reqs/integration/` rather than beside one module,
+ * because no single module here is the one a failure would blame.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -14,10 +19,7 @@ import {
   uninstallChromeMock,
   testUtils,
 } from '../support/chrome-api.mock.js';
-import {
-  fixtures,
-  factories,
-} from '../unit-examples/shared/test-data.examples.js';
+import { fixtures, factories } from '../unit-examples/test-data.examples.js';
 
 describe('Workflows: Given a first-time user with an empty library', () => {
   let templateManager, historyManager, aiService;

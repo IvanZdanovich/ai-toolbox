@@ -31,19 +31,37 @@ const PATTERN_BY_ROLE = {
 const SUITE_NAMES = new Set(['describe', 'suite']);
 const CASE_NAMES = new Set(['it', 'test']);
 
-// `describe`, `describe.skip`, `describe.each([...])`, `it.each(...)(...)`.
+// `describe`, `describe.skip`, `describe.each([...])`, `it.each(...)(...)`,
+// and Playwright's `test.describe` / `test.describe.configure` — where the
+// block is named by a property rather than by the object it hangs off, so the
+// whole chain is collected and the first segment that names a block wins.
 function blockName(node) {
   let callee = node.callee;
   if (callee.type === 'CallExpression') {
     callee = callee.callee;
   }
+  const segments = [];
   while (
     callee.type === 'MemberExpression' ||
     callee.type === 'TaggedTemplateExpression'
   ) {
+    if (
+      callee.type === 'MemberExpression' &&
+      callee.property.type === 'Identifier'
+    ) {
+      segments.push(callee.property.name);
+    }
     callee = callee.type === 'MemberExpression' ? callee.object : callee.tag;
   }
-  return callee.type === 'Identifier' ? callee.name : null;
+  if (callee.type !== 'Identifier') {
+    return null;
+  }
+  segments.push(callee.name);
+  return (
+    segments.find(
+      (segment) => SUITE_NAMES.has(segment) || CASE_NAMES.has(segment)
+    ) ?? callee.name
+  );
 }
 
 function titleNode(node) {
@@ -75,7 +93,7 @@ function roleOf(node, sourceCode) {
   return nested ? 'when' : 'given';
 }
 
-// `reqs/unit/shared/template-manager.spec.js` -> `templatemanager`, the
+// `reqs/unit/template-manager.spec.js` -> `templatemanager`, the
 // comparison form of the subject the spec is named after.
 function subjectOfFile(filename) {
   const base = filename.split(/[\\/]/).pop();

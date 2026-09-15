@@ -14,12 +14,9 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import {
-  fixtures,
-  factories,
-} from '../../unit-examples/shared/test-data.examples.js';
-import { STORAGE_CHUNK_SIZE } from '../../../chrome-extension/constraints/storage.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { fixtures, factories } from '../unit-examples/test-data.examples.js';
+import { STORAGE_CHUNK_SIZE } from '../../chrome-extension/constraints/storage.constraints.js';
 
 describe('Storage: Given the storage service over a Chrome storage double', () => {
   let storage;
@@ -31,7 +28,7 @@ describe('Storage: Given the storage service over a Chrome storage double', () =
     vi.resetModules();
 
     const StorageModule =
-      await import('../../../chrome-extension/shared/storage.js');
+      await import('../../chrome-extension/shared/storage.js');
     storage = StorageModule.default;
 
     // Clear cache
@@ -370,7 +367,7 @@ describe('Storage: Given a Chrome storage layer that fails', () => {
 
     vi.resetModules();
     const StorageModule =
-      await import('../../../chrome-extension/shared/storage.js');
+      await import('../../chrome-extension/shared/storage.js');
     const storage = StorageModule.default;
 
     // When: Getting templates

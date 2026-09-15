@@ -18,7 +18,8 @@ CHAIN_IS_UNBROKEN: carries a requirement through three files — a named variabl
 
 LEVEL_BY_WHAT_STAYS_REAL: picks the level by which modules stay real over what the file is about — otherwise the filing says nothing true about the spec, as it did for a dozen specs that sat under `integration/` while doubling every collaborator.
 PLATFORM_EDGE: doubles `chrome.*`, network, storage and time from `reqs/support/`, and never an app module the case is meant to exercise — otherwise the spec asserts against its own mock and the subject reports 0% coverage.
-BROWSER_IS_NOT_COLLECTED: leaves `reqs/browser/` out of `vitest.config.js` and runs it with Node's test runner, sending anything jsdom _could_ cover down to a level `npm test` runs — otherwise the check nobody runs becomes the one the project depends on.
+BROWSER_IS_NOT_COLLECTED: leaves `reqs/browser/` and `reqs/e2e/` out of `vitest.config.js` — the first runs under Node's test runner, the second under Playwright — and sends anything jsdom _could_ cover down to a level `npm test` runs — otherwise the check nobody runs becomes the one the project depends on.
+TWO_BROWSER_LEVELS: splits the real-Chrome work by what it asks of the browser — `reqs/browser/` drives the `chrome-devtools` CLI for what only Chrome can answer about the _install_ (the manifest, the service worker, module resolution, no console error), `reqs/e2e/` drives Playwright for what a _person_ does with the panel — over merging them, since one is a boot check and the other is a flow.
 
 ## What every case does
 
@@ -35,22 +36,27 @@ PROVE_IT_FAILS: breaks the covered behaviour → watches the new case go red →
 
 ## File names
 
-| Level / role | What stays real                             | File name                                                          | Collected |
-| ------------ | ------------------------------------------- | ------------------------------------------------------------------ | --------- |
-| unit         | exactly one module, collaborators doubled   | `reqs/unit/<app-path>/<module>.spec.js`                            | yes       |
-| integration  | two or more, only the platform edge doubled | `reqs/integration/<primary-app-path>/<module>.integration.spec.js` | yes       |
-| e2e          | a whole flow, no primary module             | `reqs/e2e/<flow>.e2e.spec.js` (flat)                               | yes       |
-| cross        | a property every module must hold           | `reqs/cross/<concern>.cross.spec.js` (flat)                        | yes       |
-| browser      | all of them, in a real Chrome               | `reqs/browser/<flow>.smoke.js` (flat)                              | no        |
-| example data | —                                           | `<subject>.examples.js`                                            | no        |
-| double       | —                                           | `<subject>.mock.js`                                                | no        |
-| harness      | —                                           | `<runner>.setup.js`                                                | no        |
-| driver       | —                                           | `<runner>.driver.js`                                               | no        |
-| lint rule    | —                                           | `<concern>.rules.js`, `<module>.boundary.js`                       | no        |
-| decision log | —                                           | `<scope>.adr.md`, `<scope>.wip.md`                                 | no        |
+| Level / role | What stays real                             | File name                                              | Runner     |
+| ------------ | ------------------------------------------- | ------------------------------------------------------ | ---------- |
+| unit         | exactly one module, collaborators doubled   | `reqs/unit/<module>.spec.js` (flat)                    | Vitest     |
+| integration  | two or more, only the platform edge doubled | `reqs/integration/<module>.integration.spec.js` (flat) | Vitest     |
+| e2e          | the shipped UI, in a real Chrome            | `reqs/e2e/<flow>.e2e.spec.js` (flat)                   | Playwright |
+| cross        | a property every module must hold           | `reqs/cross/<concern>.cross.spec.js` (flat)            | Vitest     |
+| browser      | all of them, in a real Chrome               | `reqs/browser/<flow>.smoke.js` (flat)                  | node:test  |
+| example data | —                                           | `<subject>.examples.js`                                | —          |
+| double       | —                                           | `<subject>.mock.js`                                    | —          |
+| harness      | —                                           | `<runner>.setup.js`                                    | —          |
+| driver       | —                                           | `<runner>.driver.js`                                   | —          |
+| UI address   | —                                           | `<page>.selectors.js`                                  | —          |
+| UI deed      | —                                           | `<page>.commands.js`                                   | —          |
+| UI copy      | —                                           | `<language>.localization.js`                           | —          |
+| lint rule    | —                                           | `<concern>.rules.js`, `<module>.boundary.js`           | —          |
+| decision log | —                                           | `<scope>.adr.md`, `<scope>.wip.md`                     | —          |
 
-SPEC_SUFFIX_IS_THE_LEVEL: ends every collected spec in `.spec.js` and states its level in the infix before it — bare for unit, `.integration.`, `.e2e.`, `.cross.` — moving a spec's file and its infix together when its level changes, over renaming one to stand for the other — otherwise the file sits at one level, is collected as another, or drops out of the run when its suffix stops matching `vitest.config.js`.
-SPEC_IMPORTS_ARE_RELATIVE_AND_EXTENSIONED: reaches the app by a relative specifier ending in `.js` — `'../../../chrome-extension/shared/providers.js'` — over the `@app`/`@constraints`/`@reqs` aliases `vitest.config.js` declares, which resolve only under Vitest — otherwise a spec's import graph stops resembling the one the extension runs, and hides a path the app itself must be able to load.
+EVERY_LEVEL_IS_FLAT: keeps `unit/`, `integration/`, `e2e/`, `cross/`, `browser/` and each `-examples/` directory one level deep, naming the file for its subject over mirroring `chrome-extension/`'s tree inside them — `ls reqs/unit` then lists what is covered, and a module moved between app directories does not drag its spec across `reqs/` for a rename that states nothing — otherwise two trees have to be kept in step and a source move reads as a coverage change.
+SPEC_SUFFIX_IS_THE_LEVEL: ends every spec in `.spec.js` and states its level in the infix before it — bare for unit, `.integration.`, `.e2e.`, `.cross.` — moving a spec's file and its infix together when its level changes, over renaming one to stand for the other — otherwise the file sits at one level, is collected as another, or drops out of the run when its suffix stops matching `vitest.config.js`'s `include` or `playwright.config.js`'s `testMatch`.
+RUNNER_BY_WHERE_IT_RUNS: gives a level to the runner its environment needs — Vitest/jsdom for unit, integration and cross; Playwright for `reqs/e2e/`, which needs a real Chrome with the extension installed; Node's runner for `reqs/browser/` — and keeps each level in exactly one runner's file set — otherwise a file is executed by a runner that cannot host it, or by none at all.
+SPEC_IMPORTS_ARE_RELATIVE_AND_EXTENSIONED: reaches the app by a relative specifier ending in `.js` — `'../../chrome-extension/shared/providers.js'`, one `..` out of the level directory and one out of `reqs/` from every level, now that none of them nests — over the `@app`/`@constraints`/`@reqs` aliases `vitest.config.js` declares, which resolve only under Vitest — otherwise a spec's import graph stops resembling the one the extension runs, and hides a path the app itself must be able to load.
 
 ## Titles
 
@@ -69,7 +75,7 @@ TITLES_ARE_LINTED: leaves the three title rules to `reqs/rules/spec-titles.rules
 
 ## Examples
 
-EXAMPLES_MIRROR: mirrors `reqs/<scope>/` one level up at `reqs/<scope>-examples/`, naming every file `<subject>.examples.js` — `unit-examples/shared/foo.examples.js` backs `unit/shared/foo.spec.js`.
+EXAMPLES_SIT_BESIDE_THEIR_LEVEL: pairs each level directory with `reqs/<scope>-examples/`, flat like the level it serves and naming every file `<subject>.examples.js` — `unit-examples/foo.examples.js` backs `unit/foo.spec.js`, `e2e-examples/<flow>.examples.js` backs `e2e/<flow>.e2e.spec.js` — so the two names match with the suffix swapped and no directory has to be kept in step.
 EXAMPLE_IS_A_NAMED_VARIABLE: exports each instance as a named constant describing the case it serves — `templateAtTheLimit`, `historyEntryThatFailed`, `settingsWithOpenAI` — over an anonymous literal in the case or a positional entry in an array — otherwise the case is a wall of field values and its intent lives only in the title.
 EXAMPLES_HOLD_DATA_ONLY: keeps an examples file to data, composing boundary-bearing fields from `chrome-extension/constraints/` and leaving descriptive values such as a display name or a sample sentence as literals — otherwise a requirement hides in a fixture and a boundary change misses it.
 EXAMPLE_NAME_IS_STABLE: names an example for what it is in the domain over the case that first needed it — `emailTemplate`, not `templateForSearchTest` — otherwise the second consumer either renames it or, more often, copies it.
@@ -78,7 +84,7 @@ EXAMPLE_NAME_IS_STABLE: names an example for what it is in the domain over the c
 
 LEVEL_CHECK: each spec's level matches which modules it keeps real, per the table above.
 SUFFIX_CHECK: every file under `reqs/` carries one of the file names in the table, its infix agrees with the directory it sits in, and no `.test.js` exists.
-COLLECTION_CHECK: `npx vitest list --filesOnly` names every spec file that exists; a file absent from that output has the wrong suffix or the wrong path.
+COLLECTION_CHECK: `npx vitest list --filesOnly` names every unit, integration and cross spec, and `npx playwright test --list` names every e2e spec; a file absent from both has the wrong suffix or the wrong path.
 TITLE_CHECK: `npx eslint "reqs/**/*.js"` passes, so every title carries its subject and its keyword and no two in a file match.
 SUBJECT_IMPORT_CHECK: the module named in the file name is imported for real, and no mock stands in for it.
 ASSERTION_CHECK: every case ends in an assertion about the subject.

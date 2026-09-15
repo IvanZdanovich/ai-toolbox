@@ -14,11 +14,11 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { fixtures } from '../../unit-examples/shared/test-data.examples.js';
+} from '../support/chrome-api.mock.js';
+import { fixtures } from '../unit-examples/test-data.examples.js';
 
 // Mock storage module
-vi.mock('../../../chrome-extension/shared/storage.js', async () => {
+vi.mock('../../chrome-extension/shared/storage.js', async () => {
   return {
     default: {
       getSettings: vi.fn().mockResolvedValue({
@@ -47,10 +47,10 @@ describe('AiService: Given the AI service over a doubled network', () => {
 
     vi.resetModules();
 
-    storage = (await import('../../../chrome-extension/shared/storage.js'))
+    storage = (await import('../../chrome-extension/shared/storage.js'))
       .default;
     const AIServiceModule =
-      await import('../../../chrome-extension/shared/ai-service.js');
+      await import('../../chrome-extension/shared/ai-service.js');
     aiService = AIServiceModule.default;
     aiService.mockFailureRate = 0;
 
@@ -455,9 +455,9 @@ describe('AiService: Given the per-provider request adapters', () => {
     mockFetch.mockReset();
     vi.resetModules();
 
-    storage = (await import('../../../chrome-extension/shared/storage.js'))
+    storage = (await import('../../chrome-extension/shared/storage.js'))
       .default;
-    aiService = (await import('../../../chrome-extension/shared/ai-service.js'))
+    aiService = (await import('../../chrome-extension/shared/ai-service.js'))
       .default;
     aiService.settings = null;
     aiService.requestTimestamps = [];
@@ -844,13 +844,12 @@ describe('AiService: Given a provider that fails', () => {
   it('AiService: Then it handles malformed API responses', async () => {
     // Given: OpenAI provider
     vi.resetModules();
-    const storage = (
-      await import('../../../chrome-extension/shared/storage.js')
-    ).default;
+    const storage = (await import('../../chrome-extension/shared/storage.js'))
+      .default;
     storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
 
     const AIServiceModule =
-      await import('../../../chrome-extension/shared/ai-service.js');
+      await import('../../chrome-extension/shared/ai-service.js');
     const aiService = AIServiceModule.default;
     await aiService.init();
 
@@ -877,13 +876,12 @@ describe('AiService: Given a provider that fails', () => {
   it('AiService: Then it handles timeout errors', async () => {
     // Given: OpenAI provider
     vi.resetModules();
-    const storage = (
-      await import('../../../chrome-extension/shared/storage.js')
-    ).default;
+    const storage = (await import('../../chrome-extension/shared/storage.js'))
+      .default;
     storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
 
     const AIServiceModule =
-      await import('../../../chrome-extension/shared/ai-service.js');
+      await import('../../chrome-extension/shared/ai-service.js');
     const aiService = AIServiceModule.default;
     await aiService.init();
 
@@ -902,13 +900,12 @@ describe('AiService: Given a provider that fails', () => {
   it('AiService: Then it handles JSON parse errors', async () => {
     // Given: OpenAI provider
     vi.resetModules();
-    const storage = (
-      await import('../../../chrome-extension/shared/storage.js')
-    ).default;
+    const storage = (await import('../../chrome-extension/shared/storage.js'))
+      .default;
     storage.getSettings.mockResolvedValue(fixtures.settings.withOpenAI);
 
     const AIServiceModule =
-      await import('../../../chrome-extension/shared/ai-service.js');
+      await import('../../chrome-extension/shared/ai-service.js');
     const aiService = AIServiceModule.default;
     await aiService.init();
 

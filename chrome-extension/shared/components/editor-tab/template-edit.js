@@ -7,7 +7,7 @@ import {
   variableLabel,
   variablePlaceholder,
 } from '../../helpers.js';
-import { EXTENSION_VERSION } from '../../constants.js';
+import { EXTENSION_VERSION, LIMITS } from '../../constants.js';
 import Toast from '../toast.js';
 
 export function templateEditHTML() {
@@ -15,7 +15,7 @@ export function templateEditHTML() {
     <form data-role="template-form">
       <div class="form-group">
         <label class="form-label">Template Name</label>
-        <input type="text" data-role="template-name" class="form-input" required maxlength="50" />
+        <input type="text" data-role="template-name" class="form-input" required maxlength="${LIMITS.MAX_TEMPLATE_NAME_LENGTH}" />
       </div>
 
       <div class="form-group">
@@ -25,7 +25,7 @@ export function templateEditHTML() {
             <svg class="icon icon--sm"><use href="#icon-magic"></use></svg>Generate
           </button>
         </div>
-        <input type="text" data-role="template-description" class="form-input" maxlength="200" />
+        <input type="text" data-role="template-description" class="form-input" maxlength="${LIMITS.MAX_TEMPLATE_DESCRIPTION_LENGTH}" />
       </div>
 
       <div class="form-group">
@@ -36,7 +36,7 @@ export function templateEditHTML() {
           </button>
         </div>
         <p class="form-help">Use {variable_name} for dynamic inputs</p>
-        <textarea data-role="template-prompt" class="form-textarea" required maxlength="2000" rows="6"></textarea>
+        <textarea data-role="template-prompt" class="form-textarea" required maxlength="${LIMITS.MAX_TEMPLATE_PROMPT_LENGTH}" rows="6"></textarea>
       </div>
 
       <div data-role="template-variables" class="template-variables"></div>

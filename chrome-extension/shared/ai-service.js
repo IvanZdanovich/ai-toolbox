@@ -8,6 +8,7 @@ import {
   normalizeProviderId,
 } from './providers.js';
 import { replaceVariables } from './helpers.js';
+import { MOCK_FAILURE_RATE } from '../constraints/provider.constraints.js';
 
 /**
  * Neutral message shape used by every caller:
@@ -334,7 +335,7 @@ class AIService {
     this.requestTimestamps = [];
     // Share of mock-provider calls that fail, to demo error handling.
     // Set to 0 in tests so assertions on the mock path are deterministic.
-    this.mockFailureRate = 0.1;
+    this.mockFailureRate = MOCK_FAILURE_RATE;
   }
 
   async init() {

@@ -99,33 +99,45 @@ run a cheap local model for extraction and a frontier model for the final write-
 
 ```bash
 npm install
-npm test           # Run the jsdom suite (unit, integration, e2e, cross)
+npm test           # Run the jsdom suite (unit, integration, cross)
 npm run lint       # Check code quality
-npm run test:smoke # Drive a real Chrome with the extension loaded (optional)
+npm run test:e2e   # Drive the shipped UI in a real Chrome (Playwright)
+npm run test:smoke # Check the install in a real Chrome (chrome-devtools CLI, optional)
 ```
+
+`npm run test:e2e` runs the user flows under `reqs/e2e/` with Playwright, in a
+real Chrome with the unpacked extension loaded. It needs `npx playwright
+install chromium` once, no API key — the flows drive the demo provider — and it
+is the only level that touches the shipped UI: a case clicks and types the way
+a person does, through the commands, selectors and copy under `reqs/support/`.
 
 `npm run test:smoke` needs the [`chrome-devtools`
 CLI](https://github.com/ChromeDevTools/chrome-devtools-mcp) on your machine and
 opens a real browser; it skips itself if the CLI is missing, and it is not part
-of `npm test` or CI. It covers only what jsdom cannot see — Chrome accepting
-`manifest.json`, page modules resolving without a bundler, the service worker
-registering, a run persisting across a reopen.
+of `npm test` or CI. Where the e2e flows are about what a person does, the
+smoke checks are about the install — Chrome accepting `manifest.json`, page
+modules resolving without a bundler, the service worker registering.
 
-Every collected spec is `<subject>.spec.js`, with the level in the infix before
-it (`.integration.`, `.e2e.`, `.cross.`; bare for unit), and every case title
+Every spec is `<subject>.spec.js`, with the level in the infix before
+it (`.integration.`, `.e2e.`, `.cross.`; bare for unit) — Vitest runs all of
+them but `.e2e.`, which is Playwright's — and every case title
 reads `Subject: Given/When/Then …` — so the run output names what broke and
 what owns it, and `npm test -- --reporter=verbose | grep TemplateManager` lists
 what a module is held to. `reqs/rules/spec-titles.rules.js` enforces it.
 
 The extension ships from `chrome-extension/`. Everything that verifies or
-justifies it lives in `reqs/` — specs mirroring the app path, the examples
-they use, cross-functional checks, the browser smoke checks under
-`reqs/browser/`, shared doubles, harness and drivers under
-`reqs/support/`, the static-analysis rules, and the
-architecture decisions under `reqs/adr/`. Boundary values are declared once
-in `chrome-extension/constraints/` and imported by the app, the examples,
-the specs and the rules alike; `reqs/adr/layout/layout.adr.md` records why
-that directory sits inside the extension rather than beside it.
+justifies it lives in `reqs/`, one flat directory per level: the unit specs in
+`reqs/unit/` and the examples they use in `reqs/unit-examples/`, module
+contracts in `reqs/integration/`, user flows in `reqs/e2e/` with
+`reqs/e2e-examples/`, cross-functional checks in `reqs/cross/`, the browser
+smoke checks in `reqs/browser/`, shared doubles, harness, drivers, selectors,
+UI commands and copy in `reqs/support/`, the static-analysis rules in
+`reqs/rules/`, and the architecture decisions in `reqs/adr/`. Each spec is
+named for its subject rather than filed under a copy of the app's tree.
+Boundary values are declared once in `chrome-extension/constraints/` and
+imported by the app, the examples, the specs and the rules alike;
+`reqs/adr/layout/layout.adr.md` records why that directory sits inside the
+extension rather than beside it.
 
 ## License
 

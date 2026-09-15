@@ -23,14 +23,14 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
-import { AI_PROVIDERS } from '../../../chrome-extension/shared/providers.js';
+} from '../support/chrome-api.mock.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
+import { AI_PROVIDERS } from '../../chrome-extension/shared/providers.js';
 
-const SETTINGS = '../../../chrome-extension/settings/settings.js';
+const SETTINGS = '../../chrome-extension/settings/settings.js';
 
 const PAGE_HTML = readFileSync(
-  resolve(__dirname, '../../../chrome-extension/settings/settings.html'),
+  resolve(__dirname, '../../chrome-extension/settings/settings.html'),
   'utf8'
 );
 
@@ -425,10 +425,10 @@ describe('Settings: Given the settings page booted against its real markup', () 
       );
 
       const templateManager = (
-        await import('../../../chrome-extension/shared/template-manager.js')
+        await import('../../chrome-extension/shared/template-manager.js')
       ).default;
       const workflowManager = (
-        await import('../../../chrome-extension/shared/workflow-manager.js')
+        await import('../../chrome-extension/shared/workflow-manager.js')
       ).default;
       expect(
         (await templateManager.getAllTemplates()).some(

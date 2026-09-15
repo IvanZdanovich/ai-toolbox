@@ -16,15 +16,15 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
 import {
   MAX_TEMPLATES,
   MAX_TEMPLATE_NAME_LENGTH,
   MAX_TEMPLATE_PROMPT_LENGTH,
-} from '../../../chrome-extension/constraints/template.constraints.js';
+} from '../../chrome-extension/constraints/template.constraints.js';
 
-const TEMPLATE_MANAGER = '../../../chrome-extension/shared/template-manager.js';
+const TEMPLATE_MANAGER = '../../chrome-extension/shared/template-manager.js';
 
 async function freshManager() {
   vi.resetModules();

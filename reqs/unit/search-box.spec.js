@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createSearchBox } from '../../../../chrome-extension/shared/components/search-box.js';
+import { createSearchBox } from '../../chrome-extension/shared/components/search-box.js';
 
 const SUGGESTIONS = [
   { id: 'template-1', title: 'Email Response', meta: 'Professional replies' },

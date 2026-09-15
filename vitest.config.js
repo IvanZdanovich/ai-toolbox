@@ -13,10 +13,13 @@ export default defineConfig({
 
     // Every level is `.spec.js`; the infix before it states which one, and
     // the directory it sits in has to agree (SUFFIX_IS_THE_LEVEL).
+    //
+    // `reqs/e2e/` is not here: it drives the shipped UI in a real Chrome under
+    // Playwright (playwright.config.js, `npm run test:e2e`), which jsdom
+    // cannot host. Collecting it would run those files with no browser.
     include: [
       './reqs/unit/**/*.spec.js',
       './reqs/integration/**/*.integration.spec.js',
-      './reqs/e2e/**/*.e2e.spec.js',
       './reqs/cross/**/*.cross.spec.js',
     ],
     exclude: ['**/node_modules/**', '**/build/**', '**/dist/**'],

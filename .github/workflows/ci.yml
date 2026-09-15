@@ -18,3 +18,7 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run test:coverage
+      # The e2e flows drive the shipped UI in a real Chrome, which Vitest's
+      # jsdom run cannot host, so they are their own step.
+      - run: npx playwright install --with-deps chromium
+      - run: xvfb-run -a npm run test:e2e

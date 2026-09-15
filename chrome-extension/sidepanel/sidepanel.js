@@ -107,7 +107,12 @@ class SidePanelApp {
         lastSection &&
         ['templates', 'workflows', 'history'].includes(lastSection)
       ) {
-        this.currentSection = lastSection;
+        // Applied through switchSection rather than assigned: setting
+        // currentSection alone left the panel showing Templates while
+        // believing it was on the restored section, so the first click on
+        // that section's tab was swallowed by switchSection's early return
+        // and the panel looked frozen.
+        this.switchSection(lastSection);
         console.log('SidePanelApp: Restored last active section:', lastSection);
       }
 

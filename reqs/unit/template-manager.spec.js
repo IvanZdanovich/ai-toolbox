@@ -14,15 +14,12 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import {
-  fixtures,
-  factories,
-} from '../../unit-examples/shared/test-data.examples.js';
-import { MAX_TEMPLATES } from '../../../chrome-extension/constraints/template.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { fixtures, factories } from '../unit-examples/test-data.examples.js';
+import { MAX_TEMPLATES } from '../../chrome-extension/constraints/template.constraints.js';
 
 // Mock the modules before importing
-vi.mock('../../../chrome-extension/shared/storage.js', async () => {
+vi.mock('../../chrome-extension/shared/storage.js', async () => {
   return {
     default: {
       getTemplates: vi.fn().mockResolvedValue([]),
@@ -45,10 +42,10 @@ describe('TemplateManager: Given the template manager over a doubled storage', (
     vi.resetModules();
 
     // Import fresh instances
-    storage = (await import('../../../chrome-extension/shared/storage.js'))
+    storage = (await import('../../chrome-extension/shared/storage.js'))
       .default;
     const TemplateManagerModule =
-      await import('../../../chrome-extension/shared/template-manager.js');
+      await import('../../chrome-extension/shared/template-manager.js');
     templateManager = TemplateManagerModule.default;
 
     // vitest's mockReset strips the factory's implementations, so restore the
@@ -354,13 +351,12 @@ describe('TemplateManager: Given a storage layer that fails', () => {
   it('TemplateManager: Then it handles storage errors gracefully', async () => {
     // Given: Storage that throws errors
     vi.resetModules();
-    const storage = (
-      await import('../../../chrome-extension/shared/storage.js')
-    ).default;
+    const storage = (await import('../../chrome-extension/shared/storage.js'))
+      .default;
     storage.getTemplates.mockRejectedValue(new Error('Storage unavailable'));
 
     const TemplateManagerModule =
-      await import('../../../chrome-extension/shared/template-manager.js');
+      await import('../../chrome-extension/shared/template-manager.js');
     const templateManager = TemplateManagerModule.default;
 
     // Suppress expected console.error

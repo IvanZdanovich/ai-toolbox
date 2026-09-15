@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import IconHelper from '../../../chrome-extension/shared/icon-helper.js';
+import IconHelper from '../../chrome-extension/shared/icon-helper.js';
 
 describe('IconHelper: Given the icon markup helper', () => {
   describe('IconHelper: When icon markup is built', () => {

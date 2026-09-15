@@ -17,18 +17,18 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
 import {
   MAX_WORKFLOWS,
   MAX_WORKFLOW_STEPS,
-} from '../../../chrome-extension/constraints/workflow.constraints.js';
-import { DEFAULT_AGENT_ITERATIONS } from '../../../chrome-extension/constraints/agent.constraints.js';
-import { MAX_TEMPLATE_PROMPT_LENGTH } from '../../../chrome-extension/constraints/template.constraints.js';
-import { STORAGE_CHUNK_SIZE } from '../../../chrome-extension/constraints/storage.constraints.js';
+} from '../../chrome-extension/constraints/workflow.constraints.js';
+import { DEFAULT_AGENT_ITERATIONS } from '../../chrome-extension/constraints/agent.constraints.js';
+import { MAX_TEMPLATE_PROMPT_LENGTH } from '../../chrome-extension/constraints/template.constraints.js';
+import { STORAGE_CHUNK_SIZE } from '../../chrome-extension/constraints/storage.constraints.js';
 
-const WORKFLOW_MANAGER = '../../../chrome-extension/shared/workflow-manager.js';
-const STORAGE = '../../../chrome-extension/shared/storage.js';
+const WORKFLOW_MANAGER = '../../chrome-extension/shared/workflow-manager.js';
+const STORAGE = '../../chrome-extension/shared/storage.js';
 
 // A fresh manager and a fresh storage cache, the way a reopened page gets
 // them — the modules are singletons, so only a module reset separates runs.

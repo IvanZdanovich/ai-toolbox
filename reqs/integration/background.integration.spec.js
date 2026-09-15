@@ -16,11 +16,11 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { EXTENSION_VERSION } from '../../../chrome-extension/constraints/version.constraints.js';
-import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { EXTENSION_VERSION } from '../../chrome-extension/constraints/version.constraints.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
 
-const BACKGROUND = '../../../chrome-extension/background/background.js';
+const BACKGROUND = '../../chrome-extension/background/background.js';
 
 // Booting the service worker is the subject under test: the module registers
 // its listeners and builds its menus as a side effect of being imported.

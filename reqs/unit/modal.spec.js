@@ -13,9 +13,8 @@ describe('Modal: Given the modal component mounted in the page', () => {
   beforeEach(async () => {
     document.body.innerHTML = '';
     vi.resetModules();
-    modal = (
-      await import('../../../../chrome-extension/shared/components/modal.js')
-    ).default;
+    modal = (await import('../../chrome-extension/shared/components/modal.js'))
+      .default;
   });
 
   describe('Modal: When the confirm dialog is rendered', () => {

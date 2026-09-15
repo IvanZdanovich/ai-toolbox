@@ -28,9 +28,8 @@ describe('Toast: Given the toast component mounted in the page', () => {
 
     vi.useFakeTimers();
     vi.resetModules();
-    toast = (
-      await import('../../../../chrome-extension/shared/components/toast.js')
-    ).default;
+    toast = (await import('../../chrome-extension/shared/components/toast.js'))
+      .default;
   });
 
   afterEach(() => {
@@ -64,7 +63,7 @@ describe('Toast: Given the toast component mounted in the page', () => {
     it('Toast: Then it warns and do nothing when the container is missing', () => {
       document.body.innerHTML = '';
       vi.resetModules();
-      return import('../../../../chrome-extension/shared/components/toast.js').then(
+      return import('../../chrome-extension/shared/components/toast.js').then(
         ({ default: freshToast }) => {
           const warnSpy = vi
             .spyOn(console, 'warn')

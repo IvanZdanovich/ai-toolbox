@@ -21,14 +21,14 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import { fixtures } from '../../unit-examples/shared/test-data.examples.js';
-import { STORAGE_KEYS } from '../../../chrome-extension/constraints/storage.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { fixtures } from '../unit-examples/test-data.examples.js';
+import { STORAGE_KEYS } from '../../chrome-extension/constraints/storage.constraints.js';
 
-const SIDEPANEL = '../../../chrome-extension/sidepanel/sidepanel.js';
+const SIDEPANEL = '../../chrome-extension/sidepanel/sidepanel.js';
 
 const PAGE_HTML = readFileSync(
-  resolve(__dirname, '../../../chrome-extension/sidepanel/sidepanel.html'),
+  resolve(__dirname, '../../chrome-extension/sidepanel/sidepanel.html'),
   'utf8'
 );
 

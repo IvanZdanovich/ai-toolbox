@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { fixtures } from '../../../unit-examples/shared/test-data.examples.js';
+import { fixtures } from '../unit-examples/test-data.examples.js';
 
 const mockTemplateManager = {
   getTemplate: vi.fn(),
@@ -41,24 +41,24 @@ const mockAgentRuntime = {
   runWorkflow: vi.fn(),
 };
 
-vi.mock('../../../../chrome-extension/shared/template-manager.js', () => ({
+vi.mock('../../chrome-extension/shared/template-manager.js', () => ({
   default: mockTemplateManager,
 }));
 
-vi.mock('../../../../chrome-extension/shared/workflow-manager.js', () => ({
+vi.mock('../../chrome-extension/shared/workflow-manager.js', () => ({
   default: mockWorkflowManager,
   extractWorkflowVariables: vi.fn(() => []),
 }));
 
-vi.mock('../../../../chrome-extension/shared/history-manager.js', () => ({
+vi.mock('../../chrome-extension/shared/history-manager.js', () => ({
   default: mockHistoryManager,
 }));
 
-vi.mock('../../../../chrome-extension/shared/ai-service.js', () => ({
+vi.mock('../../chrome-extension/shared/ai-service.js', () => ({
   default: mockAiService,
 }));
 
-vi.mock('../../../../chrome-extension/shared/agent-runtime.js', () => ({
+vi.mock('../../chrome-extension/shared/agent-runtime.js', () => ({
   default: mockAgentRuntime,
 }));
 
@@ -87,7 +87,7 @@ describe('EditorTab: Given the editor tab mounted with its collaborators doubled
     vi.resetModules();
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     EditorTab = (
-      await import('../../../../chrome-extension/shared/components/editor-tab/index.js')
+      await import('../../chrome-extension/shared/components/editor-tab/index.js')
     ).default;
   });
 

@@ -26,9 +26,9 @@ import {
   chromeMock,
   installChromeMock,
   uninstallChromeMock,
-} from '../../support/chrome-api.mock.js';
+} from '../support/chrome-api.mock.js';
 
-const CONTENT = '../../../chrome-extension/content/content.js';
+const CONTENT = '../../chrome-extension/content/content.js';
 
 // Injected once per page, as Chrome does it: the script binds its listeners to
 // `document`, which outlives any one case here, so re-importing it per case

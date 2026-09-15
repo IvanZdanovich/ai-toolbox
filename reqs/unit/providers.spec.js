@@ -12,7 +12,7 @@ import {
   normalizeProviderId,
   getProvider,
   listProviders,
-} from '../../../chrome-extension/shared/providers.js';
+} from '../../chrome-extension/shared/providers.js';
 
 describe('Providers: Given the provider registry', () => {
   describe('Providers: When a provider id is normalised', () => {

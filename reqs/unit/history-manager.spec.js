@@ -15,15 +15,12 @@ import {
   installChromeMock,
   uninstallChromeMock,
   testUtils,
-} from '../../support/chrome-api.mock.js';
-import {
-  fixtures,
-  factories,
-} from '../../unit-examples/shared/test-data.examples.js';
-import { MAX_HISTORY_ENTRIES } from '../../../chrome-extension/constraints/history.constraints.js';
+} from '../support/chrome-api.mock.js';
+import { fixtures, factories } from '../unit-examples/test-data.examples.js';
+import { MAX_HISTORY_ENTRIES } from '../../chrome-extension/constraints/history.constraints.js';
 
 // Mock storage module
-vi.mock('../../../chrome-extension/shared/storage.js', async () => {
+vi.mock('../../chrome-extension/shared/storage.js', async () => {
   return {
     default: {
       getHistory: vi.fn().mockResolvedValue([]),
@@ -42,10 +39,10 @@ describe('HistoryManager: Given the history manager over a doubled storage', () 
 
     vi.resetModules();
 
-    storage = (await import('../../../chrome-extension/shared/storage.js'))
+    storage = (await import('../../chrome-extension/shared/storage.js'))
       .default;
     const HistoryManagerModule =
-      await import('../../../chrome-extension/shared/history-manager.js');
+      await import('../../chrome-extension/shared/history-manager.js');
     historyManager = HistoryManagerModule.default;
 
     // Reset state
@@ -400,13 +397,12 @@ describe('HistoryManager: Given a storage layer that fails', () => {
   it('HistoryManager: Then it handles storage errors gracefully', async () => {
     // Given: Storage that throws errors
     vi.resetModules();
-    const storage = (
-      await import('../../../chrome-extension/shared/storage.js')
-    ).default;
+    const storage = (await import('../../chrome-extension/shared/storage.js'))
+      .default;
     storage.getHistory.mockRejectedValue(new Error('Storage unavailable'));
 
     const HistoryManagerModule =
-      await import('../../../chrome-extension/shared/history-manager.js');
+      await import('../../chrome-extension/shared/history-manager.js');
     const historyManager = HistoryManagerModule.default;
 
     // Suppress expected console.error
@@ -424,13 +420,12 @@ describe('HistoryManager: Given a storage layer that fails', () => {
   it('HistoryManager: Then it handles update errors for non-existent entries', async () => {
     // Given: Initialized history manager
     vi.resetModules();
-    const storage = (
-      await import('../../../chrome-extension/shared/storage.js')
-    ).default;
+    const storage = (await import('../../chrome-extension/shared/storage.js'))
+      .default;
     storage.getHistory.mockResolvedValue([]);
 
     const HistoryManagerModule =
-      await import('../../../chrome-extension/shared/history-manager.js');
+      await import('../../chrome-extension/shared/history-manager.js');
     const historyManager = HistoryManagerModule.default;
     await historyManager.init();
 
