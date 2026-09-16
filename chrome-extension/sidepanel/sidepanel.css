@@ -150,7 +150,7 @@ html {
 }
 
 .nav-tab-editor.active .nav-tab-order {
-  background: var(--color-primary);
+  background: var(--color-primary-solid);
   color: #fff;
 }
 
@@ -366,9 +366,15 @@ html {
   border-bottom: none;
 }
 
+/* .active is the arrow-key position. Focus never leaves the input in a
+   combobox, so the highlight has to be painted, not inherited from :focus. */
 .search-dropdown-item:hover,
-.search-dropdown-item:focus {
+.search-dropdown-item.active {
   background: var(--color-background-hover);
+}
+
+.search-dropdown-item.active {
+  box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
 .search-dropdown-item-meta {
@@ -396,11 +402,28 @@ html {
   transition: opacity var(--transition-fast);
 }
 
-.template-card:hover .template-card-actions {
+/* :focus-within is not optional here — without it, tabbing lands on a fully
+   invisible Delete button. Pointer-coarse devices have no hover at all, so
+   they get the actions permanently. */
+.template-card:hover .template-card-actions,
+.template-card:focus-within .template-card-actions {
   opacity: 1;
 }
 
+@media (hover: none) {
+  .template-card-actions {
+    opacity: 1;
+  }
+}
+
 .action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* WCAG 2.2 Target Size (Minimum) floor; the icon inside stays 16px. */
+  min-width: 24px;
+  min-height: 24px;
   background: none;
   border: none;
   padding: var(--spacing-xs);

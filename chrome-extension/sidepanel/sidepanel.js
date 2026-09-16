@@ -281,10 +281,17 @@ class SidePanelApp {
     navTab.setAttribute('aria-selected', 'false');
     navTab.setAttribute('aria-controls', tab.uid);
     navTab.tabIndex = -1;
+    // The × is a pointer affordance only: a real button nested inside this
+    // role="tab" button would be invalid markup, and its `title` leaked into
+    // the tab's accessible name ("1 Create Template Close"). Keyboard users
+    // close the focused tab with Delete/Backspace, advertised via
+    // aria-keyshortcuts and the tab's tooltip.
+    navTab.setAttribute('aria-keyshortcuts', 'Delete');
+    navTab.title = `${tab.title} — press Delete to close`;
     navTab.innerHTML = `
-      <span class="nav-tab-order"></span>
+      <span class="nav-tab-order" aria-hidden="true"></span>
       <span class="nav-tab-label">${sanitizeText(tab.title)}</span>
-      <span class="nav-tab-close" title="Close">${IconHelper.iconHTML('close', 'xs')}</span>
+      <span class="nav-tab-close" aria-hidden="true">${IconHelper.iconHTML('close', 'xs')}</span>
     `;
     navTab.addEventListener('click', (e) => {
       if (e.target.closest('.nav-tab-close')) {
@@ -294,18 +301,37 @@ class SidePanelApp {
       }
       this.switchSection(tab.uid);
     });
+    navTab.addEventListener('keydown', (e) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        this.closeEditorTab(tab.uid);
+      }
+    });
     document.getElementById('editorTabsRow').appendChild(navTab);
 
     this.editorTabs.set(tab.uid, { tab, navTab, sectionEl });
     this.renumberEditorTabs();
 
     this.switchSection(tab.uid);
+
+    // Without this, opening an editor leaves focus on <body> and a keyboard
+    // user has to tab in from the top of the panel to reach the form. Waits
+    // on `ready` because the fields do not exist until the tab has loaded
+    // its template/workflow, and skips anything hidden — the header's
+    // Duplicate/Export buttons start that way and cannot take focus.
+    tab.ready.then(() => {
+      const firstField = [
+        ...sectionEl.querySelectorAll('input, textarea, select, button'),
+      ].find((element) => element.offsetParent !== null);
+      (firstField || navTab).focus();
+    });
   }
 
   updateEditorTabLabel(tab) {
     const entry = this.editorTabs.get(tab.uid);
     if (entry) {
       entry.navTab.querySelector('.nav-tab-label').textContent = tab.title;
+      entry.navTab.title = `${tab.title} — press Delete to close`;
     }
   }
 
@@ -328,6 +354,13 @@ class SidePanelApp {
       return;
     }
 
+    // Where focus should land once this tab's DOM is gone: the neighbouring
+    // editor tab if there is one, otherwise the main nav. Read before the
+    // removal, since afterwards the element has no siblings to ask.
+    const neighbour =
+      entry.navTab.nextElementSibling || entry.navTab.previousElementSibling;
+    const hadFocus = entry.navTab.contains(document.activeElement);
+
     entry.tab.destroy();
     entry.navTab.remove();
     entry.sectionEl.remove();
@@ -336,6 +369,12 @@ class SidePanelApp {
 
     if (this.currentSection === uid) {
       this.switchSection('templates');
+    }
+
+    if (hadFocus) {
+      (
+        neighbour || document.getElementById(`tab-${this.currentSection}`)
+      )?.focus();
     }
   }
 
@@ -447,12 +486,14 @@ class SidePanelApp {
         (template) => `
       <div class="template-card" data-template-id="${template.id}">
         <div class="template-card-header">
-          <h3 class="template-card-title">${sanitizeText(template.name)}</h3>
+          <h3 class="template-card-title">
+            <button type="button" class="template-card-open">${sanitizeText(template.name)}</button>
+          </h3>
           <div class="template-card-actions">
-            <button class="action-btn edit" data-action="edit" title="Edit template">
+            <button class="action-btn edit" data-action="edit" title="Edit template" aria-label="Edit template ${sanitizeText(template.name)}">
               ${IconHelper.iconHTML('edit', 'sm')}
             </button>
-            <button class="action-btn delete" data-action="delete" title="Delete template">
+            <button class="action-btn delete" data-action="delete" title="Delete template" aria-label="Delete template ${sanitizeText(template.name)}">
               ${IconHelper.iconHTML('delete', 'sm', 'error')}
             </button>
           </div>
@@ -529,6 +570,8 @@ class SidePanelApp {
 
   setupTemplateCardEventListeners(container) {
     container.querySelectorAll('.template-card').forEach((card) => {
+      // Keyboard activation arrives here too: Enter/Space on the title's
+      // .template-card-open button fires a click that bubbles up to the card.
       card.addEventListener('click', (e) => {
         if (!e.target.closest('.template-card-actions')) {
           this.openEditor('template', 'run', card.dataset.templateId);
@@ -575,10 +618,12 @@ class SidePanelApp {
         return `
       <div class="template-card workflow-card" data-workflow-id="${workflow.id}">
         <div class="template-card-header">
-          <h3 class="template-card-title">${sanitizeText(workflow.name)}</h3>
+          <h3 class="template-card-title">
+            <button type="button" class="template-card-open">${sanitizeText(workflow.name)}</button>
+          </h3>
           <div class="template-card-actions">
-            <button class="action-btn edit" data-action="edit" title="Edit workflow">${IconHelper.iconHTML('edit', 'sm')}</button>
-            <button class="action-btn delete" data-action="delete" title="Delete workflow">${IconHelper.iconHTML('delete', 'sm', 'error')}</button>
+            <button class="action-btn edit" data-action="edit" title="Edit workflow" aria-label="Edit workflow ${sanitizeText(workflow.name)}">${IconHelper.iconHTML('edit', 'sm')}</button>
+            <button class="action-btn delete" data-action="delete" title="Delete workflow" aria-label="Delete workflow ${sanitizeText(workflow.name)}">${IconHelper.iconHTML('delete', 'sm', 'error')}</button>
           </div>
         </div>
         ${workflow.description ? `<p class="template-card-description">${sanitizeText(workflow.description)}</p>` : ''}
@@ -645,9 +690,10 @@ class SidePanelApp {
   }
 
   async deleteWorkflow(workflowId) {
+    const name = this.workflows.find((w) => w.id === workflowId)?.name;
     const confirmed = await Modal.confirm(
       'Delete Workflow',
-      'Are you sure you want to delete this workflow? This action cannot be undone.',
+      `Are you sure you want to delete ${name ? `“${name}”` : 'this workflow'}? This action cannot be undone.`,
       {
         confirmText: 'Delete',
         confirmClass: 'btn-danger',
@@ -717,9 +763,10 @@ class SidePanelApp {
   }
 
   async deleteTemplate(templateId) {
+    const name = this.templates.find((t) => t.id === templateId)?.name;
     const confirmed = await Modal.confirm(
       'Delete Template',
-      'Are you sure you want to delete this template? This action cannot be undone.',
+      `Are you sure you want to delete ${name ? `“${name}”` : 'this template'}? This action cannot be undone.`,
       {
         confirmText: 'Delete',
         confirmClass: 'btn-danger',

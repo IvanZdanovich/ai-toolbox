@@ -45,6 +45,17 @@
   border-color: var(--color-border-hover);
 }
 
+/* Destructive confirmation. Without this rule the class renders as a native
+   light-grey button, which reads as the safe choice inside a dark dialog. */
+.btn-danger {
+  background-color: var(--color-danger-solid);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
 .btn-small {
   height: var(--button-height);
   padding: 0 var(--spacing-sm);
@@ -57,9 +68,11 @@
   margin-right: var(--spacing-xs);
 }
 
+/* Also applied to the <h3> group captions in Settings, hence the explicit
+   margin reset — a bare h3 would bring a 1em top margin with it. */
 .form-label {
   display: block;
-  margin-bottom: var(--spacing-xs);
+  margin: 0 0 var(--spacing-xs);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
@@ -86,7 +99,10 @@
 .form-input {
   width: 100%;
   height: var(--button-height);
-  padding: var(--spacing-md);
+
+  /* Horizontal only: --spacing-md top and bottom is the full height of the
+     box, which clips a <select>'s value out of view entirely. */
+  padding: 0 var(--spacing-sm);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
@@ -95,8 +111,11 @@
   transition: border-color var(--transition-fast);
 }
 
+.form-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
 .form-input:focus {
-  outline: none;
   border-color: var(--color-primary);
 }
 
@@ -116,9 +135,13 @@ select.form-input:hover {
   border-color: var(--color-primary);
 }
 
-select.form-input:focus {
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--color-primary) 20%, transparent);
+/* One visible focus ring for every interactive element in the extension.
+   :focus-visible keeps it off mouse clicks, so it costs nothing visually
+   while making keyboard position findable — which a border-colour swap alone
+   is too faint to do. */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* Light theme dropdown arrow (system preference) */
@@ -159,10 +182,13 @@ select.form-input option:checked {
   color: white;
 }
 
+/* No min-height: each textarea's own `rows` sets its height, so a one-word
+   run variable gets two lines and the template prompt editor keeps its six.
+   A flat 80px floor here overrode both and made every field 112px tall,
+   pushing the Run button off a 400px-wide panel. */
 .form-textarea {
   width: 100%;
-  min-height: 80px;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
@@ -174,7 +200,6 @@ select.form-input option:checked {
 }
 
 .form-textarea:focus {
-  outline: none;
   border-color: var(--color-primary);
 }
 
@@ -211,7 +236,24 @@ select.form-input option:checked {
   color: var(--color-text-primary);
 }
 
-.template-card:hover .template-card-title {
+/* The card is a click target for the mouse, but only this button is in the
+   tab order — a role="button" wrapper cannot hold the edit/delete buttons
+   nested inside it. Its click bubbles to the card's own handler, so opening
+   works identically from the keyboard and the pointer. */
+.template-card-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.template-card:hover .template-card-title,
+.template-card-open:focus-visible {
   color: var(--color-primary);
 }
 
@@ -390,17 +432,30 @@ select.form-input option:checked {
   flex: 1;
 }
 
-.toast::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: var(--spacing-sm);
-  transform: translateY(-50%);
-  width: 4px;
-  height: 4px;
-  background-color: currentcolor;
+/* Replaces the decorative dot that used to hint at click-to-dismiss: the
+   same affordance, but focusable and operable from the keyboard. */
+.toast-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  opacity: 0.3;
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  font-size: var(--font-size-base);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast-close:hover,
+.toast-close:focus-visible {
+  opacity: 1;
+  background-color: var(--color-background-hover);
 }
 
 /* Loading States */

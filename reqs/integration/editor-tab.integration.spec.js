@@ -39,6 +39,16 @@ function modelSays(content) {
   return { choices: [{ message: { content } }] };
 }
 
+// The accessible name of a field, however it was given one: a <label for> or
+// an aria-label both satisfy the requirement, so the spec asks for the name
+// rather than for one particular attribute.
+function accessibleName(field) {
+  const labelled = field.id
+    ? field.ownerDocument.querySelector(`label[for="${field.id}"]`)
+    : null;
+  return (labelled?.textContent ?? field.getAttribute('aria-label'))?.trim();
+}
+
 function installFetchDouble() {
   globalThis.fetch = vi.fn(async (url, init) => {
     chatRequests.push(JSON.parse(init.body));
@@ -168,7 +178,7 @@ describe('EditorTab: Given the editor tab against the real managers behind it', 
       const { tab } = await openTemplateRun();
 
       const field = tab.q('[data-role="execute-inputs"] textarea');
-      expect(field.getAttribute('aria-label')).toBe('Name');
+      expect(accessibleName(field)).toBe('Name');
     });
 
     it('EditorTab: Then it says so when the template it was opened for is gone', async () => {
@@ -390,9 +400,9 @@ describe('EditorTab: Given the editor tab against the real managers behind it', 
     it('EditorTab: Then it gives every input an accessible name, not just a placeholder', async () => {
       const { tab } = await openWorkflowRun([promptStep()]);
 
-      expect(
-        tab.q('[data-role="run-inputs"] textarea').getAttribute('aria-label')
-      ).toBe('Topic');
+      expect(accessibleName(tab.q('[data-role="run-inputs"] textarea'))).toBe(
+        'Topic'
+      );
     });
 
     it('EditorTab: Then it shows a timeline row per step and marks each one done', async () => {

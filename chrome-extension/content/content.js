@@ -109,9 +109,16 @@ class AIToolboxContent {
   }
 
   insertText(text, position = null) {
+    // `selectedText` tracks the *live* selection, which is gone by now:
+    // moving focus into the overlay collapses it, and the mouseup handler
+    // then clears the field. A non-collapsed saved range is the durable
+    // record that the user did have something selected when they invoked us.
+    const hadSelection =
+      this.selectedText || (this.savedRange && !this.savedRange.collapsed);
+
     if (position && position.range) {
       this.insertAtRange(text, position.range);
-    } else if (this.selectedText) {
+    } else if (hadSelection) {
       this.replaceSelection(text);
     } else {
       this.insertAtCursor(text);
@@ -155,11 +162,15 @@ class AIToolboxContent {
 
   replaceSelection(text) {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) {
+    // The range saved when the overlay opened wins: focusing the overlay's
+    // Insert Text button collapses whatever the user had selected on the page.
+    const range =
+      this.savedRange ||
+      (selection.rangeCount > 0 ? selection.getRangeAt(0) : null);
+    if (!range) {
       return false;
     }
 
-    const range = selection.getRangeAt(0);
     range.deleteContents();
     range.insertNode(document.createTextNode(text));
 
@@ -178,7 +189,10 @@ class AIToolboxContent {
   ]);
 
   insertAtCursor(text) {
-    const activeElement = document.activeElement;
+    // The overlay now takes focus when it opens, so document.activeElement is
+    // the Insert Text button by the time this runs. The field the user
+    // invoked from is the one remembered in mountOverlay.
+    const activeElement = this.previouslyFocused || document.activeElement;
 
     if (
       activeElement &&
@@ -201,9 +215,12 @@ class AIToolboxContent {
       activeElement.dispatchEvent(new Event('input', { bubbles: true }));
       return true;
     } else if (activeElement && activeElement.isContentEditable) {
+      // Focusing the overlay collapsed the host page's selection, so the
+      // range saved at open time is the only record of where to write.
+      activeElement.focus();
       const selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
+      const range = this.savedRange || selection.getRangeAt?.(0);
+      if (range) {
         range.deleteContents();
         range.insertNode(document.createTextNode(text));
         range.collapse(false);
@@ -222,12 +239,32 @@ class AIToolboxContent {
   mountOverlay(title, bodyHtml, extraClass = '') {
     this.hideOverlay();
 
+    // Remembered before focus moves into the overlay, so dismissing returns
+    // the caret to the field the user invoked the toolbox from — which is
+    // also where Insert Text writes.
+    this.previouslyFocused = document.activeElement;
+
+    // Same reason, for contenteditable hosts: the caret position survives as
+    // a Range even after focus leaves.
+    const selection = window.getSelection();
+    this.savedRange =
+      selection && selection.rangeCount > 0
+        ? selection.getRangeAt(0).cloneRange()
+        : null;
+
+    const titleId = 'ai-toolbox-title';
     const overlay = this.createOverlay();
+    // This is a modal over someone else's page, so it has to declare itself:
+    // without role/aria-modal a screen reader reads it as loose divs mixed
+    // into the host page's content.
     overlay.innerHTML = `
-      <div class="ai-toolbox-overlay${extraClass ? ` ${extraClass}` : ''}">
+      <div class="ai-toolbox-overlay${extraClass ? ` ${extraClass}` : ''}"
+           role="dialog" aria-modal="true" aria-labelledby="${titleId}">
         <div class="ai-toolbox-header">
-          <h3>${this.escapeHtml(title)}</h3>
-          <button class="ai-toolbox-close">&times;</button>
+          <h3 id="${titleId}">${this.escapeHtml(title)}</h3>
+          <button class="ai-toolbox-close" aria-label="Close AI Toolbox">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
         <div class="ai-toolbox-content">
           ${bodyHtml}
@@ -244,11 +281,44 @@ class AIToolboxContent {
         btn.addEventListener('click', () => this.hideOverlay());
       });
 
+    overlay.addEventListener('keydown', (e) => this.trapFocus(overlay, e));
+
     setTimeout(() => {
       overlay.classList.add('visible');
+      // Focus the first action rather than the close button: on the result
+      // overlay that is Insert Text, the reason the overlay opened.
+      const first = overlay.querySelector(
+        '.ai-toolbox-content button, .ai-toolbox-close'
+      );
+      first?.focus();
     }, 10);
 
     return overlay;
+  }
+
+  // Tab stays inside the overlay while it is up. The host page behind is
+  // still fully interactive otherwise, and focus escaping into it silently
+  // is worse here than in an extension page — it is someone else's DOM.
+  trapFocus(overlay, e) {
+    if (e.key !== 'Tab') {
+      return;
+    }
+
+    const items = [...overlay.querySelectorAll('button, [href], [tabindex]')];
+    if (items.length === 0) {
+      return;
+    }
+
+    const first = items[0];
+    const last = items[items.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   templateRow(template) {
@@ -269,8 +339,8 @@ class AIToolboxContent {
           <strong>Selected Text:</strong>
           <div class="ai-toolbox-text">${this.escapeHtml(text.substring(0, 200))}${text.length > 200 ? '...' : ''}</div>
         </div>
-        <div class="ai-toolbox-status">
-          <div class="ai-toolbox-spinner"></div>
+        <div class="ai-toolbox-status" role="status">
+          <div class="ai-toolbox-spinner" aria-hidden="true"></div>
           <span>Processing...</span>
         </div>
       `
@@ -348,6 +418,10 @@ class AIToolboxContent {
         }
         this.overlayVisible = false;
       }, 200);
+      // Hand the host page its caret back rather than dropping focus to
+      // <body>, which would lose the user's place in whatever they were
+      // writing.
+      this.previouslyFocused?.focus?.();
     }
   }
 

@@ -309,13 +309,21 @@ class SettingsPage {
           barClass = 'warning';
         }
 
+        const usedKb = Math.round(storageInfo.bytesInUse / 1024);
+        const quotaKb = Math.round(storageInfo.quota / 1024);
+        const text = `${usedKb} KB of ${quotaKb} KB used (${percentUsed}%)`;
+
+        // The bar carries the value for assistive tech; the text below it
+        // repeats the same thing visually, so it is hidden to avoid the meter
+        // being announced twice.
         storageInfoEl.innerHTML = `
-          <div class="storage-bar">
+          <div class="storage-bar" role="progressbar"
+               aria-label="Chrome storage usage"
+               aria-valuenow="${percentUsed}" aria-valuemin="0" aria-valuemax="100"
+               aria-valuetext="${text}">
             <div class="storage-bar-fill ${barClass}" style="width: ${percentUsed}%"></div>
           </div>
-          <div class="storage-text">
-            ${Math.round(storageInfo.bytesInUse / 1024)} KB of ${Math.round(storageInfo.quota / 1024)} KB used (${percentUsed}%)
-          </div>
+          <div class="storage-text" aria-hidden="true">${text}</div>
         `;
       }
     } catch (error) {

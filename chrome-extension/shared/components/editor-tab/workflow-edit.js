@@ -4,17 +4,18 @@ import { downloadAsJson, sanitizeText } from '../../helpers.js';
 import { LIMITS, WORKFLOW_STEP_TYPES } from '../../constants.js';
 import Toast from '../toast.js';
 
-export function workflowEditHTML() {
+// `uid` namespaces the label/input ids — see templateEditHTML.
+export function workflowEditHTML(uid) {
   return `
     <form data-role="workflow-form">
       <div class="form-group">
-        <label class="form-label">Workflow Name</label>
-        <input type="text" data-role="workflow-name" class="form-input" required maxlength="50" />
+        <label class="form-label" for="${uid}-wf-name">Workflow Name</label>
+        <input type="text" id="${uid}-wf-name" data-role="workflow-name" class="form-input" required maxlength="${LIMITS.MAX_TEMPLATE_NAME_LENGTH}" />
       </div>
 
       <div class="form-group">
-        <label class="form-label">Description (optional)</label>
-        <input type="text" data-role="workflow-description" class="form-input" maxlength="200" />
+        <label class="form-label" for="${uid}-wf-description">Description (optional)</label>
+        <input type="text" id="${uid}-wf-description" data-role="workflow-description" class="form-input" maxlength="${LIMITS.MAX_TEMPLATE_DESCRIPTION_LENGTH}" />
       </div>
 
       <div class="workflow-steps-header">

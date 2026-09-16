@@ -85,7 +85,10 @@ class EditorTab {
     section.innerHTML = this.skeletonHTML();
     this.root = section;
 
-    this.init().catch((error) => {
+    // Exposed so the opener can wait for it: init() is what fills in the
+    // run/edit fields, and anything wanting to focus the first one has to
+    // happen after that, not after render().
+    this.ready = this.init().catch((error) => {
       console.error('Failed to initialize editor tab:', error);
       Toast.show('Failed to open editor', 'error');
     });
@@ -109,13 +112,13 @@ class EditorTab {
     `;
 
     if (this.type === 'template' && this.mode === 'edit') {
-      return header + templateEditHTML();
+      return header + templateEditHTML(this.uid);
     }
     if (this.type === 'template' && this.mode === 'run') {
       return header + templateRunHTML() + chatSectionHTML();
     }
     if (this.type === 'workflow' && this.mode === 'edit') {
-      return header + workflowEditHTML();
+      return header + workflowEditHTML(this.uid);
     }
     if (this.type === 'workflow' && this.mode === 'run') {
       return header + workflowRunHTML() + chatSectionHTML();

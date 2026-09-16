@@ -10,33 +10,36 @@ import {
 import { EXTENSION_VERSION, LIMITS } from '../../constants.js';
 import Toast from '../toast.js';
 
-export function templateEditHTML() {
+// `uid` is the owning editor tab's id. Several editors can be open at once,
+// so every label/input pairing has to be namespaced or the `for` attributes
+// collide and all of them resolve to the first tab's fields.
+export function templateEditHTML(uid) {
   return `
     <form data-role="template-form">
       <div class="form-group">
-        <label class="form-label">Template Name</label>
-        <input type="text" data-role="template-name" class="form-input" required maxlength="${LIMITS.MAX_TEMPLATE_NAME_LENGTH}" />
+        <label class="form-label" for="${uid}-name">Template Name</label>
+        <input type="text" id="${uid}-name" data-role="template-name" class="form-input" required maxlength="${LIMITS.MAX_TEMPLATE_NAME_LENGTH}" />
       </div>
 
       <div class="form-group">
         <div class="form-label-group">
-          <label class="form-label">Description (optional)</label>
+          <label class="form-label" for="${uid}-description">Description (optional)</label>
           <button type="button" class="btn btn-small btn-secondary generate-btn" data-role="generate-description-btn" title="Generate description from template name">
             <svg class="icon icon--sm"><use href="#icon-magic"></use></svg>Generate
           </button>
         </div>
-        <input type="text" data-role="template-description" class="form-input" maxlength="${LIMITS.MAX_TEMPLATE_DESCRIPTION_LENGTH}" />
+        <input type="text" id="${uid}-description" data-role="template-description" class="form-input" maxlength="${LIMITS.MAX_TEMPLATE_DESCRIPTION_LENGTH}" />
       </div>
 
       <div class="form-group">
         <div class="form-label-group">
-          <label class="form-label">Prompt</label>
+          <label class="form-label" for="${uid}-prompt">Prompt</label>
           <button type="button" class="btn btn-small btn-secondary generate-btn" data-role="generate-prompt-btn" title="Generate prompt from template name and description">
             <svg class="icon icon--sm"><use href="#icon-magic"></use></svg>Generate
           </button>
         </div>
-        <p class="form-help">Use {variable_name} for dynamic inputs</p>
-        <textarea data-role="template-prompt" class="form-textarea" required maxlength="${LIMITS.MAX_TEMPLATE_PROMPT_LENGTH}" rows="6"></textarea>
+        <p class="form-help" id="${uid}-prompt-help">Use {variable_name} for dynamic inputs</p>
+        <textarea id="${uid}-prompt" aria-describedby="${uid}-prompt-help" data-role="template-prompt" class="form-textarea" required maxlength="${LIMITS.MAX_TEMPLATE_PROMPT_LENGTH}" rows="6"></textarea>
       </div>
 
       <div data-role="template-variables" class="template-variables"></div>

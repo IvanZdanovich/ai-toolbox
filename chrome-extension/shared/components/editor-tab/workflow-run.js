@@ -18,9 +18,11 @@ export function workflowRunHTML() {
     <form data-role="run-form">
       <div data-role="run-inputs" class="execute-inputs"></div>
 
-      <div data-role="run-timeline" class="run-timeline hidden"></div>
+      <!-- Steps land one at a time over a long run; polite queues them behind
+           whatever the user is reading instead of interrupting per step. -->
+      <div data-role="run-timeline" class="run-timeline hidden" aria-live="polite"></div>
 
-      <div data-role="run-result" class="execute-result hidden">
+      <div data-role="run-result" class="execute-result hidden" aria-live="polite">
         <div class="result-header">
           <h3>Result</h3>
           <button type="button" class="btn btn-small btn-secondary" data-role="copy-run-result-btn">Copy</button>
@@ -29,7 +31,7 @@ export function workflowRunHTML() {
         <div data-role="run-result-meta" class="result-meta"></div>
       </div>
 
-      <div data-role="run-error" class="execute-error hidden">
+      <div data-role="run-error" class="execute-error hidden" role="alert">
         <p class="error-message"></p>
       </div>
 
@@ -63,10 +65,10 @@ export const workflowRunMethods = {
             .map(
               (variable) => `
         <div class="form-group">
-          <label class="form-label">${sanitizeText(variableLabel(variable))}</label>
+          <label class="form-label" for="${this.uid}-in-${sanitizeText(variable)}">${sanitizeText(variableLabel(variable))}</label>
           <textarea name="${sanitizeText(variable)}"
             class="form-textarea" rows="2"
-            aria-label="${sanitizeText(variableLabel(variable))}"
+            id="${this.uid}-in-${sanitizeText(variable)}"
             placeholder="${sanitizeText(variablePlaceholder(variable))}"></textarea>
         </div>`
             )

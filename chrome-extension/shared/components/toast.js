@@ -71,14 +71,18 @@ class Toast {
 
     const icon = this.getIcon(type);
 
+    // The glyph is decorative — the type is already in the message and in the
+    // border colour, and "✓" read aloud before every success is noise.
     toast.innerHTML = `
       <div class="toast-content">
-        <span class="toast-icon">${icon}</span>
+        <span class="toast-icon" aria-hidden="true">${icon}</span>
         <p class="toast-message">${sanitizeText(message)}</p>
+        <button type="button" class="toast-close" aria-label="Dismiss notification">&times;</button>
       </div>
     `;
 
-    // Make entire toast clickable to close
+    // Click anywhere to dismiss stays for the pointer; the close button is
+    // what makes the same action reachable from the keyboard.
     toast.addEventListener('click', () => {
       this.hide(id);
     });
@@ -87,6 +91,16 @@ class Toast {
     toast.style.cursor = 'pointer';
 
     return toast;
+  }
+
+  // Honour prefers-reduced-motion. These animations run through the Web
+  // Animations API, which the CSS media query in base.css cannot reach.
+  animationDuration(ms) {
+    // Optional-called: the happy-dom test environment has no matchMedia, and
+    // a missing one only means "no stated preference".
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+      ? 0
+      : ms;
   }
 
   getIcon(type) {
@@ -109,7 +123,7 @@ class Toast {
         { opacity: 1, transform: 'translateX(0)' },
       ],
       {
-        duration: 300,
+        duration: this.animationDuration(300),
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
         fill: 'forwards',
       }
@@ -128,7 +142,7 @@ class Toast {
         { opacity: 0, transform: 'translateX(100%)' },
       ],
       {
-        duration: 200,
+        duration: this.animationDuration(200),
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
         fill: 'forwards',
       }

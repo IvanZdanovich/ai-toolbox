@@ -97,3 +97,29 @@ html {
   margin: 0;
   font-size: var(--font-size-sm);
 }
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+/* Card lift, button press-scale and toast slide-in all animate by default.
+   Collapse them to near-zero rather than 0s so transitionend/onfinish
+   callbacks — which drive toast cleanup — still fire. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .template-card:hover {
+    transform: none;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
+}

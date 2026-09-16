@@ -10,7 +10,10 @@ export function templateRunHTML() {
     <form data-role="execute-form">
       <div data-role="execute-inputs" class="execute-inputs"></div>
 
-      <div data-role="execute-result" class="execute-result hidden">
+      <!-- A run takes seconds and swaps content in silently. The live regions
+           are what tell a screen reader it started, finished, or failed;
+           without them the panel just changes under the user. -->
+      <div data-role="execute-result" class="execute-result hidden" aria-live="polite">
         <div class="result-header">
           <h3>Result</h3>
           <button type="button" class="btn btn-small btn-secondary" data-role="copy-result-btn">Copy</button>
@@ -19,12 +22,12 @@ export function templateRunHTML() {
         <div data-role="result-meta" class="result-meta"></div>
       </div>
 
-      <div data-role="execute-loading" class="execute-loading hidden">
-        <div class="loading"></div>
+      <div data-role="execute-loading" class="execute-loading hidden" role="status">
+        <div class="loading" aria-hidden="true"></div>
         <p>Processing template...</p>
       </div>
 
-      <div data-role="execute-error" class="execute-error hidden">
+      <div data-role="execute-error" class="execute-error hidden" role="alert">
         <p class="error-message"></p>
       </div>
 
@@ -60,9 +63,9 @@ export const templateRunMethods = {
         .map(
           (input) => `
         <div class="form-group">
-          <label class="form-label">${sanitizeText(input.label)}</label>
+          <label class="form-label" for="${this.uid}-in-${sanitizeText(input.name)}">${sanitizeText(input.label)}</label>
           <textarea name="${sanitizeText(input.name)}" class="form-textarea"
-                    aria-label="${sanitizeText(input.label)}"
+                    id="${this.uid}-in-${sanitizeText(input.name)}"
                     placeholder="${sanitizeText(input.placeholder)}" rows="2">${sanitizeText(prefillValues[input.name] ?? input.defaultValue ?? '')}</textarea>
         </div>
       `

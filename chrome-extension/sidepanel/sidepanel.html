@@ -76,6 +76,8 @@
     </svg>
 
     <div class="sidepanel-container">
+      <h1 class="sr-only">AI Toolbox</h1>
+
       <!-- Navigation -->
       <nav class="nav-tabs" role="tablist" aria-label="Sections">
         <button
@@ -131,6 +133,7 @@
           aria-labelledby="tab-templates"
           tabindex="0"
         >
+          <h2 class="sr-only">Templates</h2>
           <div class="section-header">
             <button class="btn btn-primary btn-small" id="createTemplateBtn">
               <svg class="icon icon--sm"><use href="#icon-add"></use></svg>New
@@ -146,6 +149,7 @@
                 class="form-input"
                 placeholder="Ask or search templates…"
                 role="combobox"
+                aria-label="Search templates, or press Enter to ask the AI"
                 aria-expanded="false"
                 aria-controls="templateSearchDropdown"
                 autocomplete="off"
@@ -154,6 +158,7 @@
                 class="search-dropdown hidden"
                 id="templateSearchDropdown"
                 role="listbox"
+                aria-label="Matching templates"
               ></div>
             </div>
           </div>
@@ -176,6 +181,7 @@
           aria-labelledby="tab-workflows"
           tabindex="0"
         >
+          <h2 class="sr-only">Workflows</h2>
           <div class="section-header">
             <button class="btn btn-primary btn-small" id="createWorkflowBtn">
               <svg class="icon icon--sm"><use href="#icon-add"></use></svg>New
@@ -191,6 +197,7 @@
                 class="form-input"
                 placeholder="Ask or search workflows…"
                 role="combobox"
+                aria-label="Search workflows, or press Enter to ask the AI"
                 aria-expanded="false"
                 aria-controls="workflowSearchDropdown"
                 autocomplete="off"
@@ -199,6 +206,7 @@
                 class="search-dropdown hidden"
                 id="workflowSearchDropdown"
                 role="listbox"
+                aria-label="Matching workflows"
               ></div>
             </div>
           </div>
@@ -221,6 +229,7 @@
           aria-labelledby="tab-history"
           tabindex="0"
         >
+          <h2 class="sr-only">History</h2>
           <div class="section-header">
             <button class="btn btn-secondary btn-small" id="clearHistoryBtn">
               Clear All
@@ -235,6 +244,7 @@
                 class="form-input"
                 placeholder="Ask or search history…"
                 role="combobox"
+                aria-label="Search history, or press Enter to ask the AI"
                 aria-expanded="false"
                 aria-controls="historySearchDropdown"
                 autocomplete="off"
@@ -243,6 +253,7 @@
                 class="search-dropdown hidden"
                 id="historySearchDropdown"
                 role="listbox"
+                aria-label="Matching history entries"
               ></div>
             </div>
           </div>
@@ -266,15 +277,19 @@
             class="footer-btn footer-btn-right"
             id="expandBtn"
             title="Open in full screen"
+            aria-label="Open in full screen"
           >
-            <svg class="icon icon--md"><use href="#icon-expand"></use></svg>
+            <svg class="icon icon--md" aria-hidden="true">
+              <use href="#icon-expand"></use>
+            </svg>
           </button>
           <button
             class="footer-btn footer-btn-right"
             id="settingsBtn"
             title="Settings"
+            aria-label="Settings"
           >
-            <svg class="icon icon--md icon-settings">
+            <svg class="icon icon--md icon-settings" aria-hidden="true">
               <use href="#icon-settings"></use>
             </svg>
           </button>
@@ -282,8 +297,15 @@
       </footer>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <!-- Toast Container. The live region has to exist in the document before
+         any toast is inserted into it, so it is declared here rather than
+         created on first use. -->
+    <div
+      id="toastContainer"
+      class="toast-container"
+      role="status"
+      aria-live="polite"
+    ></div>
 
     <!-- Scripts -->
     <script type="module" src="../shared/components/toast.js"></script>

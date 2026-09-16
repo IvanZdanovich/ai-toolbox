@@ -68,8 +68,10 @@
       <!-- Header -->
       <header class="settings-header">
         <div class="header-content">
-          <button class="back-btn" id="backBtn" title="Back">
-            <svg class="icon icon--md"><use href="#icon-back"></use></svg>
+          <button class="back-btn" id="backBtn" title="Back" aria-label="Back">
+            <svg class="icon icon--md" aria-hidden="true">
+              <use href="#icon-back"></use>
+            </svg>
           </button>
           <div class="header-text">
             <h1 class="settings-title">Settings</h1>
@@ -106,7 +108,12 @@
             <div class="form-group" id="apiKeyGroup">
               <label class="form-label" for="apiKey">
                 API Key
-                <a href="#" id="apiKeyHelp" class="help-link" target="_blank"
+                <a
+                  href="#"
+                  id="apiKeyHelp"
+                  class="help-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   >Get API Key</a
                 >
               </label>
@@ -175,8 +182,14 @@
           <section class="settings-section">
             <h2 class="section-title">Backup & Restore</h2>
             <div class="form-group">
-              <label class="form-label">Data Management</label>
-              <div class="button-group">
+              <!-- Group caption, not a control label: a <label> with nothing
+                   to point at is announced as an orphan. -->
+              <h3 class="form-label">Data Management</h3>
+              <div
+                class="button-group"
+                role="group"
+                aria-label="Data management"
+              >
                 <button
                   type="button"
                   class="btn btn-secondary btn-small"
@@ -209,7 +222,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Chrome Storage Usage</label>
+              <h3 class="form-label">Chrome Storage Usage</h3>
               <div id="storageInfo" class="storage-info">
                 <!-- Storage usage information will appear here -->
               </div>
@@ -235,6 +248,7 @@
                       <a
                         href="https://buymeacoffee.com/ivanzdanovich"
                         target="_blank"
+                        rel="noopener noreferrer"
                         class="support-link coffee-link"
                       >
                         <svg class="icon icon--sm">
@@ -257,6 +271,7 @@
                     <a
                       href="https://github.com/IvanZdanovich/ai-toolbox"
                       target="_blank"
+                      rel="noopener noreferrer"
                       class="support-link github-link"
                     >
                       <svg class="icon icon--sm">
@@ -266,6 +281,7 @@
                     <a
                       href="https://github.com/IvanZdanovich/ai-toolbox/issues"
                       target="_blank"
+                      rel="noopener noreferrer"
                       class="support-link github-link"
                     >
                       <svg class="icon icon--sm">
@@ -282,7 +298,12 @@
     </div>
 
     <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div
+      id="toastContainer"
+      class="toast-container"
+      role="status"
+      aria-live="polite"
+    ></div>
 
     <!-- Scripts -->
     <script type="module" src="../shared/components/toast.js"></script>

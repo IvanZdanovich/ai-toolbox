@@ -14,6 +14,18 @@
   --color-border: #e5e7eb;
   --color-border-hover: #d1d5db;
 
+  /* Fill colours for white text. --color-primary / --color-error are tuned to
+     read as text ON a background; these are tuned to sit BEHIND white text, so
+     they stay at 4.5:1 in both themes. Never swap the two. */
+  --color-primary-solid: #2563eb;
+  --color-danger-solid: #dc2626;
+
+  /* Focus ring - 2px solid with a 2px offset clears WCAG 2.4.11 on any
+     surface, which a border-colour swap alone does not. */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--color-primary);
+
   /* Spacing */
   --spacing-xxs: 2px;
   --spacing-xs: 4px;
@@ -94,13 +106,18 @@
     --color-border-hover: #4b5563;
     --color-background-hover: #374151;
 
+    /* Dark theme keeps the light fills: lightening them drops white text below
+       4.5:1 (#3b82f6 is 3.4:1, #ef4444 is 3.8:1). */
+    --color-primary-solid: #2563eb;
+    --color-danger-solid: #b91c1c;
+
     /* Dark theme shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0, 0, 0, 0.3);
     --shadow-md:
       0 4px 6px -1px rgb(0, 0, 0, 0.4), 0 2px 4px -2px rgb(0, 0, 0, 0.4);
     --shadow-lg:
       0 10px 15px -3px rgb(0, 0, 0, 0.4), 0 4px 6px -4px rgb(0, 0, 0, 0.4);
-    --gradient-accent: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    --gradient-accent: linear-gradient(135deg, #2563eb, #7c3aed);
     --color-accent-2: #8b5cf6;
     --shadow-glow: 0 4px 16px rgb(59, 130, 246, 0.45);
   }
@@ -122,6 +139,8 @@
   --color-border: #e5e7eb;
   --color-border-hover: #d1d5db;
   --color-background-hover: #f3f4f6;
+  --color-primary-solid: #2563eb;
+  --color-danger-solid: #dc2626;
 
   /* Light theme shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0, 0, 0, 0.05);

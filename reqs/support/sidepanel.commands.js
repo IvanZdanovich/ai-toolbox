@@ -84,13 +84,18 @@ export async function sidePanel_OpenTemplateRun(page, name) {
   );
 }
 
-/** Fills the open run tab's fields, addressed by the label a user reads. */
+/**
+ * Fills the open run tab's fields, addressed by the label a user reads.
+ * getByLabel resolves the accessible name however the field earns it — a
+ * <label for> or an aria-label — so this says what it means rather than
+ * pinning one attribute.
+ */
 export async function templateRun_FillInputs(page, values) {
   for (const [label, value] of Object.entries(values)) {
-    await page.fill(
-      `${editorTab.open} ${templateRunner.inputs} textarea[aria-label="${label}"]`,
-      value
-    );
+    await page
+      .locator(`${editorTab.open} ${templateRunner.inputs}`)
+      .getByLabel(label, { exact: true })
+      .fill(value);
   }
 }
 
